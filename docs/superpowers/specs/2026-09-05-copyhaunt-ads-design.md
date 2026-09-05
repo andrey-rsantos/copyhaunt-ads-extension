@@ -380,9 +380,27 @@ testes e vê-se exatamente o que quebrou.
 {
   "manifest_version": 3,
   "permissions": ["storage"],
-  "host_permissions": ["*://*.facebook.com/ads/library/*"]
+  "host_permissions": ["*://*.facebook.com/ads/library/*"],
+  "content_scripts": [
+    {
+      "matches": ["*://*.facebook.com/ads/library/*"],
+      "js": ["src/interceptor.ts"],
+      "world": "MAIN",
+      "run_at": "document_start"
+    },
+    {
+      "matches": ["*://*.facebook.com/ads/library/*"],
+      "js": ["src/content/index.ts"],
+      "run_at": "document_start"
+    }
+  ]
 }
 ```
+
+O `world: "MAIN"` no primeiro bloco é o que dispensa a remoção do CSP descrita
+na seção 4. O `run_at: "document_start"` é obrigatório nos dois: o interceptador
+precisa aplicar o patch em `XMLHttpRequest` **antes** de a página fazer a
+primeira requisição.
 
 Contra as quatro permissões e dois hosts do referência de mercado. Uma extensão que pede o
 mínimo passa mais facilmente pela revisão da Web Store e é mais fácil de o
@@ -398,6 +416,7 @@ usuário aceitar.
 | Painel e popup | React com Tailwind | poucas instâncias, UI complexa |
 | Tokens de design | de `CopyHaunt-IDV.md` | cores, Sora/Inter, raios, ícones Lucide |
 | Storage | IndexedDB | sessão de mineração e cache |
+| Empacotamento de mídia | JSZip | download de múltiplos criativos em um arquivo |
 | Testes | Vitest com fixtures | parser testado sem navegador |
 
 ---
