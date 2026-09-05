@@ -90,3 +90,40 @@ Considerações:
   O total exigiria requisição ativa por anunciante e quebraria o
   desenho passivo da coleta
 ```
+
+## Divisão de trabalho entre agentes
+
+Claude planeja e revisa. Codex executa.
+
+| Papel | Quem | Skills |
+|---|---|---|
+| Design e plano | Claude | `brainstorming`, `writing-plans` |
+| Implementação | Codex | — |
+| Revisão | Claude | `requesting-code-review` |
+
+### Invocação do Codex
+
+Sempre com estas flags. **Nunca alterar o `~/.codex/config.toml` global** — ele
+vale para todos os outros projetos da máquina.
+
+```
+codex exec -m gpt-5.6-luna -c model_reasoning_effort="high"
+```
+
+Na primeira execução, o Codex vai pedir confirmação de acesso: este diretório
+ainda não consta como `trusted` na configuração dele.
+
+### Consequência para os planos
+
+O Codex **não carrega as skills do Superpowers e não lê este arquivo**. Ele
+começa cada tarefa sem contexto da conversa que originou o plano.
+
+Portanto, cada tarefa do plano precisa carregar a disciplina por escrito:
+
+- o teste que falha primeiro, e o comando exato para rodá-lo
+- o caminho exato de cada arquivo a criar ou alterar
+- o critério de verificação, com a saída esperada
+- a mensagem de commit já no padrão desta página
+
+Tarefa que diz apenas "implementar o normalizador" é tarefa mal escrita para
+este arranjo.
