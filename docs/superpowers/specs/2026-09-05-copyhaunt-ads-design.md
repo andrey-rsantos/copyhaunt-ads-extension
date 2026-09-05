@@ -296,6 +296,31 @@ países. A presença mede se o anunciante está investindo pesado **no nicho
 pesquisado**, que é a pergunta real ao modelar oferta. Além disso, o dado já vem
 em cada anúncio: custo zero, nenhuma requisição, e o desenho permanece passivo.
 
+#### Critérios avaliados e adiados
+
+Três sinais foram considerados para o MVP e ficaram para a v2. Todos custam
+zero, pois derivam de dados que já passam pela sessão. O motivo do adiamento é
+de produto, não técnico: cada checkbox a mais é uma decisão que o usuário
+precisa tomar **antes** de conseguir minerar. Um painel pesado na estreia faz
+com que a mineração nunca seja ligada.
+
+**Domínio de destino compartilhado.** Quantos anunciantes distintos apontam para
+o mesmo destino. Detecta exército de afiliados, que só se forma em oferta que
+converte. É o único candidato que mede o mercado em vez de um anunciante
+isolado, e por isso o mais promissor dos três. Ressalva: perde força quando os
+anunciantes usam checkout de plataforma compartilhada — agrupar por um domínio
+de plataforma juntaria o mercado inteiro. Exigiria lista de exclusão das
+plataformas conhecidas, ou agrupamento por domínio mais início do caminho.
+
+**Aceleração do anunciante.** Quantos anúncios ele estreou nos últimos dias.
+Responde "está escalando agora?" em vez de "já escalou?", separando oferta com
+verba entrando hoje daquela que já passou do pico.
+
+**Variação criativa.** Quantos criativos distintos, em oposição a cópias, o
+anunciante mantém. Complementa o critério de criativo repetido: repetição alta
+indica que duplicaram o vencedor; variação alta indica teste de ângulos. Mede
+maturidade da operação, não lucratividade — o mais fraco dos três.
+
 ---
 
 ## 8. Config remota
@@ -428,7 +453,7 @@ usuário aceitar.
 | 1 | Contagem global por anunciante | fora do MVP; exigiria requisição ativa. Reavaliar com teste em navegador autenticado |
 | 2 | estrutura interna do framework como fonte alternativa | fase 2; complexo, e as camadas 1 a 3 devem bastar |
 | 3 | Suporte a Edge e Firefox | Edge deve funcionar sem alteração (Chromium); Firefox exige adaptação de MV3 |
-| 4 | Quarto critério de escala | o usuário marcou "Other" no levantamento e o texto não foi transmitido; confirmar antes do plano |
+| 4 | Quarto critério de escala | **encerrado.** O MVP fecha com três critérios; os candidatos avaliados estão na seção 7 |
 
 ---
 
