@@ -1,0 +1,19 @@
+@import "tailwindcss";
+
+/* Tokens da identidade visual. Valores normativos, definidos em
+   CopyHaunt-IDV.md. Não alterar sem atualizar aquele documento. */
+@theme {
+  --color-ink: #08070D;
+  --color-charcoal: #111019;
+  --color-purple: #7C3AED;
+  --color-neon: #A855F7;
+  --color-lavender: #C4A7FF;
+  --color-deep: #3B1D73;
+  --color-muted: #B8B5C6;
+
+  --font-display: "Sora", ui-sans-serif, system-ui, sans-serif;
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+
+  --radius-card: 14px;
+  --radius-btn: 9px;
+}
