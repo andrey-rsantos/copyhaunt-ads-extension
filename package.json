@@ -12,6 +12,7 @@
     "typecheck": "tsc --noEmit",
     "verify:build": "vite build && node scripts/verify-manifest.mjs",
     "e2e": "playwright test",
+    "gravar:fixtures": "playwright test e2e/gravar-fixtures.spec.ts",
     "e2e:report": "playwright show-report"
   },
   "dependencies": {

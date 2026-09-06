@@ -1,0 +1,38 @@
+{
+  "gravadoEm": "2026-09-06T01:07:27.202Z",
+  "payloads": [
+    {
+      "arquivo": "payload-01.json",
+      "bytes": 77542,
+      "contem": [
+        "search_results_connection",
+        "collated_results",
+        "ad_archive_id",
+        "collation_count",
+        "snapshot"
+      ]
+    },
+    {
+      "arquivo": "payload-02.json",
+      "bytes": 58088,
+      "contem": [
+        "search_results_connection",
+        "collated_results",
+        "ad_archive_id",
+        "collation_count",
+        "snapshot"
+      ]
+    },
+    {
+      "arquivo": "payload-03.json",
+      "bytes": 59267,
+      "contem": [
+        "search_results_connection",
+        "collated_results",
+        "ad_archive_id",
+        "collation_count",
+        "snapshot"
+      ]
+    }
+  ]
+}
