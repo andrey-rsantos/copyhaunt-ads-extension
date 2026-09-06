@@ -4,7 +4,7 @@ import { AdStore } from '../core/store'
 import type { Captura } from '../interceptor/xhr-patch'
 import { observarGrade, type Observacao } from './observer'
 import { pintarGrade } from './overlay'
-import { processarCaptura } from './pipeline'
+import { processarCaptura, processarSsr } from './pipeline'
 
 /** Índice da sessão. Vive enquanto a aba viver. */
 const store = new AdStore()
@@ -77,6 +77,20 @@ function mountPanel(): void {
   document.documentElement.appendChild(frame)
 }
 
+/**
+ * Lê o lote que a Meta embutiu no HTML da primeira carga.
+ *
+ * Roda uma vez só. O script é servido com a página e não muda depois; a
+ * paginação seguinte volta a ser XHR, que o interceptador já pega. Reler a
+ * cada mutação seria parsear 179 kB por rolagem, para nada.
+ */
+function lerLoteInicial(): void {
+  const r = processarSsr(document, store)
+  if (r.novos > 0) {
+    console.info(`[CopyHaunt] lote do HTML: ${r.novos} | índice: ${r.total}`)
+  }
+}
+
 window.addEventListener('message', (event) => {
   if (event.source !== window) return
   if (!isCopyHauntMessage(event.data)) return
@@ -102,6 +116,7 @@ window.addEventListener('message', (event) => {
  */
 function iniciar(): void {
   mountPanel()
+  lerLoteInicial()
   garantirObservador()
   repintar()
 }

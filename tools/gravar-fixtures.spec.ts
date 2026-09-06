@@ -57,6 +57,25 @@ test('gravar fixtures da Biblioteca de Anúncios', async ({ context }) => {
 
   await page.goto(URL_BUSCA, { waitUntil: 'domcontentloaded', timeout: 30_000 })
 
+  // O primeiro lote não passa por XHR: vem embutido no HTML. Gravado com o
+  // envelope inteiro de propósito — é o envelope que o extrator precisa
+  // atravessar, e guardar só o miolo tornaria o teste cego para a travessia.
+  const embutidos = await page.evaluate(() =>
+    Array.from(document.querySelectorAll('script[type="application/json"]'))
+      .map((s) => s.textContent ?? '')
+      .filter((t) => t.includes('search_results_connection')),
+  )
+
+  embutidos.forEach((conteudo, i) => {
+    const arquivo = `ssr-${String(i + 1).padStart(2, '0')}.json`
+    writeFileSync(join(DESTINO, arquivo), conteudo, 'utf8')
+    indice.push({
+      arquivo,
+      bytes: conteudo.length,
+      contem: ['search_results_connection', 'html-embutido'],
+    })
+  })
+
   // Rolar para a Meta pedir mais páginas. Rolagem humana, sem requisição
   // própria: é a mesma coleta passiva que a extensão faz.
   for (let i = 0; i < 4; i += 1) {
