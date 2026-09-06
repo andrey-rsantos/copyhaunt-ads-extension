@@ -6,10 +6,15 @@
 
 ## Progresso
 
-- **Estado:** não iniciado
-- **Última tarefa concluída:** —
-- **Próxima tarefa:** Task 1
-- **Notas de retomada:** —
+- **Estado:** em andamento
+- **Última tarefa concluída:** Task 1
+- **Próxima tarefa:** Task 2
+- **Notas de retomada:** dois testes da Task 1 vinham errados no plano: esperavam
+  `-1` no fim do nome, como se ele usasse o `pageId` do fixture, mas `nomeBase`
+  usa o ID do anúncio — o que o primeiro teste do bloco já afirmava. As duas
+  expectativas foram corrigidas aqui e no arquivo de teste. O executor Codex
+  está fora do ar: o CLI instalado recusa `gpt-5.6-luna`. Task 1 foi feita pelo
+  Claude, transcrevendo o código que o próprio plano já trazia.
 
 **Goal:** Dar ação ao botão `⤓`, baixando os criativos do anúncio na melhor
 qualidade que a Meta serve — arquivo solto quando é um só, ZIP quando o anúncio
@@ -95,7 +100,7 @@ deflate — não faz o container.
 Módulo puro, sem DOM e sem rede: o nome do arquivo é a parte que o usuário vê
 todo dia na pasta de downloads, e é a que mais vale testar sem navegador.
 
-- [ ] **Step 1: Escrever o teste que falha**
+- [x] **Step 1: Escrever o teste que falha**
 
 Criar `tests/baixar.test.ts`:
 
@@ -162,14 +167,14 @@ describe('nomeDoArquivo', () => {
     const a = ad({
       anunciante: { pageId: '1', pageName: 'Ação & Cia. Ltda — Oficial!' },
     })
-    expect(nomeDoArquivo(a, video(MP4))).toBe('acao-cia-ltda-oficial-1.mp4')
+    expect(nomeDoArquivo(a, video(MP4))).toBe('acao-cia-ltda-oficial-652131454176487.mp4')
   })
 
   it('não deixa o nome crescer sem limite', () => {
     const a = ad({ anunciante: { pageId: '1', pageName: 'a'.repeat(200) } })
     const nome = nomeDoArquivo(a, video(MP4))
     expect(nome.length).toBeLessThanOrEqual(60)
-    expect(nome.endsWith('-1.mp4')).toBe(true)
+    expect(nome.endsWith('-652131454176487.mp4')).toBe(true)
   })
 
   it('usa só o ID quando não sobra nada do nome do anunciante', () => {
@@ -205,7 +210,7 @@ describe('nomeDoPacote', () => {
 })
 ```
 
-- [ ] **Step 2: Rodar e confirmar que falha**
+- [x] **Step 2: Rodar e confirmar que falha**
 
 ```bash
 npx.cmd vitest run tests/baixar.test.ts
@@ -213,7 +218,7 @@ npx.cmd vitest run tests/baixar.test.ts
 
 Esperado: FALHA, módulo `../src/core/baixar` não encontrado.
 
-- [ ] **Step 3: Escrever os nomes**
+- [x] **Step 3: Escrever os nomes**
 
 Criar `src/core/baixar.ts`:
 
@@ -296,7 +301,7 @@ export function nomeDoPacote(ad: Ad): string {
 }
 ```
 
-- [ ] **Step 4: Rodar e confirmar que passa**
+- [x] **Step 4: Rodar e confirmar que passa**
 
 ```bash
 npx.cmd vitest run tests/baixar.test.ts
