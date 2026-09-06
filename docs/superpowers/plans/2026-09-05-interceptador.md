@@ -30,6 +30,12 @@
 
 ## Estrutura de arquivos ao final
 
+> **Corrigido em 2026-09-06:** o gravador foi movido de `e2e/` para `tools/`,
+> com configuração própria. Enquanto morava em `e2e/`, um `playwright test`
+> comum o executava junto e **sobrescrevia as fixtures commitadas** com dados
+> novos da Meta — tornando não-determinísticos todos os testes unitários que
+> dependem delas. A estrutura abaixo mostra o estado original do plano.
+
 ```
 ├─ e2e/
 │  └─ gravar-fixtures.spec.ts     grava payloads reais (rodado sob demanda)

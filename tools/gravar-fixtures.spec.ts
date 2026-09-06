@@ -1,6 +1,6 @@
 import { mkdirSync, writeFileSync } from 'node:fs'
 import { join, resolve } from 'node:path'
-import { test } from './fixtures'
+import { test } from '../e2e/fixtures'
 
 const DESTINO = resolve(import.meta.dirname, '..', 'tests', 'fixtures')
 
