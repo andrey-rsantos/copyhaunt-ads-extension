@@ -17,3 +17,6 @@
 /test-results
 /playwright-report
 /.playwright
+
+# Capturas de tela para conferência
+/capturas
