@@ -6,9 +6,9 @@
 
 ## Progresso
 
-- **Estado:** em andamento
-- **Última tarefa concluída:** Task 2
-- **Próxima tarefa:** Task 3
+- **Estado:** concluído
+- **Última tarefa concluída:** Task 3
+- **Próxima tarefa:** — (plano concluído)
 - **Notas de retomada:** dois testes da Task 1 vinham errados no plano: esperavam
   `-1` no fim do nome, como se ele usasse o `pageId` do fixture, mas `nomeBase`
   usa o ID do anúncio — o que o primeiro teste do bloco já afirmava. As duas
@@ -19,6 +19,12 @@
   jsdom — o JSZip reconhece Blob por `instanceof`, e o do teste nasce em outro
   realm. Passou a receber `await blob.arrayBuffer()`, que vale nos dois
   ambientes. O plano foi corrigido junto.
+  Na Task 3, o import estático do JSZip em `download.ts` levava os 100 kB da
+  biblioteca para dentro do content script — 13 kB viraram 112 kB —, e com isso
+  o e2e do interceptador passou a estourar o timeout na suíte cheia. Virou
+  `await import('jszip')` no ramo do ZIP: content script de volta a 16 kB, o
+  JSZip em chunk próprio que o CRXJS já publica em `web_accessible_resources`,
+  e o e2e de volta a 10/10.
 
 **Goal:** Dar ação ao botão `⤓`, baixando os criativos do anúncio na melhor
 qualidade que a Meta serve — arquivo solto quando é um só, ZIP quando o anúncio
@@ -603,7 +609,7 @@ Esperado: PASSA.
 **Interfaces:**
 - Consumes: `baixarCriativos` (Task 2).
 
-- [ ] **Step 1: Trocar o teste do botão que não fazia nada**
+- [x] **Step 1: Trocar o teste do botão que não fazia nada**
 
 Em `tests/tray-acoes.test.ts`, substituir o `describe('botão baixar', …)`
 inteiro — aquele que hoje afirma que o botão "ainda não faz nada" — por:
@@ -678,7 +684,7 @@ describe('botão baixar', () => {
 Note que este arquivo já importa `vi` e já define os utilitários `ad`,
 `plantar` e `botao` no topo — use os que estão lá, não crie outros.
 
-- [ ] **Step 2: Rodar e confirmar que falha**
+- [x] **Step 2: Rodar e confirmar que falha**
 
 ```bash
 npx.cmd vitest run tests/tray-acoes.test.ts
@@ -686,7 +692,7 @@ npx.cmd vitest run tests/tray-acoes.test.ts
 
 Esperado: FALHA — o botão `baixar` ainda não faz nada.
 
-- [ ] **Step 3: Ligar o botão**
+- [x] **Step 3: Ligar o botão**
 
 Em `src/content/tray.ts`, acrescentar aos imports:
 
@@ -750,7 +756,7 @@ pelo ramo do `baixar`. O encadeamento inteiro passa a ser:
 
 mantendo os ramos `copiar` e `abrir` exatamente como estão.
 
-- [ ] **Step 4: Mostrar que o botão está ocupado**
+- [x] **Step 4: Mostrar que o botão está ocupado**
 
 Em `src/content/estilo.ts`, acrescentar logo **depois** da regra
 `.botao:hover { filter: brightness(1.15); }`:
@@ -765,7 +771,7 @@ Em `src/content/estilo.ts`, acrescentar logo **depois** da regra
 Sem cor nova: `tests/estilo.test.ts` reprova qualquer hexadecimal que não
 conste do `CopyHaunt-IDV.md`, e aqui não é preciso nenhum.
 
-- [ ] **Step 5: Rodar tudo**
+- [x] **Step 5: Rodar tudo**
 
 ```bash
 npx.cmd vitest run tests/tray-acoes.test.ts
@@ -780,7 +786,7 @@ Esperado: PASSA, tudo verde. Em especial, `tests/estilo.test.ts` e
 `npm.cmd run verify:build` continua imprimindo
 `manifest gerado OK: world MAIN preservado, permissões mínimas`.
 
-- [ ] **Step 6: Escrever a mensagem de commit**
+- [x] **Step 6: Escrever a mensagem de commit**
 
 Criar `.commit-msg-codex` na raiz com:
 

@@ -79,9 +79,66 @@ describe('botão abrir', () => {
 })
 
 describe('botão baixar', () => {
-  it('ainda não faz nada, e não estoura ao ser clicado', () => {
+  const MP4 = 'https://video.fbcdn.net/v/t42.1790-2/abc.mp4?_nc_cat=1'
+
+  function comMidia() {
+    return ad({ midias: [{ formato: 'video', alta: MP4, baixa: MP4 }] })
+  }
+
+  it('busca a mídia em alta e entrega o arquivo ao usuário', async () => {
+    const buscar = vi.fn(
+      async () => ({ ok: true, blob: async () => new Blob(['x']) }) as unknown as Response,
+    )
+    vi.stubGlobal('fetch', buscar)
+
+    // jsdom não implementa as URLs de objeto, então elas precisam existir
+    // antes de serem espionadas. Só o `createObjectURL` interessa: se ele foi
+    // chamado, o arquivo chegou à âncora, que é o que este teste verifica.
+    // Não mocke o `click` do protótipo — ele mora em `HTMLElement`, e mockar
+    // lá desativaria também o clique no próprio botão da bandeja.
+    const criarUrl = vi.fn(() => 'blob:falso')
+    URL.createObjectURL = criarUrl
+    URL.revokeObjectURL = vi.fn()
+
+    const shadow = plantar(comMidia())
+    botao(shadow, 'baixar').click()
+
+    await vi.waitFor(() => expect(criarUrl).toHaveBeenCalled())
+    expect(buscar).toHaveBeenCalledWith(MP4)
+
+    vi.unstubAllGlobals()
+  })
+
+  it('não abre menu nenhum: baixar é ação direta', () => {
+    // Anúncio sem mídia de propósito: assim nada é requisitado, e o teste
+    // mede só o que promete medir.
+    const shadow = plantar()
+    botao(shadow, 'baixar').click()
+    expect(shadow.querySelector('.menu')).toBeNull()
+  })
+
+  it('não estoura no anúncio sem mídia', () => {
     const shadow = plantar()
     expect(() => botao(shadow, 'baixar').click()).not.toThrow()
-    expect(shadow.querySelector('.menu')).toBeNull()
+  })
+
+  it('ignora o segundo clique enquanto o primeiro não terminou', async () => {
+    let liberar!: (r: Response) => void
+    const buscar = vi.fn(() => new Promise<Response>((ok) => (liberar = ok)))
+    vi.stubGlobal('fetch', buscar)
+
+    const shadow = plantar(comMidia())
+    const alvo = botao(shadow, 'baixar')
+    alvo.click()
+    await vi.waitFor(() => expect(alvo.dataset.ocupado).toBe('sim'))
+    alvo.click()
+
+    // Um carrossel demora, e sem trava o usuário impaciente baixaria tudo
+    // duas vezes.
+    expect(buscar).toHaveBeenCalledTimes(1)
+
+    liberar({ ok: false } as Response)
+    await vi.waitFor(() => expect(alvo.dataset.ocupado).toBeUndefined())
+    vi.unstubAllGlobals()
   })
 })

@@ -8,6 +8,7 @@ import {
   buscarInstagram,
   instagramConhecido,
 } from './instagram'
+import { baixarCriativos } from './download'
 import { abrirMenu, fecharMenu, type ItemMenu } from './menu'
 
 export const ATRIBUTO_ID = 'data-copyhaunt-id'
@@ -88,6 +89,42 @@ function buscarEAbrirInstagram(ad: Ad): void {
 }
 
 /**
+ * Entrega o arquivo ao usuário.
+ *
+ * Blob mais âncora com `download`, que é o que dispensa a permissão
+ * `downloads` — permissão que pesaria na revisão da Web Store por nada.
+ */
+function salvarArquivo(blob: Blob, nome: string): void {
+  const url = URL.createObjectURL(blob)
+  const ancora = document.createElement('a')
+  ancora.href = url
+  ancora.download = nome
+  ancora.click()
+  // Revogar no próximo tique: revogar na mesma volta do laço de eventos
+  // chegaria antes de o navegador terminar de ler a URL.
+  setTimeout(() => URL.revokeObjectURL(url), 0)
+}
+
+/**
+ * Baixa os criativos do card, travando o botão enquanto isso.
+ *
+ * A trava não é enfeite: um carrossel demora, e sem sinal de que algo está
+ * acontecendo o usuário clica de novo e baixa tudo duas vezes.
+ */
+async function baixarDoCard(botao: HTMLElement, ad: Ad): Promise<void> {
+  if (botao.dataset.ocupado) return
+  botao.dataset.ocupado = 'sim'
+  try {
+    await baixarCriativos(ad, {
+      buscar: (...args) => fetch(...args),
+      salvar: salvarArquivo,
+    })
+  } finally {
+    delete botao.dataset.ocupado
+  }
+}
+
+/**
  * Planta a bandeja e o badge no card.
  *
  * Idempotente por desenho: a Meta recicla nós durante a rolagem, e o mesmo
@@ -133,7 +170,9 @@ export function plantarBandeja(
       evento.stopPropagation()
       evento.preventDefault()
 
-      if (b.chave === 'copiar') {
+      if (b.chave === 'baixar') {
+        void baixarDoCard(botao, ad)
+      } else if (b.chave === 'copiar') {
         abrirMenu(raiz, montarCopias(ad), (item) => {
           if (item.valor) void navigator.clipboard.writeText(item.valor)
         })
@@ -148,7 +187,6 @@ export function plantarBandeja(
           window.open(item.valor, '_blank', 'noopener')
         })
       }
-      // 'baixar' ainda não tem ação. Ciclo próprio.
     })
     bandeja.appendChild(botao)
   }

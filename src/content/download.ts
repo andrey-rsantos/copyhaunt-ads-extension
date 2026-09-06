@@ -1,4 +1,3 @@
-import JSZip from 'jszip'
 import { nomeDoArquivo, nomeDoPacote, nomeNoPacote } from '../core/baixar'
 import type { Ad, Midia } from '../core/types'
 
@@ -72,6 +71,11 @@ export async function baixarCriativos(
     return
   }
 
+  // Import dinâmico: o JSZip são 100 kB, e um content script que os carrega
+  // em toda página da Biblioteca atrasa o que importa — medido, atrasa a
+  // confirmação do interceptador. Aqui ele só chega quando há carrossel para
+  // empacotar, que é a minoria dos cliques.
+  const { default: JSZip } = await import('jszip')
   const zip = new JSZip()
   // `ArrayBuffer` e não o `Blob`: o JSZip reconhece Blob por `instanceof`, e
   // isso quebra quando o Blob nasce em outro realm — é o que acontece sob o

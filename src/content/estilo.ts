@@ -34,6 +34,10 @@ export const CSS_BANDEJA = `
     line-height: 1;
   }
   .botao:hover { filter: brightness(1.15); }
+  .botao[data-ocupado] {
+    opacity: 0.55;
+    cursor: progress;
+  }
 
   .badge {
     position: absolute;
