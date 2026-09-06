@@ -23,7 +23,11 @@ Valem para todas as tarefas. Valores copiados literalmente do spec.
 - **Idioma:** comentários, documentação e mensagens de commit em pt-BR com acentuação correta. Identificadores de código em inglês.
 - **Commits:** seguir o padrão de `CLAUDE.md`. Tipo em inglês, texto em pt-BR, descrição no infinitivo, corpo condicional.
 - **Cores da marca:** vindas de `CopyHaunt-IDV.md`. Nunca inventar valor de cor.
-- **Node 22, npm 11.** Instalar com `npm install`.
+- **Node 22, npm 11.** Instalar com `npm install`. No PowerShell do Windows,
+  `npm` pode não resolver: usar `npm.cmd` nesse caso.
+- **As versões de `@types/react` e `@types/react-dom` NÃO acompanham a do
+  `react`.** São pacotes do DefinitelyTyped, versionados por conta própria.
+  Usar exatamente os números escritos no `package.json` desta página.
 
 ---
 
@@ -127,8 +131,8 @@ Criar `package.json` com este conteúdo exato:
     "@tailwindcss/vite": "4.3.3",
     "@types/chrome": "0.2.9",
     "@types/node": "26.4.1",
-    "@types/react": "19.2.8",
-    "@types/react-dom": "19.2.8",
+    "@types/react": "19.2.18",
+    "@types/react-dom": "19.2.7",
     "@vitejs/plugin-react": "6.1.1",
     "tailwindcss": "4.3.3",
     "typescript": "7.0.2",
