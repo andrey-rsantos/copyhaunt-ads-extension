@@ -661,7 +661,7 @@ Esperado: FALHA, com erro de resolução de `../src/core/router`.
 Criar `src/core/router.ts`:
 
 ```ts
-import type { Captura } from '../interceptor/xhr-patch'
+import { ehEndpointDeAnuncios, type Captura } from '../interceptor/xhr-patch'
 
 export type TipoCaptura =
   | 'busca'
@@ -672,10 +672,6 @@ export type TipoCaptura =
 
 /** A Meta prefixa respostas com isto para impedir sequestro de JSON. */
 const PREFIXO_ANTI_SEQUESTRO = /^\s*for\s*\(\s*;\s*;\s*\)\s*;/
-
-function ehEndpointDeAnuncios(url: string): boolean {
-  return url.includes('/api/graphql/') || url.includes('/search_ads/')
-}
 
 /**
  * Decide o que uma resposta capturada é.
