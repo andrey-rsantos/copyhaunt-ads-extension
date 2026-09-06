@@ -12,3 +12,8 @@
 
 # Mensagem de commit temporária
 /.commit-msg
+
+# Artefatos do Playwright
+/test-results
+/playwright-report
+/.playwright
