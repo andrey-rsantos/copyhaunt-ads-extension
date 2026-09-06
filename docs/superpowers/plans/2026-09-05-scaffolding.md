@@ -210,7 +210,13 @@ Acrescentar ao final de `.gitignore` (manter o que já existe):
 /node_modules
 /dist
 /.vite
+
+# Mensagem de commit temporária
+/.commit-msg
 ```
+
+O arquivo `.commit-msg` fica na raiz do repositório, e não dentro de `.git/`:
+sandboxes de agente costumam negar escrita em `.git/`, e com razão.
 
 - [ ] **Step 4: Escrever o teste que falha**
 
@@ -511,7 +517,7 @@ Esperado: nenhum erro.
 Escrever a mensagem num arquivo e commitar com `-F`. **Não usar heredoc
 (`<<'MSG'`)**: não existe no PowerShell do Windows.
 
-Criar `.git/COMMIT_MSG.txt` com este conteúdo:
+Criar `.commit-msg` com este conteúdo:
 
 ```
 📦 build: criar projeto Vite com CRXJS e manifest MV3
@@ -536,7 +542,7 @@ Depois:
 
 ```bash
 git add package.json package-lock.json tsconfig.json vite.config.ts vitest.config.ts .gitignore src tests public scripts
-git commit -F .git/COMMIT_MSG.txt
+git commit -F .commit-msg
 ```
 
 ---
@@ -658,7 +664,7 @@ Esperado: PASSA. A suíte inteira fica verde, somando os testes da Task 1.
 
 - [ ] **Step 5: Commit**
 
-Sobrescrever `.git/COMMIT_MSG.txt` com:
+Sobrescrever `.commit-msg` com:
 
 ```
 ✨ feat(ui): adicionar tokens da identidade visual
@@ -673,7 +679,7 @@ Depois:
 
 ```bash
 git add src/styles/tokens.css tests/tokens.test.ts
-git commit -F .git/COMMIT_MSG.txt
+git commit -F .commit-msg
 ```
 
 ---
@@ -985,7 +991,7 @@ Se qualquer um dos seis pontos falhar, reportar o que aconteceu em vez de contor
 
 - [ ] **Step 12: Commit**
 
-Sobrescrever `.git/COMMIT_MSG.txt` com:
+Sobrescrever `.commit-msg` com:
 
 ```
 ✨ feat(ui): ligar os quatro contextos de execução
@@ -1010,7 +1016,7 @@ Depois:
 
 ```bash
 git add src tests
-git commit -F .git/COMMIT_MSG.txt
+git commit -F .commit-msg
 ```
 
 ---

@@ -1,0 +1,32 @@
+{
+  "name": "copyhaunt-ads",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Ad intelligence para a Biblioteca de Anúncios da Meta",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit",
+    "verify:build": "vite build && node scripts/verify-manifest.mjs"
+  },
+  "dependencies": {
+    "react": "19.2.8",
+    "react-dom": "19.2.8"
+  },
+  "devDependencies": {
+    "@crxjs/vite-plugin": "2.7.1",
+    "@tailwindcss/vite": "4.3.3",
+    "@types/chrome": "0.2.9",
+    "@types/node": "26.4.1",
+    "@types/react": "19.2.18",
+    "@types/react-dom": "19.2.7",
+    "@vitejs/plugin-react": "5.2.0",
+    "tailwindcss": "4.3.3",
+    "typescript": "7.0.2",
+    "vite": "7.3.6",
+    "vitest": "5.0.0"
+  }
+}

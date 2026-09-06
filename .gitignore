@@ -4,3 +4,11 @@
 # Skills instaladas: recriáveis com `npx skills install`
 /.agents
 /.claude/skills
+
+# Dependências e artefatos de build
+/node_modules
+/dist
+/.vite
+
+# Mensagem de commit temporária
+/.commit-msg
