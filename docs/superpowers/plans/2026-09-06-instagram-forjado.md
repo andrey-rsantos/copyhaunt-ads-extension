@@ -65,7 +65,7 @@ negociável.
 - **npm no PowerShell do Windows:** usar `npm.cmd` e `npx.cmd`.
 - **Nunca rodar `npm.cmd run gravar:fixtures`.**
 - **Quem commita é o revisor.** O executor escreve `.commit-msg-codex` e para.
-- **Commits:** padrão de `CLAUDE.md`, tipo em inglês, texto em pt-BR, com rodapé
+- **Commits:** padrão de `AGENTS.md`, tipo em inglês, texto em pt-BR, com rodapé
   `Co-Authored-By: Claude Opus 5 <noreply@anthropic.com>`.
 
 ## O que este plano NÃO verifica

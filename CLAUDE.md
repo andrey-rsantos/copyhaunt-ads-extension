@@ -1,129 +1,47 @@
-# CopyHaunt Ads
+# CopyHaunt Ads · Claude Code
 
-Extensão de navegador (Chrome MV3) de *ad intelligence* para a Biblioteca de
-Anúncios da Meta. Público: gestores de tráfego e infoprodutores que precisam
-espionar e modelar ofertas concorrentes.
+As regras do projeto estão em @AGENTS.md — idioma, papéis, estado do plano,
+verificação, padrão de commits. Leia antes de qualquer coisa. Este arquivo só
+acrescenta a política deste harness.
 
-- Identidade visual: `CopyHaunt-IDV.md` (cores, tipografia, mascote, componentes)
-- Referências visuais: `refs/` (fora do versionamento)
-- Design técnico: `docs/superpowers/specs/`
+## Divisão de trabalho aqui dentro
 
-## Idioma
-
-Toda comunicação, documentação e mensagem de commit em **pt-BR**, com acentuação
-correta. Identificadores de código, nomes de arquivo e tipos de commit
-permanecem em inglês.
-
-## Padrão de commits
-
-Baseado em Conventional Commits. O tipo é etiqueta para ferramentas, por isso
-fica em inglês; todo o texto legível é em pt-BR.
-
-### Formato
-
-```
-<emoji> <tipo>(<escopo>): <descrição, minúscula, sem ponto final, até 72 caracteres>
-
-O que foi feito:
-- ...
-
-Como foi feito:
-- ...
-
-Considerações:
-- ...
-```
-
-Descrição no **infinitivo**: `adicionar filtro de data`, não `adiciona` nem
-`adicionado`.
-
-### Tipos
-
-| Tipo | Emoji | Uso |
-|---|---|---|
-| `feat` | ✨ | nova funcionalidade |
-| `fix` | 🐛 | correção de bug |
-| `docs` | 📚 | documentação |
-| `style` | 🔧 | formatação, sem mudança de lógica |
-| `refactor` | ♻️ | reestruturação sem mudar comportamento |
-| `perf` | ⚡ | ganho de performance |
-| `test` | 🧪 | testes |
-| `build` | 📦 | build e dependências |
-| `chore` | 🔨 | tarefas administrativas |
-
-### Escopos
-
-`interceptor`, `normalizer`, `overlay`, `miner`, `config`, `ui`, `spec`,
-`build`. Novos escopos podem ser criados quando surgir um módulo novo — basta
-que o nome corresponda a uma fronteira real do código.
-
-### Quando preencher cada seção
-
-O corpo é **condicional**, não obrigatório. Corpo preenchido por obrigação vira
-ruído e ensina quem lê o histórico a ignorá-lo.
-
-| Seção | Quando incluir |
+| Papel | Quem |
 |---|---|
-| Título | sempre |
-| O que foi feito | quando o título sozinho não cobre o escopo da mudança |
-| Como foi feito | quando a abordagem **não é óbvia** olhando o diff |
-| Considerações | quando há algo que **o diff não conta**: trade-off aceito, limitação conhecida, pendência deixada de propósito |
+| Planner, orchestrator e reviewer | Claude |
+| Executor | plugin Codex |
 
-Commit pequeno fica em uma linha. Assim, ver um corpo grande já sinaliza
-"preste atenção aqui".
+Dentro do Claude Code, **toda implementação substancial é delegada ao plugin
+Codex** — o subagente `codex:codex-rescue`, ou a skill `codex:rescue`. Claude
+escreve o plano, despacha a tarefa, revisa o resultado contra o plano, roda a
+verificação e commita.
 
-### Exemplo
+**Substancial** é: criar ou reescrever um módulo, mexer em `src/` além de um
+ajuste pontual, ou fechar uma `Task` inteira do plano.
 
-```
-✨ feat(miner): adicionar filtro por presença do anunciante na busca
+Claude faz direto, sem delegar: planos e specs, documentação, revisão de
+código, commits, e edições de uma ou duas linhas cuja delegação custaria mais
+do que a própria edição.
 
-O que foi feito:
-- Contabilizar quantos anúncios de cada pageId apareceram na sessão
-- Expor o mínimo como critério configurável no painel
+## Modelo do executor
 
-Como foi feito:
-- Contagem em memória durante a normalização, sem requisição adicional
-- Índice Map<pageId, número> descartado ao encerrar a sessão
-
-Considerações:
-- Mede presença no nicho pesquisado, não o total global do anunciante.
-  O total exigiria requisição ativa por anunciante e quebraria o
-  desenho passivo da coleta
-```
-
-## Divisão de trabalho entre agentes
-
-Claude planeja e revisa. Codex executa.
-
-| Papel | Quem | Skills |
-|---|---|---|
-| Design e plano | Claude | `brainstorming`, `writing-plans` |
-| Implementação | Codex | — |
-| Revisão | Claude | `requesting-code-review` |
-
-### Invocação do Codex
-
-Sempre com estas flags. **Nunca alterar o `~/.codex/config.toml` global** — ele
-vale para todos os outros projetos da máquina.
+Decisão do dono do projeto, e é para manter: **`gpt-5.6-luna` com effort
+`high`**. Ao despachar, incluir na requisição ao plugin:
 
 ```
-codex exec -m gpt-5.6-luna -c model_reasoning_effort="high"
+--model gpt-5.6-luna --effort high
 ```
 
-Na primeira execução, o Codex vai pedir confirmação de acesso: este diretório
-ainda não consta como `trusted` na configuração dele.
+O plugin deixa modelo e effort sem valor por padrão e só usa os que forem
+pedidos explicitamente — por isso as flags vão na chamada, e não no
+`~/.codex/config.toml`, que é global da máquina e vale para os outros projetos.
 
-### Consequência para os planos
+Esta é a única linha do repositório que nomeia um modelo, e ela mora aqui de
+propósito: `AGENTS.md` continua sem versão de modelo, para que o projeto siga
+aberto em outro harness.
 
-O Codex **não carrega as skills do Superpowers e não lê este arquivo**. Ele
-começa cada tarefa sem contexto da conversa que originou o plano.
+## O que isso não é
 
-Portanto, cada tarefa do plano precisa carregar a disciplina por escrito:
-
-- o teste que falha primeiro, e o comando exato para rodá-lo
-- o caminho exato de cada arquivo a criar ou alterar
-- o critério de verificação, com a saída esperada
-- a mensagem de commit já no padrão desta página
-
-Tarefa que diz apenas "implementar o normalizador" é tarefa mal escrita para
-este arranjo.
+Esta preferência é do harness, não do projeto. Aberto o mesmo repositório no
+Codex CLI ou no OpenCode, ela não se aplica: valem os papéis de `AGENTS.md`, e
+o estado continua sendo plano mais git mais testes.

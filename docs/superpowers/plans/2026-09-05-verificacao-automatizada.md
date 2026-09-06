@@ -24,7 +24,7 @@
 - **npm no PowerShell do Windows:** usar `npm.cmd`.
 - **Quem commita é o revisor.** O executor escreve `.commit-msg` na raiz e
   para. Nunca escrever dentro de `.git/`.
-- **Commits:** padrão de `CLAUDE.md`, tipo em inglês, texto em pt-BR.
+- **Commits:** padrão de `AGENTS.md`, tipo em inglês, texto em pt-BR.
 
 ## Estrutura de arquivos ao final
 

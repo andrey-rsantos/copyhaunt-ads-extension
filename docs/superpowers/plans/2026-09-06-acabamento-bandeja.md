@@ -20,7 +20,7 @@
 - **Cores só do `CopyHaunt-IDV.md`.** Nunca inventar hexadecimal.
 - **npm no PowerShell do Windows:** usar `npm.cmd` e `npx.cmd`.
 - **Quem commita é o revisor.** O executor escreve `.commit-msg` na raiz e para.
-- **Commits:** padrão de `CLAUDE.md`, tipo em inglês, texto em pt-BR.
+- **Commits:** padrão de `AGENTS.md`, tipo em inglês, texto em pt-BR.
 
 ## Decisões de desenho, e o motivo de cada uma
 

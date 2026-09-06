@@ -19,7 +19,7 @@
   OPEN com requisição, depois.
 - **npm no PowerShell do Windows:** usar `npm.cmd` e `npx.cmd`.
 - **Quem commita é o revisor.** O executor escreve `.commit-msg` na raiz e para.
-- **Commits:** padrão de `CLAUDE.md`, tipo em inglês, texto em pt-BR.
+- **Commits:** padrão de `AGENTS.md`, tipo em inglês, texto em pt-BR.
 - **Cores vêm de `src/styles/tokens.css`.** Nunca escrever hexadecimal solto.
 
 ## O DOM real, medido

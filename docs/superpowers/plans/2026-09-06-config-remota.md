@@ -50,7 +50,7 @@ daquela consulta, junto com quem o usa.
 - **Nenhuma requisição à Meta.** Este plano fala com o GitHub, nunca com a Meta.
 - **npm no PowerShell do Windows:** usar `npm.cmd` e `npx.cmd`.
 - **Quem commita é o revisor.** O executor escreve `.commit-msg-codex` na raiz e para.
-- **Commits:** padrão de `CLAUDE.md`, tipo em inglês, texto em pt-BR, com rodapé
+- **Commits:** padrão de `AGENTS.md`, tipo em inglês, texto em pt-BR, com rodapé
   `Co-Authored-By: Claude Opus 5 <noreply@anthropic.com>`.
 
 ---

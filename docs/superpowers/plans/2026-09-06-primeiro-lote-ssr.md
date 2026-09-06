@@ -43,7 +43,7 @@ passam pelas regras do normalizador; nenhum é recusado.
   pode ler `ad_archive_id`, `start_date`, `snapshot` ou irmãos.
 - **npm no PowerShell do Windows:** usar `npm.cmd` e `npx.cmd`.
 - **Quem commita é o revisor.** O executor escreve `.commit-msg` na raiz e para.
-- **Commits:** padrão de `CLAUDE.md`, tipo em inglês, texto em pt-BR, com
+- **Commits:** padrão de `AGENTS.md`, tipo em inglês, texto em pt-BR, com
   rodapé `Co-Authored-By: Claude Opus 5 <noreply@anthropic.com>`.
 
 ## Decisões de desenho, e o motivo de cada uma

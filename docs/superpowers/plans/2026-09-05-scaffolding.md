@@ -21,7 +21,7 @@ Valem para todas as tarefas. Valores copiados literalmente do spec.
 - **Coleta passiva.** Nenhum código pode emitir requisição própria para a Meta. Sem exceção.
 - **Sem código remoto.** Proibido pelo MV3.
 - **Idioma:** comentários, documentação e mensagens de commit em pt-BR com acentuação correta. Identificadores de código em inglês.
-- **Commits:** seguir o padrão de `CLAUDE.md`. Tipo em inglês, texto em pt-BR, descrição no infinitivo, corpo condicional.
+- **Commits:** seguir o padrão de `AGENTS.md`. Tipo em inglês, texto em pt-BR, descrição no infinitivo, corpo condicional.
 - **Quem commita é o revisor, não o executor.** O executor escreve a mensagem
   em `.commit-msg` na raiz e para por ali. O revisor confere o trabalho e só
   então commita. Ver "Modelo de commit" abaixo.

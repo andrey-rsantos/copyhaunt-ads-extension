@@ -17,7 +17,7 @@
 - **Coleta 100% passiva.** Nada aqui emite requisição.
 - **npm no PowerShell do Windows:** usar `npm.cmd` e `npx.cmd`.
 - **Quem commita é o revisor.** O executor escreve `.commit-msg` na raiz e para.
-- **Commits:** padrão de `CLAUDE.md`, tipo em inglês, texto em pt-BR.
+- **Commits:** padrão de `AGENTS.md`, tipo em inglês, texto em pt-BR.
 - **Não alterar as fixtures.** Elas são a fonte de verdade do formato real.
 
 ## O formato real, levantado das fixtures
