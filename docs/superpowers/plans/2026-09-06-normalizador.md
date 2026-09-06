@@ -60,6 +60,27 @@ um ou mais anúncios que compartilham criativo.
 | `display_format` | string | `VIDEO`, `IMAGE`, … |
 | `videos` | array | com `video_hd_url` e `video_sd_url` |
 | `images` | array | com `original_image_url` e `resized_image_url` |
+| `cards` | array | **onde mora o criativo dos formatos DCO, CAROUSEL e DPA** |
+
+### O criativo nem sempre está em `videos` ou `images`
+
+Distribuição real de `display_format` nos 27 anúncios das fixtures:
+
+| Formato | Quantidade | Onde está o criativo |
+|---|---|---|
+| `DCO` | 13 | `cards[]` |
+| `VIDEO` | 8 | `videos[]` |
+| `IMAGE` | 3 | `images[]` |
+| `CAROUSEL` | 2 | `cards[]` |
+| `DPA` | 1 | `cards[]` |
+
+**Dezesseis dos vinte e sete guardam o criativo em `cards`.** DCO é o formato
+mais comum de todos — é o que se usa para testar vários criativos no mesmo
+anúncio, exatamente o comportamento de quem escala oferta.
+
+Os cards usam os mesmos nomes de campo (`video_hd_url`, `original_image_url`),
+então a extração é a mesma. Ignorar `cards` deixaria "baixar criativo" —
+funcionalidade central do produto — sem funcionar na maioria dos anúncios.
 
 ## Achado que contraria o spec
 
