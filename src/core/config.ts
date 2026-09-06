@@ -11,6 +11,15 @@ export interface ConfigRemota {
     /** Padrão que acha o ID da biblioteca no texto do card. */
     libraryIdPattern: string
   }
+  /**
+   * `doc_id` da consulta que devolve o Instagram do anunciante.
+   *
+   * Opcional de propósito. É a peça mais frágil de toda a extensão — some
+   * assim que a Meta desregistrar a query —, e apagar este campo do arquivo
+   * hospedado desliga a consulta forjada em minutos, sem esperar revisão da
+   * loja. Uma config sem ele é uma config válida com o recurso desligado.
+   */
+  advertiserDocId?: string
 }
 
 /**
@@ -63,5 +72,18 @@ export function validarConfig(bruto: unknown): ConfigRemota | null {
     return null
   }
 
-  return { version: raiz.version, anchors: { libraryIdPattern: padrao } }
+  const config: ConfigRemota = {
+    version: raiz.version,
+    anchors: { libraryIdPattern: padrao },
+  }
+
+  // Só dígitos: o doc_id da Meta é numérico, e exigir isso impede que um
+  // arquivo comprometido contrabandeie qualquer outra coisa para dentro do
+  // corpo de uma requisição feita com a sessão do usuário.
+  const docId = raiz.advertiserDocId
+  if (typeof docId === 'string' && /^\d+$/.test(docId)) {
+    config.advertiserDocId = docId
+  }
+
+  return config
 }

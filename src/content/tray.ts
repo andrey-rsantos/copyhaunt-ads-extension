@@ -3,6 +3,11 @@ import { montarCopias } from '../core/copy'
 import { montarDestinos } from '../core/links'
 import type { Ad } from '../core/types'
 import { criarShadow } from './estilo'
+import {
+  BUSCAR_INSTAGRAM,
+  buscarInstagram,
+  instagramConhecido,
+} from './instagram'
 import { abrirMenu, fecharMenu, type ItemMenu } from './menu'
 
 export const ATRIBUTO_ID = 'data-copyhaunt-id'
@@ -35,13 +40,51 @@ function ligarFechamentoGlobal(): void {
   })
 }
 
-/** Os destinos do OPEN na forma que o menu entende. */
+/**
+ * Os destinos do OPEN na forma que o menu entende.
+ *
+ * O item do Instagram é o único que não sai pronto de `montarDestinos`: lá
+ * mora só o que dá para saber sem requisição nenhuma, e quando isso não
+ * alcança — 89% dos anúncios medidos — o item vira uma ação em vez de um beco
+ * sem saída.
+ */
 function destinosComoItens(ad: Ad): ItemMenu[] {
-  return montarDestinos(ad).map((d) => ({
-    chave: d.chave,
-    rotulo: d.rotulo,
-    valor: d.url,
-  }))
+  return montarDestinos(ad).map((d) => {
+    if (d.chave !== 'instagram' || d.url !== null) {
+      return { chave: d.chave, rotulo: d.rotulo, valor: d.url }
+    }
+
+    // `undefined` = nunca perguntamos, então ofereça a busca. Qualquer outra
+    // coisa já é resposta: o perfil achado, ou o `null` de quem já foi
+    // perguntado e não deu, que volta a item desabilitado.
+    const sabido = instagramConhecido(ad.anunciante.pageId)
+    if (sabido === undefined) {
+      return {
+        chave: d.chave,
+        rotulo: `${d.rotulo} (buscar)`,
+        valor: BUSCAR_INSTAGRAM,
+      }
+    }
+    return { chave: d.chave, rotulo: d.rotulo, valor: sabido }
+  })
+}
+
+/**
+ * Dispara a consulta forjada e abre o perfil, se vier.
+ *
+ * Só é chamada de dentro do callback de clique do menu. É a única requisição
+ * que esta extensão fabrica em nome da conta do usuário, e o clique deliberado
+ * é a trava que o spec exige.
+ */
+function buscarEAbrirInstagram(ad: Ad): void {
+  void buscarInstagram(ad.anunciante.pageId, {
+    buscar: (...args) => fetch(...args),
+    html: () => document.documentElement.innerHTML,
+  }).then((url) => {
+    // Não achou: silêncio. O item já sabe que vai voltar desabilitado na
+    // próxima abertura do menu.
+    if (url) window.open(url, '_blank', 'noopener')
+  })
 }
 
 /**
@@ -96,8 +139,13 @@ export function plantarBandeja(
         })
       } else if (b.chave === 'abrir') {
         abrirMenu(raiz, destinosComoItens(ad), (item) => {
+          if (!item.valor) return
+          if (item.valor === BUSCAR_INSTAGRAM) {
+            buscarEAbrirInstagram(ad)
+            return
+          }
           // `noopener`: a aba aberta não recebe referência para esta.
-          if (item.valor) window.open(item.valor, '_blank', 'noopener')
+          window.open(item.valor, '_blank', 'noopener')
         })
       }
       // 'baixar' ainda não tem ação. Ciclo próprio.

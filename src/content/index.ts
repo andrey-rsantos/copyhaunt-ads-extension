@@ -3,6 +3,7 @@ import { isCopyHauntMessage } from '../core/messages'
 import { AdStore } from '../core/store'
 import type { Captura } from '../interceptor/xhr-patch'
 import { definirPadraoAncora } from './anchor'
+import { definirDocIdAnunciante } from './instagram'
 import { observarGrade, type Observacao } from './observer'
 import { pintarGrade } from './overlay'
 import { processarCaptura, processarSsr } from './pipeline'
@@ -65,6 +66,9 @@ function aplicarConfig(): void {
   chrome.runtime.sendMessage({ tipo: 'obter-config' }, (config) => {
     if (chrome.runtime.lastError || !config?.anchors?.libraryIdPattern) return
     definirPadraoAncora(config.anchors.libraryIdPattern)
+    // Sem este campo, a consulta forjada nem sai. É o interruptor remoto do
+    // recurso: apagar o campo do arquivo hospedado o desliga em minutos.
+    definirDocIdAnunciante(config.advertiserDocId)
   })
 }
 

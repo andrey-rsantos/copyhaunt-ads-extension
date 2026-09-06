@@ -57,3 +57,30 @@ describe('validarConfig', () => {
     expect(validarConfig(gigante)).toBeNull()
   })
 })
+
+describe('advertiserDocId', () => {
+  const COM_DOC = {
+    ...VALIDA,
+    advertiserDocId: '7193625857423421',
+  }
+
+  it('aceita e devolve o doc_id quando ele vem', () => {
+    expect(validarConfig(COM_DOC)).toEqual(COM_DOC)
+  })
+
+  it('config sem doc_id continua válida, apenas sem ele', () => {
+    // É assim que se desliga a consulta forjada em minutos: apagando o campo
+    // do JSON hospedado, sem passar pela revisão da Chrome Web Store.
+    expect(validarConfig(VALIDA)).toEqual(VALIDA)
+    expect(validarConfig(VALIDA)).not.toHaveProperty('advertiserDocId')
+  })
+
+  it.each([
+    ['não string', 7193625857423421],
+    ['vazio', ''],
+    ['com letras', '71936a25857423421'],
+    ['com espaço', '7193625857 423421'],
+  ])('descarta doc_id %s, mantendo o resto da config', (_caso, docId) => {
+    expect(validarConfig({ ...VALIDA, advertiserDocId: docId })).toEqual(VALIDA)
+  })
+})
