@@ -39,6 +39,8 @@ export interface Ad {
   /** Texto principal do criativo. */
   texto?: string
   titulo?: string
+  /** Descrição do link. A Meta a envia em 13 de 30 anúncios medidos. */
+  descricao?: string
   /** Chamada para ação, como "Saiba mais". */
   cta?: string
   midias: Midia[]

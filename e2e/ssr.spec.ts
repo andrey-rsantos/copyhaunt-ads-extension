@@ -25,8 +25,17 @@ test('os cards do topo já nascem com bandeja', async ({ context }) => {
   })
 
   await page.goto(URL_BUSCA, { waitUntil: 'domcontentloaded', timeout: 30_000 })
+
   // Sem rolar: é justamente a primeira tela que estava descoberta.
-  await page.waitForTimeout(8000)
+  //
+  // A espera é pela condição, não por um tempo chutado: o número de bandejas
+  // é a própria coisa que o teste afirma, então esperar por ele é esperar
+  // exatamente o necessário, seja a Meta rápida ou lenta.
+  await expect
+    .poll(() => page.locator('[data-copyhaunt-id]').count(), {
+      timeout: 30_000,
+    })
+    .toBeGreaterThanOrEqual(20)
 
   const bandejas = await page.locator('[data-copyhaunt-id]').count()
 

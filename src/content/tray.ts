@@ -1,6 +1,9 @@
 import { diasAtivos, faixaBadge } from '../core/display'
+import { montarCopias } from '../core/copy'
+import { montarDestinos } from '../core/links'
 import type { Ad } from '../core/types'
 import { criarShadow } from './estilo'
+import { abrirMenu, fecharMenu, type ItemMenu } from './menu'
 
 export const ATRIBUTO_ID = 'data-copyhaunt-id'
 
@@ -9,6 +12,37 @@ const BOTOES = [
   { chave: 'copiar', glifo: '⧉', titulo: 'Copiar texto' },
   { chave: 'abrir', glifo: '↗', titulo: 'Abrir links' },
 ]
+
+/**
+ * Fecha qualquer menu aberto na página.
+ *
+ * Um listener por bandeja seriam centenas; este é único e percorre os hosts.
+ *
+ * ponytail: varre todos os hosts a cada clique, O(n) com n = cards na tela
+ * (25 a 60 medidos). Se a grade crescer muito, guardar o host aberto numa
+ * variável de módulo e fechar só ele.
+ */
+let fechamentoLigado = false
+
+function ligarFechamentoGlobal(): void {
+  if (fechamentoLigado) return
+  fechamentoLigado = true
+  document.addEventListener('click', () => {
+    for (const host of document.querySelectorAll(`[${ATRIBUTO_ID}]`)) {
+      const shadow = (host as HTMLElement).shadowRoot
+      if (shadow) fecharMenu(shadow)
+    }
+  })
+}
+
+/** Os destinos do OPEN na forma que o menu entende. */
+function destinosComoItens(ad: Ad): ItemMenu[] {
+  return montarDestinos(ad).map((d) => ({
+    chave: d.chave,
+    rotulo: d.rotulo,
+    valor: d.url,
+  }))
+}
 
 /**
  * Planta a bandeja e o badge no card.
@@ -50,6 +84,24 @@ export function plantarBandeja(
     botao.dataset.acao = b.chave
     botao.title = b.titulo
     botao.textContent = b.glifo
+    botao.addEventListener('click', (evento) => {
+      // A Meta escuta clique no card inteiro: sem isto, abrir o menu abriria
+      // o anúncio deles junto.
+      evento.stopPropagation()
+      evento.preventDefault()
+
+      if (b.chave === 'copiar') {
+        abrirMenu(raiz, montarCopias(ad), (item) => {
+          if (item.valor) void navigator.clipboard.writeText(item.valor)
+        })
+      } else if (b.chave === 'abrir') {
+        abrirMenu(raiz, destinosComoItens(ad), (item) => {
+          // `noopener`: a aba aberta não recebe referência para esta.
+          if (item.valor) window.open(item.valor, '_blank', 'noopener')
+        })
+      }
+      // 'baixar' ainda não tem ação. Ciclo próprio.
+    })
     bandeja.appendChild(botao)
   }
 
@@ -60,6 +112,7 @@ export function plantarBandeja(
 
   raiz.append(bandeja, badge)
   shadow.appendChild(raiz)
+  ligarFechamentoGlobal()
 }
 
 /**
