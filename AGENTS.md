@@ -86,6 +86,14 @@ aqui depende do transcript de uma sessão.
    `npm run typecheck`.
 5. Ver o que a sessão anterior deixou solto: `git status`, `git diff`,
    `git log --oneline -10`.
+6. Se existir um `RASC.txt` na raiz, ler. É o rascunho do dono do projeto,
+   fora do versionamento: ideias, incômodos e resultados de teste manual que
+   ainda não viraram plano. Pode não existir — um clone limpo não o traz, e
+   isso não é erro.
+
+**`RASC.txt` é caixa de entrada, não estado.** Nada escrito ali está decidido:
+o que vale é o plano, o spec e os testes. Item de rascunho que sobreviver à
+conversa vira tarefa em plano; o resto morre ali mesmo, que é a função dele.
 
 Se o plano disser "concluído" e a verificação falhar, **a verificação ganha**:
 o plano está mentindo e o primeiro trabalho é consertar isso.
