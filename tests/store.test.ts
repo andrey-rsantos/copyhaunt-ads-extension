@@ -1,0 +1,63 @@
+import { describe, expect, it } from 'vitest'
+import { AdStore } from '../src/core/store'
+import type { Ad } from '../src/core/types'
+
+function ad(id: string, pageId = '9', colacao = 1): Ad {
+  return {
+    id,
+    iniciouEm: new Date('2026-08-01T00:00:00Z'),
+    colacao,
+    anunciante: { pageId, pageName: 'Anunciante ' + pageId },
+    midias: [],
+    plataformas: [],
+    ativo: true,
+  }
+}
+
+describe('AdStore', () => {
+  it('guarda e devolve por id', () => {
+    const s = new AdStore()
+    s.adicionar([ad('1'), ad('2')])
+    expect(s.obter('1')?.id).toBe('1')
+    expect(s.total()).toBe(2)
+  })
+
+  it('não duplica o mesmo anúncio', () => {
+    const s = new AdStore()
+    s.adicionar([ad('1')])
+    s.adicionar([ad('1')])
+    expect(s.total()).toBe(1)
+  })
+
+  it('conta a presença do anunciante na sessão', () => {
+    const s = new AdStore()
+    s.adicionar([ad('1', 'p1'), ad('2', 'p1'), ad('3', 'p2')])
+    expect(s.presenca('p1')).toBe(2)
+    expect(s.presenca('p2')).toBe(1)
+  })
+
+  it('presença não cresce com anúncio repetido', () => {
+    const s = new AdStore()
+    s.adicionar([ad('1', 'p1')])
+    s.adicionar([ad('1', 'p1')])
+    expect(s.presenca('p1')).toBe(1)
+  })
+
+  it('presença de anunciante desconhecido é zero', () => {
+    expect(new AdStore().presenca('nunca-visto')).toBe(0)
+  })
+
+  it('limpar zera tudo', () => {
+    const s = new AdStore()
+    s.adicionar([ad('1', 'p1')])
+    s.limpar()
+    expect(s.total()).toBe(0)
+    expect(s.presenca('p1')).toBe(0)
+  })
+
+  it('todos devolve na ordem de inserção', () => {
+    const s = new AdStore()
+    s.adicionar([ad('1'), ad('2'), ad('3')])
+    expect(s.todos().map((a) => a.id)).toEqual(['1', '2', '3'])
+  })
+})

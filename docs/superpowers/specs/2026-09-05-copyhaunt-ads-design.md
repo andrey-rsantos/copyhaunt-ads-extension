@@ -46,8 +46,16 @@ tipografia (Sora/Inter), raios de borda, glow e ícones Lucide.
 
 - **Sem backend próprio.** Nenhum servidor de aplicação, autenticação ou banco.
   A única dependência externa é um arquivo JSON estático (seção 8).
-- **Coleta 100% passiva.** A extensão não emite requisição própria à Meta.
-  Ela apenas observa o que a página já pede. Não há exceção a esta regra.
+- **Coleta passiva por padrão.** A extensão não emite requisição própria à Meta
+  durante busca, mineração ou navegação. Ela apenas observa o que a página já
+  pede.
+
+  **Uma exceção, declarada em 2026-09-06:** a consulta do Instagram do
+  anunciante, disparada apenas por clique explícito no item do menu OPEN, uma
+  vez por anunciante e com cache de sessão. Mecânica, travas e risco na seção
+  7. Nenhuma outra exceção pode ser aberta sem passar por esta seção — em
+  especial, **nada no motor de mineração pode emitir requisição**, porque é ali
+  que o volume transformaria um pedido isolado em varredura.
 
 ---
 
@@ -237,9 +245,80 @@ Seis destinos, montados a partir do `Ad` normalizado:
 - **Buscar anúncios deste anunciante** — Ad Library com `view_all_page_id`
 - **URL do anúncio na Biblioteca** — permalink
 
-Item sem dado aparece **desabilitado, com o motivo no tooltip** — nem todo
-anunciante tem Instagram vinculado. Ocultar faria o menu mudar de tamanho a cada
-card.
+Item sem dado aparece **desabilitado, com o motivo no tooltip**. Ocultar faria o
+menu mudar de tamanho a cada card.
+
+#### O Instagram do anunciante: decidido em 2026-09-06
+
+**Decisão:** derivar passivamente quando der, e forjar a consulta ao clicar
+quando não der. O risco foi apresentado e **aceito pelo usuário**.
+
+##### Caminho 1 — derivação passiva (tentado primeiro, sempre)
+
+Quando `cta_type` contém `INSTAGRAM` ou o `link_url` aponta para
+`instagram.com`, o destino **é** o perfil do anunciante. Medido em 27 anúncios:
+cobre **11%** dos casos, com custo zero e nenhuma requisição.
+
+A Meta usa a forma de deep link `/_u/<handle>`; normalizar para URL de perfil
+limpa antes de exibir.
+
+##### Caminho 2 — consulta forjada (só quando o caminho 1 falha)
+
+```js
+fetch('https://www.facebook.com/api/graphql/', {
+  method: 'POST',
+  headers: { 'content-type': 'application/x-www-form-urlencoded' },
+  body: new URLSearchParams({
+    token_de_sessao: <token da sessão>,
+    doc_id: <da config remota, NUNCA fixo no código>,
+    variables: JSON.stringify({ viewAllPageID: pageId }),
+  }),
+  credentials: 'omit',
+})
+```
+
+Devolve `extraPageInfo.page_info.ig_username`, e junto vêm `ig_followers`,
+`ig_verification`, `verification_status` e a data de criação da página, em
+`pages_transparency_info.history_items` com `item_type === 'CREATION'`.
+
+**Travas obrigatórias:**
+
+- só disparar em **clique explícito** no item do menu — nunca durante mineração
+- **uma requisição por anunciante**, com cache em memória pela sessão
+- o `doc_id` vive na **config remota** (seção 8), nunca fixo no código: é a
+  peça mais frágil, e some quando a Meta desregistra a query
+- falha é **silenciosa**: item volta a desabilitado, nada de erro na cara do
+  usuário e nada de repetição automática
+
+##### Por que não dá para fazer isso sem sessão
+
+Medido num perfil de navegador descartável, sem login:
+
+| Medição | Resultado |
+|---|---|
+| A página do anunciante busca esse dado sozinha? | **não** — só `AdLibraryFoundationRootQuery`, `useIsAdLibraryPowerUserQuery` e `AdLibraryFilterContextProviderQuery`, nenhuma com sinal de Instagram |
+| Existe `token_de_sessao` sem login? | **não** — ausente no HTML |
+| A consulta responde sem token? | **não** — HTTP 200, porém `data` vazio e 12 erros |
+
+Logo, o caminho 2 **exige a sessão autenticada do usuário**. Não existe versão
+anônima. Isso foi verificado, não suposto.
+
+##### O risco, escrito por extenso
+
+A requisição usa o token e os cookies da conta do usuário para pedir uma query
+que **a interface nunca dispara sozinha** naquele contexto. Para a Meta, é uma
+conta autenticada gerando tráfego que não corresponde a nenhuma ação de tela.
+
+É diferente de tudo o mais nesta extensão: o interceptador apenas **escuta** o
+que a página já pediu, e é indistinguível de uso humano. Este caminho
+**fabrica** um pedido em nome da conta.
+
+Quem paga se der errado é o usuário final, não o produto. As travas acima
+existem para manter isso no mínimo: um pedido, por clique deliberado, por
+anunciante, por sessão.
+
+A extensão de referência faz o mesmo, com escala omitida. Isso mede que ainda
+não houve consequência visível — não que o risco inexista.
 
 #### A4 · Filtro de data
 
@@ -288,6 +367,27 @@ Implementação própria de cerca de 30 linhas, em vez de dependência externa.
 
 Todos configuráveis e desligáveis individualmente.
 
+#### O padrão de colação, medido
+
+Distribuição real em 94 anúncios, quatro nichos, ordenados por impressões:
+
+| Corte | Anúncios que passam |
+|---|---|
+| ≥ 1 | 100% |
+| ≥ 2 | 49% |
+| ≥ 3 | 33% |
+| **≥ 5** | **18%** |
+| ≥ 10 | 1% |
+
+Máximo observado: 14.
+
+O padrão de **≥ 5 se confirma**: deixa passar cerca de um em cada cinco, que é
+filtro apertado sem ser estéril. Já ≥ 10 derruba quase tudo e só serve como
+ajuste manual para quem procura o topo absoluto.
+
+Ressalva: a amostra vem das primeiras páginas de quatro buscas. Nichos com
+disputa mais agressiva devem ter colação maior.
+
 **Presença do anunciante** conta quantos anúncios de cada `pageId` apareceram
 **nesta sessão de busca** — não o total global do anunciante.
 
@@ -333,6 +433,7 @@ Pages). Sem servidor de aplicação.
   "version": 7,
   "searchDocIds": ["6622080967917089"],
   "collationDocIds": ["7822800761110468"],
+  "advertiserDocId": "7193625857423421",
   "fieldPaths": { "collationCount": ["..."] },
   "anchors": { "libraryIdPattern": "\\b\\d{15,17}\\b" }
 }
@@ -454,6 +555,8 @@ usuário aceitar.
 | 2 | estrutura interna do framework como fonte alternativa | fase 2; complexo, e as camadas 1 a 3 devem bastar |
 | 3 | Suporte a Edge e Firefox | Edge deve funcionar sem alteração (Chromium); Firefox exige adaptação de MV3 |
 | 4 | Quarto critério de escala | **encerrado.** O MVP fecha com três critérios; os candidatos avaliados estão na seção 7 |
+| 5 | Instagram do anunciante | **encerrado em 2026-09-06.** Derivação passiva primeiro, consulta forjada ao clicar quando ela falhar. Risco aceito pelo usuário. Mecânica e travas na seção 7 |
+| 6 | Padrão de colação ≥ 5 | **encerrado.** Confirmado com dado real: deixa passar 18% dos anúncios. Distribuição na seção 7 |
 
 ---
 

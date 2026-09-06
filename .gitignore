@@ -4,3 +4,19 @@
 # Skills instaladas: recriáveis com `npx skills install`
 /.agents
 /.claude/skills
+
+# Dependências e artefatos de build
+/node_modules
+/dist
+/.vite
+
+# Mensagem de commit temporária
+/.commit-msg
+
+# Artefatos do Playwright
+/test-results
+/playwright-report
+/.playwright
+
+# Capturas de tela para conferência
+/capturas
