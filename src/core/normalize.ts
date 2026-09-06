@@ -87,6 +87,7 @@ function normalizarAnuncio(bruto: unknown): Ad | null {
     // body é objeto, não string: o texto mora em body.text.
     texto: texto(prop(prop(snapshot, 'body'), 'text')),
     titulo: texto(prop(snapshot, 'title')),
+    descricao: texto(prop(snapshot, 'link_description')),
     cta: texto(prop(snapshot, 'cta_text')),
     midias: extrairMidias(snapshot),
     plataformas: lista(prop(bruto, 'publisher_platform')).filter(

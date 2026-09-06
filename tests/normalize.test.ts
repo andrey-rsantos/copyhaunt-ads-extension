@@ -232,6 +232,19 @@ describe('normalizarBusca contra as fixtures reais', () => {
 
     expect(total).toBeGreaterThan(20)
   })
+
+  it('lê a descrição do link quando a Meta a envia', () => {
+    const ads = normalizarBusca(
+      JSON.parse(readFileSync(join(PASTA, 'payload-01.json'), 'utf8')),
+    )
+    const comDescricao = ads.filter((a) => a.descricao)
+    // Nem todo anúncio traz link_description: medido, 13 de 30 no lote do HTML.
+    expect(comDescricao.length).toBeGreaterThan(0)
+    for (const a of comDescricao) {
+      expect(typeof a.descricao).toBe('string')
+      expect(a.descricao!.length).toBeGreaterThan(0)
+    }
+  })
 })
 
 describe('normalizarBusca com criativos em cards', () => {

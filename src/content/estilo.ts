@@ -55,6 +55,38 @@ export const CSS_BANDEJA = `
     color: #A855F7;
     box-shadow: 0 0 20px rgba(168, 85, 247, 0.25);
   }
+
+  .menu {
+    position: absolute;
+    top: 44px;
+    left: 8px;
+    z-index: 10;
+    min-width: 210px;
+    padding: 6px;
+    border-radius: 12px;
+    background: #08070D;
+    box-shadow: 0 0 20px rgba(124, 58, 237, 0.25);
+    font-family: Inter, ui-sans-serif, system-ui, sans-serif;
+    font-size: 13px;
+  }
+
+  .menu .item {
+    padding: 8px 10px;
+    border-radius: 8px;
+    color: #FFFFFF;
+    cursor: pointer;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .menu .item:hover { background: #7C3AED; }
+
+  .menu .item[data-desabilitado="sim"] {
+    color: #C4A7FF;
+    opacity: 0.45;
+    cursor: not-allowed;
+  }
+  .menu .item[data-desabilitado="sim"]:hover { background: transparent; }
 `
 
 let folha: CSSStyleSheet | null = null
