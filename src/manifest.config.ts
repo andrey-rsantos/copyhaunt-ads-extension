@@ -4,6 +4,13 @@ import pkg from '../package.json'
 const AD_LIBRARY = '*://*.facebook.com/ads/library/*'
 
 /**
+ * O host da config remota. Escopo estreito de propósito: só este repositório,
+ * não o `raw.githubusercontent.com` inteiro.
+ */
+const CONFIG_REMOTA =
+  'https://raw.githubusercontent.com/andrey-rsantos/CopyHaunt-Ads/*'
+
+/**
  * Objeto puro do manifest, exportado à parte para poder ser testado sem
  * depender do build. É a única fonte de verdade das permissões.
  */
@@ -14,7 +21,7 @@ export const manifest = {
   description: pkg.description,
   icons: { '128': 'icon-128.png' },
   permissions: ['storage'],
-  host_permissions: [AD_LIBRARY],
+  host_permissions: [AD_LIBRARY, CONFIG_REMOTA],
   background: {
     service_worker: 'src/background/index.ts',
     type: 'module' as const,

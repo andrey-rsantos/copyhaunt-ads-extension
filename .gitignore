@@ -11,7 +11,7 @@
 /.vite
 
 # Mensagem de commit temporária
-/.commit-msg
+/.commit-msg*
 
 # Artefatos do Playwright
 /test-results

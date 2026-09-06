@@ -2,6 +2,7 @@ import type { Criterios } from '../core/criteria'
 import { isCopyHauntMessage } from '../core/messages'
 import { AdStore } from '../core/store'
 import type { Captura } from '../interceptor/xhr-patch'
+import { definirPadraoAncora } from './anchor'
 import { observarGrade, type Observacao } from './observer'
 import { pintarGrade } from './overlay'
 import { processarCaptura, processarSsr } from './pipeline'
@@ -51,6 +52,20 @@ function repintar(): void {
 function garantirObservador(): void {
   if (observacao) return
   observacao = observarGrade(document.body, repintar, 300)
+}
+
+/**
+ * Pede a config ao service worker e aplica o que dela depende.
+ *
+ * Não bloqueia a subida: a extensão começa com o padrão de fábrica e troca
+ * quando a resposta chegar. Esperar pela rede para pintar o primeiro card
+ * seria trocar um risco raro por uma lentidão certa.
+ */
+function aplicarConfig(): void {
+  chrome.runtime.sendMessage({ tipo: 'obter-config' }, (config) => {
+    if (chrome.runtime.lastError || !config?.anchors?.libraryIdPattern) return
+    definirPadraoAncora(config.anchors.libraryIdPattern)
+  })
 }
 
 const PANEL_ID = 'copyhaunt-panel'
@@ -115,6 +130,7 @@ window.addEventListener('message', (event) => {
  * renderizar os cards, então a primeira pintura também precisa esperar.
  */
 function iniciar(): void {
+  aplicarConfig()
   mountPanel()
   lerLoteInicial()
   garantirObservador()

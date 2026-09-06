@@ -7,12 +7,31 @@
  */
 export const PADRAO_LIBRARY_ID = /(?<!\d)(\d{15,17})(?!\d)/
 
+/**
+ * O padrão em uso. Começa igual ao de fábrica e só muda se a config remota
+ * trouxer outro — é a peça que a Meta quebra quando mexe no DOM, e trocá-la
+ * de fora é o motivo de a config remota existir.
+ */
+let padraoAtual = PADRAO_LIBRARY_ID
+
+/**
+ * Troca o padrão de ancoragem. Padrão inválido é ignorado: perder a ancoragem
+ * inteira por causa de uma config ruim seria pior que ignorar a config.
+ */
+export function definirPadraoAncora(padrao: string): void {
+  try {
+    padraoAtual = new RegExp(padrao)
+  } catch {
+    // Mantém o que já funcionava.
+  }
+}
+
 export function extrairLibraryId(texto: string): string | null {
-  return texto.match(PADRAO_LIBRARY_ID)?.[1] ?? null
+  return texto.match(padraoAtual)?.[1] ?? null
 }
 
 function contarIds(texto: string): number {
-  const g = new RegExp(PADRAO_LIBRARY_ID.source, 'g')
+  const g = new RegExp(padraoAtual.source, 'g')
   return new Set(texto.match(g) ?? []).size
 }
 

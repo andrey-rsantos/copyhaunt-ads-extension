@@ -18,9 +18,10 @@ describe('manifest MV3', () => {
     expect(manifest.permissions).toEqual(['storage'])
   })
 
-  it('restringe o host à Biblioteca de Anúncios', () => {
+  it('pede exatamente os dois hosts necessários, e nada além', () => {
     expect(manifest.host_permissions).toEqual([
       '*://*.facebook.com/ads/library/*',
+      'https://raw.githubusercontent.com/andrey-rsantos/CopyHaunt-Ads/*',
     ])
   })
 

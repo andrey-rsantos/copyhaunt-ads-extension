@@ -49,7 +49,7 @@ daquela consulta, junto com quem o usa.
   proibido `eval`, `new Function`, `import()` dinâmico ou injeção de `<script>`.
 - **Nenhuma requisição à Meta.** Este plano fala com o GitHub, nunca com a Meta.
 - **npm no PowerShell do Windows:** usar `npm.cmd` e `npx.cmd`.
-- **Quem commita é o revisor.** O executor escreve `.commit-msg` na raiz e para.
+- **Quem commita é o revisor.** O executor escreve `.commit-msg-codex` na raiz e para.
 - **Commits:** padrão de `CLAUDE.md`, tipo em inglês, texto em pt-BR, com rodapé
   `Co-Authored-By: Claude Opus 5 <noreply@anthropic.com>`.
 
@@ -728,7 +728,7 @@ Esperado: PASSA, tudo verde, incluindo os testes de e2e que já existiam.
 
 - [ ] **Step 7: Escrever a mensagem de commit**
 
-Criar `.commit-msg` na raiz com:
+Criar `.commit-msg-codex` na raiz com:
 
 ```
 ✨ feat(config): buscar do repositório os valores que a Meta pode mudar

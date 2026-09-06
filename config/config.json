@@ -1,0 +1,6 @@
+{
+  "version": 1,
+  "anchors": {
+    "libraryIdPattern": "(?<!\\d)(\\d{15,17})(?!\\d)"
+  }
+}
