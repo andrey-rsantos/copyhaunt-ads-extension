@@ -6,10 +6,15 @@
 
 ## Progresso
 
-- **Estado:** não iniciado
-- **Última tarefa concluída:** —
-- **Próxima tarefa:** Task 1
-- **Notas de retomada:** —
+- **Estado:** concluído
+- **Última tarefa concluída:** Task 3
+- **Próxima tarefa:** — (plano concluído)
+- **Notas de retomada:** o Step 6 (mensagem de commit) fica marcado porque o
+  revisor commitou direto, sem passar por `.commit-msg-codex`. Um desvio no
+  código: `tratarComandoFiltro` compara as URLs com os parâmetros ordenados, e
+  não como texto cru — `montarUrlFiltro` apaga e reescreve os dois
+  `start_date`, o que muda a ordem da query e faria a comparação literal
+  navegar para a página em que já se está.
 
 **Goal:** Dar ao usuário os dois cortes de data que o spec define — *provadas*
 e *subindo* — a partir do painel, reescrevendo a URL da Biblioteca e deixando
@@ -80,7 +85,7 @@ Módulo puro. É onde mora a desconfiança: `lerComandoFiltro` recebe `unknown`
 vindo de `postMessage` e devolve `null` para tudo que não for exatamente o que
 esperamos.
 
-- [ ] **Step 1: Escrever o teste que falha**
+- [x] **Step 1: Escrever o teste que falha**
 
 Criar `tests/filtro.test.ts`:
 
@@ -161,7 +166,7 @@ describe('urlDoComando', () => {
 })
 ```
 
-- [ ] **Step 2: Rodar e confirmar que falha**
+- [x] **Step 2: Rodar e confirmar que falha**
 
 ```bash
 npx.cmd vitest run tests/filtro.test.ts
@@ -169,7 +174,7 @@ npx.cmd vitest run tests/filtro.test.ts
 
 Esperado: FALHA, módulo `../src/core/filtro` não encontrado.
 
-- [ ] **Step 3: Escrever o comando**
+- [x] **Step 3: Escrever o comando**
 
 Criar `src/core/filtro.ts`:
 
@@ -222,7 +227,7 @@ export function urlDoComando(
 }
 ```
 
-- [ ] **Step 4: Rodar e confirmar que passa**
+- [x] **Step 4: Rodar e confirmar que passa**
 
 ```bash
 npx.cmd vitest run tests/filtro.test.ts
@@ -251,7 +256,7 @@ A navegação entra injetada, como o `salvar` do download entrou: assim o
 caminho inteiro é testável sem navegador, e o jsdom não precisa fingir que
 sabe mudar de página.
 
-- [ ] **Step 1: Escrever o teste que falha**
+- [x] **Step 1: Escrever o teste que falha**
 
 Criar `tests/comando.test.ts`:
 
@@ -328,7 +333,7 @@ describe('tratarComandoFiltro', () => {
 })
 ```
 
-- [ ] **Step 2: Rodar e confirmar que falha**
+- [x] **Step 2: Rodar e confirmar que falha**
 
 ```bash
 npx.cmd vitest run tests/comando.test.ts
@@ -336,7 +341,7 @@ npx.cmd vitest run tests/comando.test.ts
 
 Esperado: FALHA, módulo `../src/content/comando` não encontrado.
 
-- [ ] **Step 3: Escrever o obediente**
+- [x] **Step 3: Escrever o obediente**
 
 Criar `src/content/comando.ts`:
 
@@ -388,7 +393,7 @@ export function tratarComandoFiltro(
 }
 ```
 
-- [ ] **Step 4: Ligar no content script**
+- [x] **Step 4: Ligar no content script**
 
 Em `src/content/index.ts`:
 
@@ -440,7 +445,7 @@ let painel: HTMLIFrameElement | null = null
   }
 ```
 
-- [ ] **Step 5: Rodar e confirmar que passa**
+- [x] **Step 5: Rodar e confirmar que passa**
 
 ```bash
 npx.cmd vitest run tests/comando.test.ts
@@ -469,7 +474,7 @@ dependência e uma mudança de configuração para testar seis botões que só
 postam mensagem não se pagam. Quem prova que o painel funciona é o Playwright,
 clicando de verdade — e é ele que também prova o canal inteiro, ponta a ponta.
 
-- [ ] **Step 1: Escrever o e2e que falha**
+- [x] **Step 1: Escrever o e2e que falha**
 
 Criar `e2e/filtro.spec.ts`:
 
@@ -525,7 +530,7 @@ O rótulo `1 sem` sai de `rotulo(7)`, definido no Step 3. Se você mudar o
 rótulo, mude aqui também — e deixe os dois iguais, sem inventar um terceiro
 nome.
 
-- [ ] **Step 2: Rodar e confirmar que falha**
+- [x] **Step 2: Rodar e confirmar que falha**
 
 ```bash
 npx.cmd playwright test filtro
@@ -533,7 +538,7 @@ npx.cmd playwright test filtro
 
 Esperado: FALHA, o painel não tem botão nenhum.
 
-- [ ] **Step 3: Escrever o painel**
+- [x] **Step 3: Escrever o painel**
 
 Substituir `src/panel/App.tsx` inteiro por:
 
@@ -633,7 +638,7 @@ Sem cor nova: `bg-charcoal`, `bg-ink`, `bg-purple`, `text-lavender` e
 `text-muted` já existem em `src/styles/tokens.css`, e `tests/tokens.test.ts`
 reprova qualquer valor que não conste do `CopyHaunt-IDV.md`.
 
-- [ ] **Step 4: Dar altura ao painel**
+- [x] **Step 4: Dar altura ao painel**
 
 O iframe tem `height:180px`, suficiente para uma frase e nada mais. Em
 `src/content/index.ts`, em `mountPanel`, trocar por:
@@ -645,7 +650,7 @@ O iframe tem `height:180px`, suficiente para uma frase e nada mais. Em
 Só a altura. Posição, largura e `z-index` estão travados pelo e2e
 `o painel monta como iframe sem vazar estilo na página`, e continuam valendo.
 
-- [ ] **Step 5: Rodar tudo**
+- [x] **Step 5: Rodar tudo**
 
 ```bash
 npm.cmd test
@@ -657,7 +662,7 @@ npx.cmd playwright test
 Esperado: PASSA, inclusive `e2e/filtro.spec.ts`. O `verify:build` precisa
 seguir dizendo "permissões mínimas": este plano não pede permissão nenhuma.
 
-- [ ] **Step 6: Escrever a mensagem de commit**
+- [x] **Step 6: Escrever a mensagem de commit**
 
 Criar `.commit-msg-codex` na raiz com:
 

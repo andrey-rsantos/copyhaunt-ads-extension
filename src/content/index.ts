@@ -7,6 +7,7 @@ import { definirDocIdAnunciante } from './instagram'
 import { observarGrade, type Observacao } from './observer'
 import { pintarGrade } from './overlay'
 import { processarCaptura, processarSsr } from './pipeline'
+import { tratarComandoFiltro, veioDoPainel } from './comando'
 
 /** Índice da sessão. Vive enquanto a aba viver. */
 const store = new AdStore()
@@ -73,6 +74,7 @@ function aplicarConfig(): void {
 }
 
 const PANEL_ID = 'copyhaunt-panel'
+let painel: HTMLIFrameElement | null = null
 
 /** Monta o painel num iframe, que isola o CSS da página da Meta. */
 function mountPanel(): void {
@@ -86,13 +88,14 @@ function mountPanel(): void {
     'top:16px',
     'right:16px',
     'width:320px',
-    'height:180px',
+    'height:220px',
     'border:0',
     'border-radius:14px',
     'z-index:2147483647',
     'box-shadow:0 0 20px rgba(124, 58, 237, 0.18)',
   ].join(';')
 
+  painel = frame
   document.documentElement.appendChild(frame)
 }
 
@@ -111,11 +114,24 @@ function lerLoteInicial(): void {
 }
 
 window.addEventListener('message', (event) => {
-  if (event.source !== window) return
+  // Duas fontes legítimas, e nenhuma outra: o main world, que manda capturas,
+  // e o iframe do painel, que manda comandos.
+  const doPainel = veioDoPainel(event.source, painel)
+  if (event.source !== window && !doPainel) return
   if (!isCopyHauntMessage(event.data)) return
 
   if (event.data.kind === 'interceptor-ready') {
     console.info('[CopyHaunt] interceptador confirmado pelo content script')
+    return
+  }
+
+  if (doPainel && event.data.kind === 'panel-command') {
+    tratarComandoFiltro(
+      event.data.payload,
+      location.href,
+      new Date(),
+      (url) => location.assign(url),
+    )
     return
   }
 
