@@ -1,4 +1,10 @@
 import { isCopyHauntMessage } from '../core/messages'
+import { AdStore } from '../core/store'
+import type { Captura } from '../interceptor/xhr-patch'
+import { processarCaptura } from './pipeline'
+
+/** Índice da sessão. Vive enquanto a aba viver. */
+const store = new AdStore()
 
 const PANEL_ID = 'copyhaunt-panel'
 
@@ -30,6 +36,14 @@ window.addEventListener('message', (event) => {
 
   if (event.data.kind === 'interceptor-ready') {
     console.info('[CopyHaunt] interceptador confirmado pelo content script')
+    return
+  }
+
+  if (event.data.kind === 'raw-capture') {
+    const resultado = processarCaptura(event.data.payload as Captura, store)
+    if (resultado.novos > 0) {
+      console.info(`[CopyHaunt] indexados: ${resultado.total}`)
+    }
   }
 })
 
