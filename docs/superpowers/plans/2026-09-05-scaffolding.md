@@ -448,8 +448,21 @@ import manifest from './src/manifest.config'
 
 export default defineConfig({
   plugins: [react(), tailwindcss(), crx({ manifest })],
+  build: {
+    rollupOptions: {
+      // O painel precisa ser declarado como entrada. HTML citado apenas em
+      // web_accessible_resources é COPIADO, não compilado: o arquivo gerado
+      // continuaria apontando para ./main.tsx e o React nunca montaria.
+      input: { panel: 'src/panel/index.html' },
+    },
+  },
 })
 ```
+
+O bloco `build.rollupOptions.input` não é decoração. Sem ele o build passa, o
+manifest fica correto, o iframe monta — e o painel aparece **em branco**, porque
+o navegador recebe um `<script src="./main.tsx">` que não sabe executar. Falha
+silenciosa clássica: tudo verde, nada funcionando.
 
 - [ ] **Step 12: Copiar o ícone**
 

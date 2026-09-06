@@ -6,4 +6,9 @@ import manifest from './src/manifest.config'
 
 export default defineConfig({
   plugins: [react(), tailwindcss(), crx({ manifest })],
+  build: {
+    rollupOptions: {
+      input: { panel: 'src/panel/index.html' },
+    },
+  },
 })
