@@ -22,6 +22,9 @@ Valem para todas as tarefas. Valores copiados literalmente do spec.
 - **Sem código remoto.** Proibido pelo MV3.
 - **Idioma:** comentários, documentação e mensagens de commit em pt-BR com acentuação correta. Identificadores de código em inglês.
 - **Commits:** seguir o padrão de `CLAUDE.md`. Tipo em inglês, texto em pt-BR, descrição no infinitivo, corpo condicional.
+- **Quem commita é o revisor, não o executor.** O executor escreve a mensagem
+  em `.commit-msg` na raiz e para por ali. O revisor confere o trabalho e só
+  então commita. Ver "Modelo de commit" abaixo.
 - **Cores da marca:** vindas de `CopyHaunt-IDV.md`. Nunca inventar valor de cor.
 - **Node 22, npm 11.** Instalar com `npm install`. No PowerShell do Windows,
   `npm` pode não resolver: usar `npm.cmd` nesse caso.
@@ -83,6 +86,25 @@ CopyHaunt Ads/
 **Fora do escopo deste plano:** normalização de payload, critérios de escala, bandeja de botões, filtro de data, download, motor de mineração. Tudo isso entra em planos de funcionalidade posteriores. Este plano entrega apenas o esqueleto que compila, carrega e testa.
 
 ---
+
+## Modelo de commit
+
+O executor **não commita**. Ele conclui o trabalho, escreve a mensagem em
+`.commit-msg` na raiz do repositório e para. O revisor confere e commita.
+
+Isso não é contorno: é o desenho certo. Um commit afirma "este trabalho está
+bom", e essa afirmação é do revisor. Foi também o que a realidade impôs — o
+sandbox do executor nega escrita em `.git/`, e `git commit` precisa criar
+`.git/index.lock`. A restrição está certa: `.git/` guarda o histórico, e um
+agente com escrita ali pode reescrever o passado.
+
+Cada passo de commit deste plano, portanto, se lê assim:
+
+- **executor**: escreve `.commit-msg` com o conteúdo indicado e reporta
+- **revisor**: verifica, roda `git add` e `git commit -F .commit-msg`, apaga o
+  arquivo
+
+O `.commit-msg` está no `.gitignore`. Nunca escrever dentro de `.git/`.
 
 ## Por que Vite 7 e não Vite 8
 
