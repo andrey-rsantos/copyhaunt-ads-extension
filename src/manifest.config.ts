@@ -32,6 +32,12 @@ export const manifest = {
       run_at: 'document_start' as const,
     },
   ],
+  web_accessible_resources: [
+    {
+      resources: ['src/panel/index.html'],
+      matches: ['*://*.facebook.com/*'],
+    },
+  ],
 }
 
 export default defineManifest(manifest)
