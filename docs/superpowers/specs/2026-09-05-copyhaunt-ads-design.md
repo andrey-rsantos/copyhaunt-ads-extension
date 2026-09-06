@@ -237,9 +237,32 @@ Seis destinos, montados a partir do `Ad` normalizado:
 - **Buscar anúncios deste anunciante** — Ad Library com `view_all_page_id`
 - **URL do anúncio na Biblioteca** — permalink
 
-Item sem dado aparece **desabilitado, com o motivo no tooltip** — nem todo
-anunciante tem Instagram vinculado. Ocultar faria o menu mudar de tamanho a cada
-card.
+Item sem dado aparece **desabilitado, com o motivo no tooltip**. Ocultar faria o
+menu mudar de tamanho a cada card.
+
+#### O Instagram do anunciante não é obtenível passivamente
+
+Medido em 94 anúncios reais, de quatro nichos: `snapshot.instagram_actor_name`
+aparece em **zero** deles.
+
+A extensão de referência resolve isso com uma **requisição ativa por
+anunciante**. A função que monta o link lê `extraPageInfo.page_info.ig_username`,
+protegida por uma trava `isExtraDataFetched`. No mesmo pacote vêm
+`ig_followers`, `ig_verification`, `verification_status` e a data de criação da
+página.
+
+Isso conflita com a restrição de coleta 100% passiva da seção 2. Três saídas,
+e a decisão é de produto:
+
+| Saída | Consequência |
+|---|---|
+| Manter desabilitado | passividade intacta; o item fica morto quase sempre |
+| Buscar **ao clicar** | uma requisição por clique deliberado do usuário, com cache por sessão. Não é varredura: é o usuário pedindo aquele anunciante |
+| Remover o item | menu mais honesto, uma funcionalidade a menos |
+
+A segunda preserva o espírito da restrição — o que a seção 2 proíbe é a
+extensão **varrer** por conta própria, não responder a um clique. Mas exige
+declarar a exceção por escrito, e ela não está declarada hoje.
 
 #### A4 · Filtro de data
 
@@ -287,6 +310,27 @@ Implementação própria de cerca de 30 linhas, em vez de dependência externa.
 ```
 
 Todos configuráveis e desligáveis individualmente.
+
+#### O padrão de colação, medido
+
+Distribuição real em 94 anúncios, quatro nichos, ordenados por impressões:
+
+| Corte | Anúncios que passam |
+|---|---|
+| ≥ 1 | 100% |
+| ≥ 2 | 49% |
+| ≥ 3 | 33% |
+| **≥ 5** | **18%** |
+| ≥ 10 | 1% |
+
+Máximo observado: 14.
+
+O padrão de **≥ 5 se confirma**: deixa passar cerca de um em cada cinco, que é
+filtro apertado sem ser estéril. Já ≥ 10 derruba quase tudo e só serve como
+ajuste manual para quem procura o topo absoluto.
+
+Ressalva: a amostra vem das primeiras páginas de quatro buscas. Nichos com
+disputa mais agressiva devem ter colação maior.
 
 **Presença do anunciante** conta quantos anúncios de cada `pageId` apareceram
 **nesta sessão de busca** — não o total global do anunciante.
@@ -454,6 +498,8 @@ usuário aceitar.
 | 2 | estrutura interna do framework como fonte alternativa | fase 2; complexo, e as camadas 1 a 3 devem bastar |
 | 3 | Suporte a Edge e Firefox | Edge deve funcionar sem alteração (Chromium); Firefox exige adaptação de MV3 |
 | 4 | Quarto critério de escala | **encerrado.** O MVP fecha com três critérios; os candidatos avaliados estão na seção 7 |
+| 5 | Instagram do anunciante | **decisão de produto pendente.** Medido: não vem passivamente em 94 anúncios de quatro nichos. As três saídas estão na seção 7 |
+| 6 | Padrão de colação ≥ 5 | **encerrado.** Confirmado com dado real: deixa passar 18% dos anúncios. Distribuição na seção 7 |
 
 ---
 
