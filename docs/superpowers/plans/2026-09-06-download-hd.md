@@ -7,14 +7,18 @@
 ## Progresso
 
 - **Estado:** em andamento
-- **Última tarefa concluída:** Task 1
-- **Próxima tarefa:** Task 2
+- **Última tarefa concluída:** Task 2
+- **Próxima tarefa:** Task 3
 - **Notas de retomada:** dois testes da Task 1 vinham errados no plano: esperavam
   `-1` no fim do nome, como se ele usasse o `pageId` do fixture, mas `nomeBase`
   usa o ID do anúncio — o que o primeiro teste do bloco já afirmava. As duas
   expectativas foram corrigidas aqui e no arquivo de teste. O executor Codex
   está fora do ar: o CLI instalado recusa `gpt-5.6-luna`. Task 1 foi feita pelo
   Claude, transcrevendo o código que o próprio plano já trazia.
+  Na Task 2, o `zip.file(...)` do plano recebia o `Blob` direto e quebrava sob
+  jsdom — o JSZip reconhece Blob por `instanceof`, e o do teste nasce em outro
+  realm. Passou a receber `await blob.arrayBuffer()`, que vale nos dois
+  ambientes. O plano foi corrigido junto.
 
 **Goal:** Dar ação ao botão `⤓`, baixando os criativos do anúncio na melhor
 qualidade que a Meta serve — arquivo solto quando é um só, ZIP quando o anúncio
@@ -326,7 +330,7 @@ Esperado: PASSA.
   `Dependencias { buscar: typeof fetch; salvar: (blob: Blob, nome: string) => void }`,
   `baixarCriativos(ad: Ad, deps: Dependencias): Promise<void>`.
 
-- [ ] **Step 1: Instalar o JSZip**
+- [x] **Step 1: Instalar o JSZip**
 
 ```bash
 npm.cmd install jszip@3.10.1 --save-exact
@@ -339,7 +343,7 @@ para `dependencies`, pare e relate.
 
 O JSZip traz os próprios tipos, então **não instale `@types/jszip`**.
 
-- [ ] **Step 2: Escrever o teste que falha**
+- [x] **Step 2: Escrever o teste que falha**
 
 Criar `tests/download.test.ts`:
 
@@ -475,7 +479,7 @@ describe('quando alguma mídia falha', () => {
 })
 ```
 
-- [ ] **Step 3: Rodar e confirmar que falha**
+- [x] **Step 3: Rodar e confirmar que falha**
 
 ```bash
 npx.cmd vitest run tests/download.test.ts
@@ -483,7 +487,7 @@ npx.cmd vitest run tests/download.test.ts
 
 Esperado: FALHA, módulo `../src/content/download` não encontrado.
 
-- [ ] **Step 4: Escrever o download**
+- [x] **Step 4: Escrever o download**
 
 Criar `src/content/download.ts`:
 
@@ -563,7 +567,13 @@ export async function baixarCriativos(
   }
 
   const zip = new JSZip()
-  boas.forEach(({ midia, blob }, i) => zip.file(nomeNoPacote(i, midia), blob))
+  // `ArrayBuffer` e não o `Blob`: o JSZip reconhece Blob por `instanceof`, e
+  // isso quebra quando o Blob nasce em outro realm — é o que acontece sob o
+  // jsdom dos testes. O buffer é aceito em qualquer ambiente, e o conteúdo já
+  // estava em memória de todo modo.
+  for (const [i, { midia, blob }] of boas.entries()) {
+    zip.file(nomeNoPacote(i, midia), await blob.arrayBuffer())
+  }
 
   // Sem compressão, que é o padrão do JSZip: MP4 e JPEG já vêm comprimidos, e
   // passá-los pelo deflate custa tempo de CPU para não economizar byte nenhum.
@@ -571,7 +581,7 @@ export async function baixarCriativos(
 }
 ```
 
-- [ ] **Step 5: Rodar e confirmar que passa**
+- [x] **Step 5: Rodar e confirmar que passa**
 
 ```bash
 npx.cmd vitest run tests/download.test.ts
