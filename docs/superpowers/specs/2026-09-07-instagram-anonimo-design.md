@@ -246,20 +246,38 @@ nenhuma ação de tela"* — a descrição que o spec anterior usava para o risc
 consulta nova **é** a ação de tela: idêntica à que a Biblioteca dispara quando
 alguém clica em "Sobre".
 
-## Verificação obrigatória antes de implementar
+## Verificação: feita em 2026-09-07, e o desenho passou
 
-O ponto 3 acima é a única incerteza que sobrou, e tem teste barato — **mas só
-funciona com sessão logada**:
+O ponto 3 acima era a única incerteza restante. O teste: disparar a consulta
+com `credentials: 'omit'` numa aba **logada** e ler
+`data.viewer.actor.__typename`.
 
-> Disparar a consulta com `credentials: 'omit'` numa aba logada e ler
-> `data.viewer.actor.__typename` na resposta.
->
-> - `LoggedOutUser` → o servidor tratou como anônima apesar do `lsd`. O
->   desenho está validado.
-> - `User` → o `lsd` carrega contexto de sessão, a anonimização é parcial e o
->   desenho precisa mudar antes de prosseguir.
+| Observado | |
+|---|---|
+| Sessão na aba | ativa, confirmada pelo `token_de_sessao` preenchido |
+| `__typename` | **`LoggedOutUser`** |
+| `ig_username` | `britaniaeletro` |
 
-Sem esse resultado, a implementação não começa.
+**O `lsd` não carrega contexto de sessão.** O servidor tratou a requisição
+como anônima mesmo ela tendo saído de uma aba autenticada, e ainda assim
+devolveu o dado. É o melhor desfecho possível: o ponto 3 do risco residual
+deixa de valer, e sobram só o IP e os Termos de Uso.
+
+### Como saber se uma aba da Biblioteca está logada
+
+Custou quatro tentativas descobrir, e vale registrado — os indicadores óbvios
+**mentem** nesta superfície:
+
+| Indicador | Numa aba logada | Serve? |
+|---|---|---|
+| `document.cookie` contém `c_user` | **não aparece** | não |
+| `"USER_ID"` no HTML | vem **`0`** | não |
+| token do `token_de_sessao` no HTML | preenchido | **sim** |
+
+Deslogado, a estrutura `DTSGInitData` até aparece no HTML, mas com o token
+**vazio** — então testar a presença do nome da estrutura também não serve. O
+critério é o token ter conteúdo, que é exatamente o que `extrairTokenDeSessao` já
+media com `([^"]+)`.
 
 ## Fora de escopo
 

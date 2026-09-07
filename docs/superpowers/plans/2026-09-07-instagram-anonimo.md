@@ -4,10 +4,16 @@
 
 ## Progresso
 
-- **Estado:** não iniciado
-- **Última tarefa concluída:** —
-- **Próxima tarefa:** Task 1
-- **Notas de retomada:** —
+- **Estado:** em andamento
+- **Última tarefa concluída:** Task 1 — a verificação bloqueante
+- **Próxima tarefa:** Task 2
+- **Notas de retomada:** Verificação feita em 2026-09-07, numa aba da
+  Biblioteca com sessão ativa — confirmada pelo `token_de_sessao` preenchido, que é o
+  único indicador confiável ali: `USER_ID` vem `0` e o cookie `c_user` não é
+  visível a JavaScript mesmo com o usuário logado. A consulta com
+  `credentials: 'omit'` devolveu `__typename: LoggedOutUser` e o handle
+  `britaniaeletro`. **O `lsd` não carrega contexto de sessão**: o desenho está
+  validado e a implementação, liberada. Nenhum código foi escrito ainda.
 
 **Goal:** Trocar a consulta do Instagram do anunciante por uma versão anônima,
 que não usa token nem cookies da conta do usuário, e dar notícia do resultado
@@ -62,7 +68,7 @@ resultado, porque ele pode invalidar o desenho.
 carregada com a sessão dele. Se o servidor associar o `lsd` à sessão, a
 requisição não é anônima e o ganho de segurança não existe.
 
-- [ ] **Step 1: Rodar a consulta numa aba logada**
+- [x] **Step 1: Rodar a consulta numa aba logada**
 
 Numa aba da Biblioteca de Anúncios **com o Facebook logado**, no console:
 
@@ -94,7 +100,7 @@ console.log('typename:', t.match(/"__typename":"(\w*User)"/)?.[1])
 console.log('ig:', t.match(/"ig_username":"([^"]*)"/)?.[1])
 ```
 
-- [ ] **Step 2: Ler o resultado e decidir**
+- [x] **Step 2: Ler o resultado e decidir**
 
 | `typename` | Significado | Ação |
 |---|---|---|
@@ -104,7 +110,7 @@ console.log('ig:', t.match(/"ig_username":"([^"]*)"/)?.[1])
 Esperado: `ig` deve vir `britaniaeletro` nos dois casos — ele não é o critério.
 O critério é só o `typename`.
 
-- [ ] **Step 3: Registrar o resultado no plano**
+- [x] **Step 3: Registrar o resultado no plano**
 
 Escrever em **Notas de retomada** o `typename` observado e a data. Sem esse
 registro, a próxima sessão não sabe se a verificação aconteceu.
