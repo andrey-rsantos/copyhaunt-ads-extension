@@ -11,8 +11,8 @@
   `main` (5d89467..343c1ee). A extensão consulta o Instagram do anunciante sem
   enviar cookie nem token de conta, e dá a notícia no próprio menu. Verificação
   final: 329 testes Vitest, 12 e2e Playwright, typecheck limpo e verify:build
-  aprovando as permissões mínimas. **Falta o teste manual no navegador** — com
-  a extensão carregada, um anunciante com Instagram e um sem.
+  aprovando as permissões mínimas. Teste manual no navegador feito e aprovado
+  pelo dono do projeto em 2026-09-07. Nada pendente neste plano.
 
 **Goal:** Trocar a consulta do Instagram do anunciante por uma versão anônima,
 que não usa token nem cookies da conta do usuário, e dar notícia do resultado
