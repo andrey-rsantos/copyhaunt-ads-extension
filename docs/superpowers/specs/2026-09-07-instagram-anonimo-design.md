@@ -172,6 +172,31 @@ Isto corrige o defeito que motivou a investigação: hoje o item apaga sem dizer
 nada, e "não tem Instagram" fica indistinguível de "quebrou". Essa era a
 queixa real, não a posição do botão.
 
+### O que se perde com isso, e por que aceita-se
+
+Comparado com um *toast*, o menu **prende o usuário durante os ~2 s**. Um
+clique em qualquer outro lugar da página aciona o fechamento global de
+`tray.ts` e o recado some da tela. Com toast, ele poderia rolar, abrir outros
+cards e continuar procurando — o aviso chegaria de qualquer forma.
+
+**A troca se sustenta por causa do cache.** Se o menu fechar no meio, a
+resposta ainda é guardada quando chega; reabrir aquele card mostra o resultado
+na hora, sem nova requisição. Perde-se a notícia imediata, nunca o dado. Sem o
+cache a recomendação seria o toast: descartar a resposta de uma consulta de
+2 s seria inaceitável.
+
+Perdas menores: o menu cobre o criativo enquanto está aberto, e não dá para
+disparar vários anunciantes e ver as respostas chegando — vira um de cada vez,
+que é como o fluxo real acontece de todo modo.
+
+**Condição para rever:** uso real. Se o dono do projeto se pegar clicando e
+querendo sair antes da resposta, o toast entra — e é aditivo, porque o item já
+carregará o estado; levar a frase para um canto da tela não é reescrita.
+
+Um detalhe que só apareceu ao desenhar os dois lado a lado: **o toast também
+não abriria a aba sozinho**, porque chega depois dos ~2 s com a ativação já
+expirada. Isso deixa de ser argumento a favor de qualquer um dos dois.
+
 ### Por que o resultado não abre a aba sozinho
 
 Seria o passo natural, e não funciona. Com ~2 s de espera, o `window.open`
