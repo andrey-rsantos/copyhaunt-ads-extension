@@ -1,35 +1,35 @@
 /**
- * O token da sessão do Facebook, lido do HTML da própria página.
+ * O token público da página, lido do HTML.
  *
- * Sem ele a consulta forjada não sai: medido num perfil descartável, sem
- * login o token não existe no HTML, e a consulta sem token responde 200 com
- * `data` vazio e 12 erros. Não há versão anônima deste caminho.
+ * O `lsd` é o token anti-CSRF que a Biblioteca usa em toda requisição, e
+ * existe **com ou sem login** — foi medido num perfil deslogado. É ele que
+ * torna possível consultar o Instagram do anunciante sem a conta do usuário.
+ *
+ * Não confundir com o `token_de_sessao`, que esta extensão usava até 2026-09-07: esse
+ * era vinculado à sessão, e é justamente o que se quis parar de mandar.
  */
 
 /**
- * Os dois lugares onde o Facebook publica o token, na ordem em que valem a
- * pena ser tentados.
+ * Os dois lugares onde o token aparece, na ordem em que valem a pena.
  *
- * O primeiro cobre as duas grafias que a Meta alterna, `DTSGInitData` e
- * `DTSGInitialData`, e é a forma corrente. O segundo é o campo escondido dos
- * formulários, mais antigo, mantido porque custa uma linha e cobre páginas
- * que a Meta ainda não migrou.
+ * O primeiro é a forma corrente. O segundo é o campo escondido dos
+ * formulários, mantido porque custa uma linha.
  *
  * Os `\s*` existem porque o HTML vem minificado hoje, mas isso é escolha
  * deles, não contrato.
  */
 const PADROES = [
-  /"DTSGInit(?:ial)?Data"\s*,\s*\[\]\s*,\s*\{\s*"token"\s*:\s*"([^"]+)"/,
-  /name="token_de_sessao"\s+value="([^"]+)"/,
+  /"LSD"\s*,\s*\[\]\s*,\s*\{\s*"token"\s*:\s*"([^"]+)"/,
+  /name="lsd"\s+value="([^"]+)"/,
 ]
 
 /**
  * Devolve o token, ou `null`.
  *
- * `null` não é erro: é o estado normal de quem não está logado, e quem chama
- * precisa tratá-lo como "não dá para perguntar", em silêncio.
+ * `null` significa que a página não é o que esperávamos — quem chama trata
+ * como "não dá para perguntar".
  */
-export function extrairTokenDeSessao(html: string): string | null {
+export function extrairLsd(html: string): string | null {
   for (const padrao of PADROES) {
     const achado = html.match(padrao)?.[1]
     if (achado) return achado

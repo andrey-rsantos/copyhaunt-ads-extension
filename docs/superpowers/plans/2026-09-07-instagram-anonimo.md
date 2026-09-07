@@ -5,9 +5,12 @@
 ## Progresso
 
 - **Estado:** em andamento
-- **Última tarefa concluída:** Task 1 — a verificação bloqueante
-- **Próxima tarefa:** Task 2
-- **Notas de retomada:** Verificação feita em 2026-09-07, numa aba da
+- **Última tarefa concluída:** Task 2 — o token anônimo da página
+- **Próxima tarefa:** Task 3
+- **Notas de retomada:** Task 2 concluída em 2026-09-07. `extrairLsd` substitui
+  `extrairTokenDeSessao` em `sessao.ts`; o typecheck permanece quebrado de propósito
+  até a Task 3, que atualizará `instagram.ts`. A suíte específica passou com
+  5 testes. Verificação feita em 2026-09-07, numa aba da
   Biblioteca com sessão ativa — confirmada pelo `token_de_sessao` preenchido, que é o
   único indicador confiável ali: `USER_ID` vem `0` e o cookie `c_user` não é
   visível a JavaScript mesmo com o usuário logado. A consulta com
@@ -127,7 +130,7 @@ registro, a próxima sessão não sabe se a verificação aconteceu.
 - Produces: `extrairLsd(html: string): string | null` de `src/content/sessao.ts`
 - Removes: `extrairTokenDeSessao` — depois desta tarefa, nada no projeto o usa
 
-- [ ] **Step 1: Escrever o teste que falha**
+- [x] **Step 1: Escrever o teste que falha**
 
 Substituir o conteúdo de `tests/sessao.test.ts` por:
 
@@ -162,12 +165,12 @@ describe('extrairLsd', () => {
 })
 ```
 
-- [ ] **Step 2: Rodar e confirmar que falha**
+- [x] **Step 2: Rodar e confirmar que falha**
 
 Run: `npx.cmd vitest run tests/sessao.test.ts`
 Expected: FAIL — `extrairLsd` não existe (erro de importação)
 
-- [ ] **Step 3: Escrever a implementação**
+- [x] **Step 3: Escrever a implementação**
 
 Substituir o conteúdo de `src/content/sessao.ts` por:
 
@@ -212,7 +215,7 @@ export function extrairLsd(html: string): string | null {
 }
 ```
 
-- [ ] **Step 4: Rodar e confirmar que passa**
+- [x] **Step 4: Rodar e confirmar que passa**
 
 Run: `npx.cmd vitest run tests/sessao.test.ts`
 Expected: PASS, 5 testes
@@ -221,7 +224,7 @@ Run: `npm.cmd run typecheck`
 Expected: falha em `src/content/instagram.ts`, que ainda importa
 `extrairTokenDeSessao`. **É esperado** e some na Task 3.
 
-- [ ] **Step 5: Escrever a mensagem de commit**
+- [x] **Step 5: Escrever a mensagem de commit**
 
 Escrever em `.commit-msg` na raiz:
 
