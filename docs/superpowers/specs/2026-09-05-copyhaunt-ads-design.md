@@ -250,6 +250,14 @@ menu mudar de tamanho a cada card.
 
 #### O Instagram do anunciante: decidido em 2026-09-06
 
+> **SUPERADO EM 2026-09-07** por
+> `2026-09-07-instagram-anonimo-design.md`. O caminho 2 abaixo, suas travas e
+> a análise de risco não valem mais: existe versão anônima da consulta, e a
+> subseção "Por que não dá para fazer isso sem sessão" está **factualmente
+> errada** — ela mediu o carregamento da página do anunciante sem abrir a aba
+> "Sobre", que é onde a query roda. O caminho 1 (derivação passiva) continua
+> valendo como está.
+
 **Decisão:** derivar passivamente quando der, e forjar a consulta ao clicar
 quando não der. O risco foi apresentado e **aceito pelo usuário**.
 
