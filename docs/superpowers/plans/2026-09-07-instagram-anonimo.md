@@ -7,17 +7,12 @@
 - **Estado:** concluído
 - **Última tarefa concluída:** Task 5 — o fluxo do clique
 - **Próxima tarefa:** nenhuma, o plano fechou
-- **Notas de retomada:** Tasks 1 a 3 concluídas em 2026-09-07. `sessao.ts` lê o
-  `lsd`, `instagram.ts` faz a consulta anônima sem cookies, e o `doc_id` novo
-  está sincronizado nos dois arquivos de config. Suíte inteira verde com 322
-  testes, typecheck limpo e `verify:build` aprovando as permissões mínimas.
-  Falta a camada de interface: Tasks 4 e 5. A verificação bloqueante da Task 1
-  foi feita numa aba da Biblioteca com sessão ativa — confirmada pelo `token_de_sessao` preenchido, que é o
-  único indicador confiável ali: `USER_ID` vem `0` e o cookie `c_user` não é
-  visível a JavaScript mesmo com o usuário logado. A consulta com
-  `credentials: 'omit'` devolveu `__typename: LoggedOutUser` e o handle
-  `britaniaeletro`. **O `lsd` não carrega contexto de sessão**: o desenho está
-  validado e a implementação, liberada. Nenhum código foi escrito ainda.
+- **Notas de retomada:** Plano concluído em 2026-09-07, tudo commitado em
+  `main` (5d89467..343c1ee). A extensão consulta o Instagram do anunciante sem
+  enviar cookie nem token de conta, e dá a notícia no próprio menu. Verificação
+  final: 329 testes Vitest, 12 e2e Playwright, typecheck limpo e verify:build
+  aprovando as permissões mínimas. **Falta o teste manual no navegador** — com
+  a extensão carregada, um anunciante com Instagram e um sem.
 
 **Goal:** Trocar a consulta do Instagram do anunciante por uma versão anônima,
 que não usa token nem cookies da conta do usuário, e dar notícia do resultado
