@@ -18,6 +18,10 @@ export interface ConfigRemota {
    * assim que a Meta desregistrar a query —, e apagar este campo do arquivo
    * hospedado desliga a consulta forjada em minutos, sem esperar revisão da
    * loja. Uma config sem ele é uma config válida com o recurso desligado.
+   *
+   * O desligamento remoto só vale enquanto o arquivo hospedado responder: se
+   * ele cair, a extensão usa a `CONFIG_EMBUTIDA`, que traz o campo. Desligar
+   * o recurso em definitivo é apagá-lo dos dois lados.
    */
   advertiserDocId?: string
 }
@@ -39,10 +43,16 @@ const TAMANHO_MAXIMO_PADRAO = 500
  * É para onde a extensão cai quando a busca falha ou o conteúdo não passa na
  * validação. Sem ela, uma indisponibilidade do arquivo deixaria a extensão sem
  * saber ancorar nada.
+ *
+ * Carrega o `advertiserDocId` porque uma queda sem ele desliga o Instagram sem
+ * que ninguém tenha decidido isso — e desligado por acidente é indistinguível
+ * de quebrado, para quem usa. Enquanto o arquivo hospedado não existir, é esta
+ * cópia que faz o recurso funcionar.
  */
 export const CONFIG_EMBUTIDA: ConfigRemota = {
   version: 0,
   anchors: { libraryIdPattern: '(?<!\\d)(\\d{15,17})(?!\\d)' },
+  advertiserDocId: '7193625857423421',
 }
 
 /**

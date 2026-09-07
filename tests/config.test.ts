@@ -1,9 +1,15 @@
+import { readFileSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
 import {
   CONFIG_EMBUTIDA,
   validarConfig,
   type ConfigRemota,
 } from '../src/core/config'
+
+/** O arquivo destinado à hospedagem, lido do disco: a outra metade do par. */
+const HOSPEDADA = JSON.parse(
+  readFileSync(new URL('../config/config.json', import.meta.url), 'utf8'),
+) as ConfigRemota
 
 const VALIDA: ConfigRemota = {
   version: 7,
@@ -18,6 +24,19 @@ describe('CONFIG_EMBUTIDA', () => {
   it('traz o padrão de ancoragem que o código usa hoje', () => {
     const re = new RegExp(CONFIG_EMBUTIDA.anchors.libraryIdPattern)
     expect('Library ID: 2366492917183805').toMatch(re)
+  })
+
+  /**
+   * Sem o doc_id aqui, a queda desliga o Instagram sem ninguém ter decidido
+   * isso: a config hospedada 404 e a extensão conclui, calada, que o recurso
+   * está desligado. Foi o que aconteceu, e custou uma sessão de teste manual.
+   *
+   * Comparar com o arquivo hospedado, em vez de fixar o número, mantém as
+   * duas cópias no mesmo valor. Desligar o recurso de verdade é apagar o campo
+   * dos dois lados — e este teste é quem cobra o segundo lado.
+   */
+  it('traz o mesmo doc_id do arquivo hospedado', () => {
+    expect(CONFIG_EMBUTIDA.advertiserDocId).toBe(HOSPEDADA.advertiserDocId)
   })
 })
 
