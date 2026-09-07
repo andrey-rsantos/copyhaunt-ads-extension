@@ -1,13 +1,13 @@
-import { extrairTokenDeSessao } from './sessao'
+import { extrairLsd } from './sessao'
+import { PAIS } from '../core/links'
 
 /**
  * A consulta forjada: o caminho 2 da seção 7 do spec.
  *
- * Esta é a única parte da extensão que **fabrica** um pedido em nome da conta
- * do usuário. Todo o resto apenas escuta o que a página já pediu. O risco foi
- * apresentado por extenso e aceito, e as travas deste arquivo são o que o
- * mantém no mínimo: um pedido, por clique deliberado, por anunciante, por
- * sessão.
+ * Esta é a única parte da extensão que **fabrica** um pedido. Todo o resto
+ * apenas escuta o que a página já pediu. A requisição continua deliberada,
+ * limitada a um anunciante por sessão, mas não viaja em nome da conta do
+ * usuário.
  *
  * **Somente dados, nunca código.** Nada da resposta é executado.
  */
@@ -79,7 +79,7 @@ export function instagramConhecido(pageId: string): string | null | undefined {
 
 export interface Dependencias {
   buscar: typeof fetch
-  /** O HTML de onde sai o `token_de_sessao`. Injetado para testar sem navegador. */
+  /** O HTML de onde sai o `lsd`. Injetado para testar sem navegador. */
   html: () => string
 }
 
@@ -124,6 +124,52 @@ function desistir(motivo: string): null {
   return null
 }
 
+/**
+ * As `variables` da consulta, copiadas da requisição real da Biblioteca.
+ *
+ * Não foram podadas: as tentativas estão no spec, e nenhuma compensou.
+ * `fetchPageInfo` e `isAboutTab` são o que resolve `page_info`;
+ * `isLandingPage: true` faz a query devolver só o viewer, e `countries` vazio
+ * responde 200 sem o campo — falha silenciosa, o pior desfecho possível.
+ */
+function variaveis(pageId: string) {
+  return {
+    activeStatus: 'ALL', adType: 'ALL', audienceTimeframe: 'LAST_7_DAYS',
+    bylines: [], collationToken: null, contentLanguages: [],
+    countries: [PAIS], country: PAIS, deeplinkAdID: null, excludedIDs: [],
+    fetchPageInfo: true, fetchSharedDisclaimers: false, hasDeeplinkAdID: false,
+    isAboutTab: true, isAudienceTab: false, isLandingPage: false,
+    isTargetedCountry: false, location: null, mediaType: 'ALL',
+    multiCountryFilterMode: null, pageIDs: [], potentialReachInput: [],
+    publisherPlatforms: [], queryString: '', regions: [], searchType: 'PAGE',
+    sessionID: crypto.randomUUID(),
+    sortData: { mode: 'SORT_BY_TOTAL_IMPRESSIONS', direction: 'DESCENDING' },
+    source: null, startDate: null, v: '10d60d', viewAllPageID: pageId,
+  }
+}
+
+/**
+ * Acha o handle num corpo que vem em várias linhas JSON.
+ *
+ * A Meta responde em streaming: a consulta medida devolveu três linhas, e o
+ * campo estava na segunda. Um `JSON.parse` do texto inteiro **lança**. Linha
+ * que não parseia é ignorada — cobre também o `for (;;);` que eles às vezes
+ * prefixam.
+ */
+function acharNoCorpo(texto: string): string | null {
+  for (const linha of texto.split('\n')) {
+    const inicio = linha.indexOf('{')
+    if (inicio < 0) continue
+    try {
+      const achado = acharIgUsername(JSON.parse(linha.slice(inicio)))
+      if (achado) return achado
+    } catch {
+      // Linha truncada ou não-JSON: a próxima pode servir.
+    }
+  }
+  return null
+}
+
 /** A requisição em si. Nunca lança: todo fracasso vira `null`. */
 async function consultar(
   pageId: string,
@@ -131,36 +177,28 @@ async function consultar(
 ): Promise<string | null> {
   if (!docIdAtual) return desistir('sem doc_id na config, recurso desligado')
 
-  const token = extrairTokenDeSessao(deps.html())
-  // Sem sessão não há o que perguntar. Não é erro: é o estado de quem não
-  // está logado, e foi medido que não existe versão anônima deste caminho.
-  if (!token) return desistir('sem token_de_sessao no HTML, sessão não reconhecida')
+  const lsd = extrairLsd(deps.html())
+  if (!lsd) return desistir('sem lsd no HTML, página não reconhecida')
 
   try {
     const resposta = await deps.buscar(GRAPHQL, {
       method: 'POST',
       headers: { 'content-type': 'application/x-www-form-urlencoded' },
       body: new URLSearchParams({
-        token_de_sessao: token,
+        lsd,
         doc_id: docIdAtual,
-        variables: JSON.stringify({ viewAllPageID: pageId }),
+        variables: JSON.stringify(variaveis(pageId)),
       }).toString(),
+      // 'omit' é o ponto inteiro desta mudança: nenhum cookie da conta do
+      // usuário viaja. Trocar por 'include' desfaz o ganho de segurança.
       credentials: 'omit',
     })
     if (!resposta.ok) return desistir(`resposta HTTP ${resposta.status}`)
 
-    // A Meta às vezes prefixa a resposta com `for (;;);`, defesa antiga contra
-    // roubo de JSON. Cortar até a primeira chave custa menos que adivinhar
-    // qual das formas veio.
-    const texto = await resposta.text()
-    const inicio = texto.indexOf('{')
-    if (inicio < 0) return desistir('resposta sem JSON')
-
-    const handle = acharIgUsername(JSON.parse(texto.slice(inicio)))
-    if (!handle) return desistir('resposta sem ig_username, doc_id provavelmente rodado')
+    const handle = acharNoCorpo(await resposta.text())
+    if (!handle) return desistir('sem ig_username: anunciante sem Instagram vinculado')
     return `https://www.instagram.com/${handle}`
   } catch (erro) {
-    // Rede caída, JSON quebrado, resposta truncada: tudo vira silêncio.
     return desistir(`falhou: ${erro instanceof Error ? erro.message : erro}`)
   }
 }

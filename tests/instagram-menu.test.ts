@@ -8,11 +8,18 @@ import {
 import { plantarBandeja } from '../src/content/tray'
 import type { Ad } from '../src/core/types'
 
-const HTML_LOGADO = `["DTSGInitData",[],{"token":"NAcMtoken"},1]`
+const HTML_COM_LSD = `["LSD",[],{"token":"AdLsdToken"},323]`
 
-const RESPOSTA_BOA = {
-  data: { page: { extraPageInfo: { page_info: { ig_username: 'renanbotelho' } } } },
-}
+const RESPOSTA_BOA = [
+  JSON.stringify({ data: { viewer: { actor: { __typename: 'LoggedOutUser' } } } }),
+  JSON.stringify({
+    data: {
+      ad_library_page_info: {
+        page_info: { page_name: 'Renan Botelho Dr', ig_username: 'renanbotelhodr' },
+      },
+    },
+  }),
+].join('\n')
 
 function ad(extra: Partial<Ad> = {}): Ad {
   return {
@@ -48,15 +55,15 @@ function itemInstagram(shadow: ShadowRoot): HTMLElement {
 function respostaBoa() {
   return {
     ok: true,
-    text: async () => JSON.stringify(RESPOSTA_BOA),
+    text: async () => RESPOSTA_BOA,
   } as unknown as Response
 }
 
 beforeEach(() => {
   document.body.innerHTML = ''
   limparCacheInstagram()
-  definirDocIdAnunciante('7193625857423421')
-  document.documentElement.innerHTML = `<head></head><body><script>${HTML_LOGADO}</script></body>`
+  definirDocIdAnunciante('26617181747964058')
+  document.documentElement.innerHTML = `<head></head><body><script>${HTML_COM_LSD}</script></body>`
 })
 
 describe('o item do Instagram quando a derivação passiva não alcança', () => {
@@ -97,7 +104,7 @@ describe('o item do Instagram quando a derivação passiva não alcança', () =>
 
     await vi.waitFor(() => {
       expect(open).toHaveBeenCalledWith(
-        'https://www.instagram.com/renanbotelho',
+        'https://www.instagram.com/renanbotelhodr',
         '_blank',
         'noopener',
       )
@@ -115,7 +122,7 @@ describe('o item do Instagram quando a derivação passiva não alcança', () =>
     itemInstagram(shadow).click()
     await vi.waitFor(() =>
       expect(instagramConhecido('378128628724966')).toBe(
-        'https://www.instagram.com/renanbotelho',
+        'https://www.instagram.com/renanbotelhodr',
       ),
     )
 
@@ -127,7 +134,7 @@ describe('o item do Instagram quando a derivação passiva não alcança', () =>
     item.click()
     await vi.waitFor(() =>
       expect(window.open).toHaveBeenCalledWith(
-        'https://www.instagram.com/renanbotelho',
+        'https://www.instagram.com/renanbotelhodr',
         '_blank',
         'noopener',
       ),

@@ -5,13 +5,14 @@
 ## Progresso
 
 - **Estado:** em andamento
-- **Última tarefa concluída:** Task 2 — o token anônimo da página
-- **Próxima tarefa:** Task 3
-- **Notas de retomada:** Task 2 concluída em 2026-09-07. `extrairLsd` substitui
-  `extrairTokenDeSessao` em `sessao.ts`; o typecheck permanece quebrado de propósito
-  até a Task 3, que atualizará `instagram.ts`. A suíte específica passou com
-  5 testes. Verificação feita em 2026-09-07, numa aba da
-  Biblioteca com sessão ativa — confirmada pelo `token_de_sessao` preenchido, que é o
+- **Última tarefa concluída:** Task 3 — a consulta anônima
+- **Próxima tarefa:** Task 4
+- **Notas de retomada:** Tasks 1 a 3 concluídas em 2026-09-07. `sessao.ts` lê o
+  `lsd`, `instagram.ts` faz a consulta anônima sem cookies, e o `doc_id` novo
+  está sincronizado nos dois arquivos de config. Suíte inteira verde com 322
+  testes, typecheck limpo e `verify:build` aprovando as permissões mínimas.
+  Falta a camada de interface: Tasks 4 e 5. A verificação bloqueante da Task 1
+  foi feita numa aba da Biblioteca com sessão ativa — confirmada pelo `token_de_sessao` preenchido, que é o
   único indicador confiável ali: `USER_ID` vem `0` e o cookie `c_user` não é
   visível a JavaScript mesmo com o usuário logado. A consulta com
   `credentials: 'omit'` devolveu `__typename: LoggedOutUser` e o handle
@@ -256,7 +257,7 @@ Considerações:
 - Produces: `PAIS` de `src/core/links.ts`; `buscarInstagram` e
   `definirDocIdAnunciante` mantêm as assinaturas atuais
 
-- [ ] **Step 1: Escrever o teste que falha**
+- [x] **Step 1: Escrever o teste que falha**
 
 Em `tests/instagram.test.ts`, trocar as constantes do topo e acrescentar os
 testes novos. As constantes:
@@ -341,13 +342,13 @@ Ajustar também o `deps()` do arquivo para usar `HTML_COM_LSD` no `html` e
 `RESPOSTA_BOA` no `buscar`, e o `beforeEach` para
 `definirDocIdAnunciante(DOC_ID)`. Remover os testes que exercitam `token_de_sessao`.
 
-- [ ] **Step 2: Rodar e confirmar que falha**
+- [x] **Step 2: Rodar e confirmar que falha**
 
 Run: `npx.cmd vitest run tests/instagram.test.ts`
 Expected: FAIL — `credentials` é `'include'`, o corpo tem `token_de_sessao`, e o corpo
 multi-linha estoura o `JSON.parse`
 
-- [ ] **Step 3: Exportar a constante de país**
+- [x] **Step 3: Exportar a constante de país**
 
 Em `src/core/links.ts`, trocar o `'BR'` embutido em `buscaNaBiblioteca` por
 uma constante exportada, para a consulta e os links usarem a mesma fonte:
@@ -363,7 +364,7 @@ export const PAIS = 'BR'
 
 E dentro de `buscaNaBiblioteca`, usar `country: PAIS`.
 
-- [ ] **Step 4: Escrever a implementação da consulta**
+- [x] **Step 4: Escrever a implementação da consulta**
 
 Em `src/content/instagram.ts`: trocar o import do topo por
 `import { extrairLsd } from './sessao'`, acrescentar
@@ -454,13 +455,13 @@ Atualizar também o comentário do topo do arquivo: ele afirma que este é o
 único ponto que fabrica pedido **em nome da conta do usuário**, e isso deixa
 de ser verdade. A requisição continua fabricada, mas anônima.
 
-- [ ] **Step 5: Trocar o doc_id nos dois arquivos**
+- [x] **Step 5: Trocar o doc_id nos dois arquivos**
 
 Em `config/config.json` e na `CONFIG_EMBUTIDA` de `src/core/config.ts`, trocar
 `"7193625857423421"` por `"26617181747964058"`. O teste de sincronia entre os
 dois já existe e vai cobrar se só um for alterado.
 
-- [ ] **Step 6: Rodar e confirmar que passa**
+- [x] **Step 6: Rodar e confirmar que passa**
 
 Run: `npx.cmd vitest run tests/instagram.test.ts tests/config.test.ts tests/links.test.ts`
 Expected: PASS
@@ -468,7 +469,7 @@ Expected: PASS
 Run: `npm.cmd test` e `npm.cmd run typecheck`
 Expected: suíte inteira verde, typecheck limpo
 
-- [ ] **Step 7: Escrever a mensagem de commit**
+- [x] **Step 7: Escrever a mensagem de commit**
 
 ```
 ✨ feat(overlay): consultar o Instagram do anunciante sem a conta do usuário

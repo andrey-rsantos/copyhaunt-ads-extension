@@ -52,7 +52,7 @@ const TAMANHO_MAXIMO_PADRAO = 500
 export const CONFIG_EMBUTIDA: ConfigRemota = {
   version: 0,
   anchors: { libraryIdPattern: '(?<!\\d)(\\d{15,17})(?!\\d)' },
-  advertiserDocId: '7193625857423421',
+  advertiserDocId: '26617181747964058',
 }
 
 /**

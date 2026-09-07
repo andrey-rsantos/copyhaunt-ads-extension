@@ -8,11 +8,18 @@ export interface DestinoOpen {
 
 const AD_LIBRARY = 'https://www.facebook.com/ads/library/'
 
+/**
+ * O país das buscas. A extensão é de mercado brasileiro, e o valor aparece
+ * tanto nos links da Biblioteca quanto nas `variables` da consulta do
+ * Instagram — que responde 200 **sem o campo** se o país vier vazio.
+ */
+export const PAIS = 'BR'
+
 function buscaNaBiblioteca(params: Record<string, string>): string {
   const p = new URLSearchParams({
     active_status: 'active',
     ad_type: 'all',
-    country: 'BR',
+    country: PAIS,
     ...params,
   })
   return `${AD_LIBRARY}?${p.toString()}`

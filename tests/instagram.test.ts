@@ -8,26 +8,29 @@ import {
 } from '../src/content/instagram'
 
 const PAGE_ID = '378128628724966'
-const DOC_ID = '7193625857423421'
-const HTML_LOGADO = `["DTSGInitData",[],{"token":"NAcMtoken"},1]`
+const DOC_ID = '26617181747964058'
+const HTML_COM_LSD = `["LSD",[],{"token":"AdLsdToken"},323]`
 
 function resposta(corpo: unknown, ok = true) {
   const texto = typeof corpo === 'string' ? corpo : JSON.stringify(corpo)
   return { ok, text: async () => texto } as unknown as Response
 }
 
-const RESPOSTA_BOA = {
-  data: {
-    page: {
-      extraPageInfo: { page_info: { ig_username: 'renanbotelho', ig_followers: 12 } },
+const RESPOSTA_BOA = [
+  JSON.stringify({ data: { viewer: { actor: { __typename: 'LoggedOutUser' } } } }),
+  JSON.stringify({
+    data: {
+      ad_library_page_info: {
+        page_info: { page_name: 'Renan Botelho Dr', ig_username: 'renanbotelhodr' },
+      },
     },
-  },
-}
+  }),
+].join('\n')
 
 function deps(extra: Partial<Dependencias> = {}): Dependencias {
   return {
     buscar: vi.fn(async () => resposta(RESPOSTA_BOA)),
-    html: () => HTML_LOGADO,
+    html: () => HTML_COM_LSD,
     ...extra,
   }
 }
@@ -41,7 +44,7 @@ beforeEach(() => {
 describe('buscarInstagram', () => {
   it('devolve a URL do perfil quando a resposta traz o handle', async () => {
     expect(await buscarInstagram(PAGE_ID, deps())).toBe(
-      'https://www.instagram.com/renanbotelho',
+      'https://www.instagram.com/renanbotelhodr',
     )
   })
 
@@ -56,28 +59,59 @@ describe('buscarInstagram', () => {
     )
   })
 
-  it('tolera o prefixo anti-roubo de JSON que a Meta às vezes manda', async () => {
-    const d = deps({
-      buscar: vi.fn(async () => resposta(`for (;;);${JSON.stringify(RESPOSTA_BOA)}`)),
-    })
-    expect(await buscarInstagram(PAGE_ID, d)).toBe(
-      'https://www.instagram.com/renanbotelho',
+  it('acha o handle mesmo quando o corpo vem em várias linhas JSON', async () => {
+    expect(await buscarInstagram(PAGE_ID, deps())).toBe(
+      'https://www.instagram.com/renanbotelhodr',
     )
   })
 
-  it('manda o token, o doc_id e o pageId, com os cookies da sessão', async () => {
+  it('não manda cookie nem token de sessão', async () => {
     const buscar = vi.fn(async () => resposta(RESPOSTA_BOA))
     await buscarInstagram(PAGE_ID, deps({ buscar }))
 
-    const [url, init] = buscar.mock.calls[0] as unknown as [string, RequestInit]
-    expect(url).toBe('https://www.facebook.com/api/graphql/')
-    expect(init.method).toBe('POST')
-    expect(init.credentials).toBe('include')
+    const [, init] = buscar.mock.calls[0] as unknown as [string, RequestInit]
+    expect(init.credentials).toBe('omit')
 
     const corpo = new URLSearchParams(init.body as string)
-    expect(corpo.get('token_de_sessao')).toBe('NAcMtoken')
+    expect(corpo.get('lsd')).toBe('AdLsdToken')
+    expect(corpo.get('token_de_sessao')).toBeNull()
+  })
+
+  it('manda o doc_id da config e o anunciante pedido', async () => {
+    const buscar = vi.fn(async () => resposta(RESPOSTA_BOA))
+    await buscarInstagram(PAGE_ID, deps({ buscar }))
+
+    const [, init] = buscar.mock.calls[0] as unknown as [string, RequestInit]
+    const corpo = new URLSearchParams(init.body as string)
     expect(corpo.get('doc_id')).toBe(DOC_ID)
-    expect(JSON.parse(corpo.get('variables')!)).toEqual({ viewAllPageID: PAGE_ID })
+    expect(JSON.parse(corpo.get('variables') as string)).toMatchObject({
+      viewAllPageID: PAGE_ID,
+      isAboutTab: true,
+      fetchPageInfo: true,
+      isLandingPage: false,
+      countries: ['BR'],
+    })
+  })
+
+  it('desiste sem lsd, e não chega a pedir nada', async () => {
+    const buscar = vi.fn(async () => resposta(RESPOSTA_BOA))
+    expect(await buscarInstagram(PAGE_ID, deps({ buscar, html: () => '<html></html>' })))
+      .toBeNull()
+    expect(buscar).not.toHaveBeenCalled()
+  })
+
+  it('devolve null quando o anunciante não tem Instagram vinculado', async () => {
+    const semIg = JSON.stringify({
+      data: { ad_library_page_info: { page_info: { page_name: 'Susana Ateliê' } } },
+    })
+    expect(await buscarInstagram(PAGE_ID, deps({ buscar: async () => resposta(semIg) })))
+      .toBeNull()
+  })
+
+  it('não quebra quando uma das linhas não é JSON', async () => {
+    const sujo = `for (;;);\n${RESPOSTA_BOA}`
+    expect(await buscarInstagram(PAGE_ID, deps({ buscar: async () => resposta(sujo) })))
+      .toBe('https://www.instagram.com/renanbotelhodr')
   })
 })
 
@@ -91,7 +125,7 @@ describe('as travas do spec', () => {
     expect(d.buscar).not.toHaveBeenCalled()
   })
 
-  it('não sai requisição nenhuma sem sessão', async () => {
+  it('não sai requisição nenhuma sem lsd', async () => {
     const d = deps({ html: () => '<html>deslogado</html>' })
     expect(await buscarInstagram(PAGE_ID, d)).toBeNull()
     expect(d.buscar).not.toHaveBeenCalled()
@@ -119,8 +153,8 @@ describe('as travas do spec', () => {
     const segunda = buscarInstagram(PAGE_ID, d)
     liberar(resposta(RESPOSTA_BOA))
 
-    expect(await primeira).toBe('https://www.instagram.com/renanbotelho')
-    expect(await segunda).toBe('https://www.instagram.com/renanbotelho')
+    expect(await primeira).toBe('https://www.instagram.com/renanbotelhodr')
+    expect(await segunda).toBe('https://www.instagram.com/renanbotelhodr')
     expect(d.buscar).toHaveBeenCalledTimes(1)
   })
 
@@ -159,7 +193,7 @@ describe('instagramConhecido', () => {
 
   it('guarda o achado', async () => {
     await buscarInstagram(PAGE_ID, deps())
-    expect(instagramConhecido(PAGE_ID)).toBe('https://www.instagram.com/renanbotelho')
+    expect(instagramConhecido(PAGE_ID)).toBe('https://www.instagram.com/renanbotelhodr')
   })
 
   it('guarda o nulo de quem já foi perguntado e não deu', async () => {
