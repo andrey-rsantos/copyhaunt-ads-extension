@@ -109,17 +109,32 @@ function acharIgUsername(no: unknown): string | null {
   return null
 }
 
+/**
+ * Diz por que a consulta desistiu.
+ *
+ * O recurso falha calado de propósito — nada na página da Meta deve mudar
+ * quando ele não acha nada. Mas calado para o usuário virou calado também
+ * para quem mantém o código, e "desligado pela config" ficou indistinguível
+ * de "quebrado pela Meta" justamente no ponto mais frágil da extensão.
+ *
+ * Nunca inclui o token nem a resposta: só o motivo.
+ */
+function desistir(motivo: string): null {
+  console.info(`[CopyHaunt] instagram: ${motivo}`)
+  return null
+}
+
 /** A requisição em si. Nunca lança: todo fracasso vira `null`. */
 async function consultar(
   pageId: string,
   deps: Dependencias,
 ): Promise<string | null> {
-  if (!docIdAtual) return null
+  if (!docIdAtual) return desistir('sem doc_id na config, recurso desligado')
 
   const token = extrairTokenDeSessao(deps.html())
   // Sem sessão não há o que perguntar. Não é erro: é o estado de quem não
   // está logado, e foi medido que não existe versão anônima deste caminho.
-  if (!token) return null
+  if (!token) return desistir('sem token_de_sessao no HTML, sessão não reconhecida')
 
   try {
     const resposta = await deps.buscar(GRAPHQL, {
@@ -132,20 +147,21 @@ async function consultar(
       }).toString(),
       credentials: 'omit',
     })
-    if (!resposta.ok) return null
+    if (!resposta.ok) return desistir(`resposta HTTP ${resposta.status}`)
 
     // A Meta às vezes prefixa a resposta com `for (;;);`, defesa antiga contra
     // roubo de JSON. Cortar até a primeira chave custa menos que adivinhar
     // qual das formas veio.
     const texto = await resposta.text()
     const inicio = texto.indexOf('{')
-    if (inicio < 0) return null
+    if (inicio < 0) return desistir('resposta sem JSON')
 
     const handle = acharIgUsername(JSON.parse(texto.slice(inicio)))
-    return handle ? `https://www.instagram.com/${handle}` : null
-  } catch {
+    if (!handle) return desistir('resposta sem ig_username, doc_id provavelmente rodado')
+    return `https://www.instagram.com/${handle}`
+  } catch (erro) {
     // Rede caída, JSON quebrado, resposta truncada: tudo vira silêncio.
-    return null
+    return desistir(`falhou: ${erro instanceof Error ? erro.message : erro}`)
   }
 }
 
