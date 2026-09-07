@@ -9,7 +9,7 @@ import {
   instagramConhecido,
 } from './instagram'
 import { baixarCriativos } from './download'
-import { abrirMenu, fecharMenu, type ItemMenu } from './menu'
+import { abrirMenu, atualizarItem, fecharMenu, type ItemMenu } from './menu'
 
 export const ATRIBUTO_ID = 'data-copyhaunt-id'
 
@@ -55,36 +55,66 @@ function destinosComoItens(ad: Ad): ItemMenu[] {
       return { chave: d.chave, rotulo: d.rotulo, valor: d.url }
     }
 
-    // `undefined` = nunca perguntamos, então ofereça a busca. Qualquer outra
-    // coisa já é resposta: o perfil achado, ou o `null` de quem já foi
-    // perguntado e não deu, que volta a item desabilitado.
+    // `undefined` = nunca perguntamos, então ofereça a busca. `null` = já
+    // perguntamos e o anunciante não tem. Qualquer string é o perfil achado,
+    // e o rótulo mostra o handle antes de abrir.
     const sabido = instagramConhecido(ad.anunciante.pageId)
+
     if (sabido === undefined) {
       return {
         chave: d.chave,
         rotulo: `${d.rotulo} (buscar)`,
         valor: BUSCAR_INSTAGRAM,
+        // Sem isto o menu fecharia no clique, e a resposta que chega ~2 s
+        // depois não teria onde aparecer.
+        mantemAberto: true,
       }
     }
-    return { chave: d.chave, rotulo: d.rotulo, valor: sabido }
+
+    if (sabido === null) {
+      return { chave: d.chave, rotulo: 'sem Instagram vinculado', valor: null }
+    }
+
+    return {
+      chave: d.chave,
+      rotulo: `Abrir @${sabido.split('/').pop()}`,
+      valor: sabido,
+    }
   })
 }
 
 /**
- * Dispara a consulta forjada e abre o perfil, se vier.
+ * Dispara a consulta e dá a notícia no próprio item do menu.
  *
- * Só é chamada de dentro do callback de clique do menu. É a única requisição
- * que esta extensão fabrica em nome da conta do usuário, e o clique deliberado
- * é a trava que o spec exige.
+ * Não abre a aba sozinha de propósito. A consulta leva ~2 s, e a essa altura
+ * a ativação transitória do clique já expirou: o `window.open` seria bloqueado
+ * como popup, e o caso de sucesso falharia em silêncio. O segundo clique abre
+ * com ativação legítima — e, de quebra, o handle fica legível antes de abrir.
  */
-function buscarEAbrirInstagram(ad: Ad): void {
+function buscarInstagramNoMenu(raiz: ParentNode, ad: Ad): void {
+  atualizarItem(raiz, 'instagram', { rotulo: 'buscando…', estado: 'buscando' })
+
   void buscarInstagram(ad.anunciante.pageId, {
     buscar: (...args) => fetch(...args),
     html: () => document.documentElement.innerHTML,
   }).then((url) => {
-    // Não achou: silêncio. O item já sabe que vai voltar desabilitado na
-    // próxima abertura do menu.
-    if (url) window.open(url, '_blank', 'noopener')
+    if (!url) {
+      atualizarItem(raiz, 'instagram', {
+        rotulo: 'sem Instagram vinculado',
+        estado: 'apagado',
+      })
+      return
+    }
+    atualizarItem(raiz, 'instagram', {
+      rotulo: `Abrir @${url.split('/').pop()}`,
+      estado: 'achou',
+      // A ação precisa vir junto: `atualizarItem` troca a linha por um clone
+      // e o listener original morre com ela.
+      aoClicar: () => {
+        window.open(url, '_blank', 'noopener')
+        fecharMenu(raiz)
+      },
+    })
   })
 }
 
@@ -180,7 +210,7 @@ export function plantarBandeja(
         abrirMenu(raiz, destinosComoItens(ad), (item) => {
           if (!item.valor) return
           if (item.valor === BUSCAR_INSTAGRAM) {
-            buscarEAbrirInstagram(ad)
+            buscarInstagramNoMenu(raiz, ad)
             return
           }
           // `noopener`: a aba aberta não recebe referência para esta.

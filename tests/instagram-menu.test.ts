@@ -2,7 +2,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import {
   definirDocIdAnunciante,
-  instagramConhecido,
   limparCacheInstagram,
 } from '../src/content/instagram'
 import { plantarBandeja } from '../src/content/tray'
@@ -10,16 +9,11 @@ import type { Ad } from '../src/core/types'
 
 const HTML_COM_LSD = `["LSD",[],{"token":"AdLsdToken"},323]`
 
-const RESPOSTA_BOA = [
-  JSON.stringify({ data: { viewer: { actor: { __typename: 'LoggedOutUser' } } } }),
-  JSON.stringify({
-    data: {
-      ad_library_page_info: {
-        page_info: { page_name: 'Renan Botelho Dr', ig_username: 'renanbotelhodr' },
-      },
-    },
-  }),
-].join('\n')
+const RESPOSTA_BOA = {
+  data: {
+    ad_library_page_info: { page_info: { ig_username: 'renanbotelhodr' } },
+  },
+}
 
 function ad(extra: Partial<Ad> = {}): Ad {
   return {
@@ -55,7 +49,7 @@ function itemInstagram(shadow: ShadowRoot): HTMLElement {
 function respostaBoa() {
   return {
     ok: true,
-    text: async () => RESPOSTA_BOA,
+    text: async () => JSON.stringify(RESPOSTA_BOA),
   } as unknown as Response
 }
 
@@ -93,80 +87,71 @@ describe('o item do Instagram quando a derivação passiva não alcança', () =>
     vi.unstubAllGlobals()
   })
 
-  it('o clique busca e abre a aba com o perfil achado', async () => {
+  it('mostra buscando e depois o handle, sem fechar o menu', async () => {
+    vi.stubGlobal('fetch', vi.fn(async () => respostaBoa()))
+    const shadow = plantar()
+    abrirOpen(shadow)
+
+    itemInstagram(shadow).click()
+    expect(itemInstagram(shadow).textContent).toBe('buscando…')
+
+    await vi.waitFor(() =>
+      expect(itemInstagram(shadow).textContent).toBe('Abrir @renanbotelhodr'),
+    )
+    expect(shadow.querySelector('.menu')).not.toBeNull()
+  })
+
+  it('avisa quando o anunciante não tem Instagram vinculado', async () => {
+    const semIg = {
+      ok: true,
+      text: async () =>
+        JSON.stringify({ data: { ad_library_page_info: { page_info: {} } } }),
+    } as unknown as Response
+    vi.stubGlobal('fetch', vi.fn(async () => semIg))
+    const shadow = plantar()
+    abrirOpen(shadow)
+
+    itemInstagram(shadow).click()
+    await vi.waitFor(() =>
+      expect(itemInstagram(shadow).textContent).toBe('sem Instagram vinculado'),
+    )
+    expect(itemInstagram(shadow).dataset.desabilitado).toBe('sim')
+  })
+
+  it('só abre a aba no segundo clique, com ativação do usuário', async () => {
     const open = vi.fn()
     vi.stubGlobal('open', open)
     vi.stubGlobal('fetch', vi.fn(async () => respostaBoa()))
-
     const shadow = plantar()
     abrirOpen(shadow)
-    itemInstagram(shadow).click()
 
-    await vi.waitFor(() => {
-      expect(open).toHaveBeenCalledWith(
-        'https://www.instagram.com/renanbotelhodr',
-        '_blank',
-        'noopener',
-      )
-    })
-    vi.unstubAllGlobals()
+    itemInstagram(shadow).click()
+    await vi.waitFor(() =>
+      expect(itemInstagram(shadow).textContent).toBe('Abrir @renanbotelhodr'),
+    )
+    expect(open).not.toHaveBeenCalled()
+
+    itemInstagram(shadow).click()
+    expect(open).toHaveBeenCalledWith(
+      'https://www.instagram.com/renanbotelhodr', '_blank', 'noopener',
+    )
   })
 
-  it('depois de achar, o item vira link direto e não busca de novo', async () => {
+  it('uma segunda abertura do menu já mostra o handle, sem requisitar de novo', async () => {
     const buscar = vi.fn(async () => respostaBoa())
     vi.stubGlobal('open', vi.fn())
     vi.stubGlobal('fetch', buscar)
-
     const shadow = plantar()
+
     abrirOpen(shadow)
     itemInstagram(shadow).click()
     await vi.waitFor(() =>
-      expect(instagramConhecido('378128628724966')).toBe(
-        'https://www.instagram.com/renanbotelhodr',
-      ),
+      expect(itemInstagram(shadow).textContent).toBe('Abrir @renanbotelhodr'),
     )
 
     abrirOpen(shadow)
-    const item = itemInstagram(shadow)
-    expect(item.dataset.desabilitado).toBeUndefined()
-    expect(item.textContent).not.toContain('buscar')
-
-    item.click()
-    await vi.waitFor(() =>
-      expect(window.open).toHaveBeenCalledWith(
-        'https://www.instagram.com/renanbotelhodr',
-        '_blank',
-        'noopener',
-      ),
-    )
-    // A segunda trava: o anunciante não é perguntado duas vezes.
+    expect(itemInstagram(shadow).textContent).toBe('Abrir @renanbotelhodr')
     expect(buscar).toHaveBeenCalledTimes(1)
-    vi.unstubAllGlobals()
-  })
-
-  it('quando a busca não acha, o item volta a desabilitado e cala', async () => {
-    const buscar = vi.fn(
-      async () => ({ ok: true, text: async () => '{"data":{}}' }) as unknown as Response,
-    )
-    const open = vi.fn()
-    vi.stubGlobal('open', open)
-    vi.stubGlobal('fetch', buscar)
-
-    const shadow = plantar()
-    abrirOpen(shadow)
-    itemInstagram(shadow).click()
-    await vi.waitFor(() => expect(instagramConhecido('378128628724966')).toBeNull())
-
-    // Falha silenciosa: nenhuma aba, nenhum erro na cara do usuário.
-    expect(open).not.toHaveBeenCalled()
-
-    abrirOpen(shadow)
-    expect(itemInstagram(shadow).dataset.desabilitado).toBe('sim')
-
-    itemInstagram(shadow).click()
-    // E nenhuma repetição automática nem manual.
-    expect(buscar).toHaveBeenCalledTimes(1)
-    vi.unstubAllGlobals()
   })
 })
 

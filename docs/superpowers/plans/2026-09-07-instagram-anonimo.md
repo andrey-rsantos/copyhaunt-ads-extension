@@ -4,9 +4,9 @@
 
 ## Progresso
 
-- **Estado:** em andamento
-- **Última tarefa concluída:** Task 4 — o menu que dá notícia sem fechar
-- **Próxima tarefa:** Task 5
+- **Estado:** concluído
+- **Última tarefa concluída:** Task 5 — o fluxo do clique
+- **Próxima tarefa:** nenhuma, o plano fechou
 - **Notas de retomada:** Tasks 1 a 3 concluídas em 2026-09-07. `sessao.ts` lê o
   `lsd`, `instagram.ts` faz a consulta anônima sem cookies, e o `doc_id` novo
   está sincronizado nos dois arquivos de config. Suíte inteira verde com 322
@@ -695,7 +695,7 @@ Considerações:
 - Consumes: `atualizarItem` e `ItemMenu.mantemAberto` (Task 4);
   `buscarInstagram` (Task 3)
 
-- [ ] **Step 1: Substituir os testes que a mudança invalida**
+- [x] **Step 1: Substituir os testes que a mudança invalida**
 
 O arquivo já tem os auxiliares — use-os como estão: `ad()`, `plantar()`,
 `abrirOpen(shadow)`, `itemInstagram(shadow)`, `respostaBoa()`, e
@@ -805,12 +805,12 @@ O último teste é o que sustenta a decisão de interface registrada no spec:
 perder o menu no meio da espera custa a notícia, nunca o dado. Ele depende de
 `destinosComoItens` passar a montar o rótulo a partir do cache — veja o Step 3.
 
-- [ ] **Step 2: Rodar e confirmar que falha**
+- [x] **Step 2: Rodar e confirmar que falha**
 
 Run: `npx.cmd vitest run tests/instagram-menu.test.ts`
 Expected: FAIL — o item some do menu ao clicar, porque o menu fecha
 
-- [ ] **Step 3: Escrever a implementação**
+- [x] **Step 3: Escrever a implementação**
 
 Em `src/content/tray.ts`, o ramo do Instagram dentro de `destinosComoItens`
 passa a montar o rótulo a partir do cache — é isso que faz a segunda abertura
@@ -908,12 +908,12 @@ acima. Os dois caminhos até a aba — item atualizado na hora e item já nascid
 pronto — chamam `window.open` a partir de um clique real, que é a condição
 para o navegador não bloquear.
 
-- [ ] **Step 4: Rodar e confirmar que passa**
+- [x] **Step 4: Rodar e confirmar que passa**
 
 Run: `npx.cmd vitest run tests/instagram-menu.test.ts`
 Expected: PASS
 
-- [ ] **Step 5: Rodar a verificação inteira**
+- [x] **Step 5: Rodar a verificação inteira**
 
 ```
 npm.cmd test
@@ -925,7 +925,7 @@ npx.cmd playwright test
 Expected: tudo verde, e o `verify:build` confirmando permissões mínimas
 inalteradas.
 
-- [ ] **Step 6: Escrever a mensagem de commit**
+- [x] **Step 6: Escrever a mensagem de commit**
 
 ```
 ✨ feat(overlay): dar a notícia da busca do Instagram no próprio menu
