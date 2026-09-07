@@ -85,6 +85,14 @@ export const CSS_BANDEJA = `
   }
   .menu .item:hover { background: #7C3AED; }
 
+  .menu .item[data-estado="buscando"] {
+    color: #C4A7FF;
+    opacity: 0.7;
+    cursor: progress;
+  }
+  .menu .item[data-estado="buscando"]:hover { background: transparent; }
+  .menu .item[data-estado="achou"] { color: #A855F7; font-weight: 600; }
+
   .menu .item[data-desabilitado="sim"] {
     color: #C4A7FF;
     opacity: 0.45;

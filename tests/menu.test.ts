@@ -1,6 +1,11 @@
 // @vitest-environment jsdom
 import { describe, expect, it, vi } from 'vitest'
-import { abrirMenu, fecharMenu, type ItemMenu } from '../src/content/menu'
+import {
+  abrirMenu,
+  atualizarItem,
+  fecharMenu,
+  type ItemMenu,
+} from '../src/content/menu'
 
 const ITENS: ItemMenu[] = [
   { chave: 'a', rotulo: 'Com dado', valor: 'valor-a' },
@@ -70,5 +75,61 @@ describe('fecharMenu', () => {
 
   it('não estoura quando não há menu', () => {
     expect(() => fecharMenu(raiz())).not.toThrow()
+  })
+})
+
+describe('item que mantém o menu aberto', () => {
+  it('não fecha o menu quando o item pede para ficar', () => {
+    const raiz = document.createElement('div')
+    abrirMenu(raiz, [{ chave: 'ig', rotulo: 'Instagram', valor: 'x', mantemAberto: true }], () => {})
+    ;(raiz.querySelector('[data-chave="ig"]') as HTMLElement).click()
+    expect(raiz.querySelector('.menu')).not.toBeNull()
+  })
+
+  it('fecha normalmente quando o item não pede nada', () => {
+    const raiz = document.createElement('div')
+    abrirMenu(raiz, [{ chave: 'site', rotulo: 'Site', valor: 'x' }], () => {})
+    ;(raiz.querySelector('[data-chave="site"]') as HTMLElement).click()
+    expect(raiz.querySelector('.menu')).toBeNull()
+  })
+})
+
+describe('atualizarItem', () => {
+  it('troca o rótulo e marca o item como buscando', () => {
+    const raiz = document.createElement('div')
+    abrirMenu(raiz, [{ chave: 'ig', rotulo: 'Instagram', valor: 'x' }], () => {})
+    atualizarItem(raiz, 'ig', { rotulo: 'buscando…', estado: 'buscando' })
+
+    const linha = raiz.querySelector('[data-chave="ig"]') as HTMLElement
+    expect(linha.textContent).toBe('buscando…')
+    expect(linha.dataset.estado).toBe('buscando')
+  })
+
+  it('deixa o item apagado e sem ação quando o estado é apagado', () => {
+    const raiz = document.createElement('div')
+    const escolhas: string[] = []
+    abrirMenu(raiz, [{ chave: 'ig', rotulo: 'Instagram', valor: 'x' }], (i) => escolhas.push(i.chave))
+    atualizarItem(raiz, 'ig', { rotulo: 'sem Instagram vinculado', estado: 'apagado' })
+    ;(raiz.querySelector('[data-chave="ig"]') as HTMLElement).click()
+
+    expect(raiz.querySelector('[data-chave="ig"]')!.getAttribute('data-desabilitado')).toBe('sim')
+    expect(escolhas).toEqual([])
+  })
+
+  it('instala a ação nova, porque a troca descarta a antiga', () => {
+    const raiz = document.createElement('div')
+    const antiga = vi.fn()
+    const nova = vi.fn()
+    abrirMenu(raiz, [{ chave: 'ig', rotulo: 'Instagram', valor: 'x' }], antiga)
+    atualizarItem(raiz, 'ig', { rotulo: 'Abrir @perfil', estado: 'achou', aoClicar: nova })
+    ;(raiz.querySelector('[data-chave="ig"]') as HTMLElement).click()
+
+    expect(nova).toHaveBeenCalledTimes(1)
+    expect(antiga).not.toHaveBeenCalled()
+  })
+
+  it('não explode quando o menu já foi fechado', () => {
+    const raiz = document.createElement('div')
+    expect(() => atualizarItem(raiz, 'ig', { rotulo: 'x', estado: 'achou' })).not.toThrow()
   })
 })

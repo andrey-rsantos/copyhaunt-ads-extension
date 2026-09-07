@@ -5,8 +5,8 @@
 ## Progresso
 
 - **Estado:** em andamento
-- **Última tarefa concluída:** Task 3 — a consulta anônima
-- **Próxima tarefa:** Task 4
+- **Última tarefa concluída:** Task 4 — o menu que dá notícia sem fechar
+- **Próxima tarefa:** Task 5
 - **Notas de retomada:** Tasks 1 a 3 concluídas em 2026-09-07. `sessao.ts` lê o
   `lsd`, `instagram.ts` faz a consulta anônima sem cookies, e o `doc_id` novo
   está sincronizado nos dois arquivos de config. Suíte inteira verde com 322
@@ -504,7 +504,7 @@ Considerações:
   `atualizarItem(raiz: ParentNode, chave: string, mudanca: MudancaItem): void`
   com `MudancaItem = { rotulo: string; estado: 'buscando' | 'achou' | 'apagado' }`
 
-- [ ] **Step 1: Escrever o teste que falha**
+- [x] **Step 1: Escrever o teste que falha**
 
 Acrescentar a `tests/menu.test.ts`:
 
@@ -566,12 +566,12 @@ describe('atualizarItem', () => {
 })
 ```
 
-- [ ] **Step 2: Rodar e confirmar que falha**
+- [x] **Step 2: Rodar e confirmar que falha**
 
 Run: `npx.cmd vitest run tests/menu.test.ts`
 Expected: FAIL — `atualizarItem` não existe
 
-- [ ] **Step 3: Escrever a implementação**
+- [x] **Step 3: Escrever a implementação**
 
 Em `src/content/menu.ts`, acrescentar ao `ItemMenu`:
 
@@ -646,7 +646,7 @@ export function atualizarItem(
 }
 ```
 
-- [ ] **Step 4: Estilo dos estados novos**
+- [x] **Step 4: Estilo dos estados novos**
 
 Em `src/content/estilo.ts`, dentro de `CSS_BANDEJA`, depois das regras de
 `.menu .item`:
@@ -661,12 +661,12 @@ Em `src/content/estilo.ts`, dentro de `CSS_BANDEJA`, depois das regras de
   .menu .item[data-estado="achou"] { color: #A855F7; font-weight: 600; }
 ```
 
-- [ ] **Step 5: Rodar e confirmar que passa**
+- [x] **Step 5: Rodar e confirmar que passa**
 
 Run: `npx.cmd vitest run tests/menu.test.ts tests/estilo.test.ts`
 Expected: PASS
 
-- [ ] **Step 6: Escrever a mensagem de commit**
+- [x] **Step 6: Escrever a mensagem de commit**
 
 ```
 ✨ feat(overlay): permitir que um item do menu dê notícia sem fechar
