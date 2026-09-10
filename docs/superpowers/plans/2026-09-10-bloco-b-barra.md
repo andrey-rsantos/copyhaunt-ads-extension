@@ -6,9 +6,9 @@
 ## Progresso
 
 - **Estado:** em andamento
-- **Última tarefa concluída:** Task 2 — plantar os enxertos e mantê-los vivos
-- **Próxima tarefa:** Task 3
-- **Notas de retomada:** A Task 1 foi validada contra a Meta real antes de ser executada, e a primeira versão da regra falhou lá: subir procurando o primeiro flex-row devolve um wrapper interno do campo de busca, com 20 px de altura. O plano e o spec da âncora foram corrigidos antes do despacho, e o teste de regressão que trava isso está em `tests/content/barra.test.ts`. Também caiu a afirmação de que a barra teria duas formas por largura: entre 762 e 1602 px ela foi sempre `row`, e a forma de coluna era estado transitório de carregamento. O suporte a `coluna` ficou no código por ser barato. Na Task 2, a revisão pegou um vazamento que os testes não veriam: a folha de estilo é compartilhada com as bandejas dos cards, e o `:host` do CSS_ENXERTOS venceria o `all: initial` delas, dando `display: flex` ao host da bandeja e empurrando o conteúdo de todo card para baixo. A regra foi escopada para `:host(#copyhaunt-enxertos)` e dois testes de texto travam o caminho. Suíte: 373 testes, 38 arquivos.
+- **Última tarefa concluída:** Task 4 — a gaveta de exemplos
+- **Próxima tarefa:** Task 5
+- **Notas de retomada:** A Task 1 foi validada contra a Meta real antes de ser executada, e a primeira versão da regra falhou lá: subir procurando o primeiro flex-row devolve um wrapper interno do campo de busca, com 20 px de altura. O plano e o spec da âncora foram corrigidos antes do despacho, e o teste de regressão que trava isso está em `tests/content/barra.test.ts`. Também caiu a afirmação de que a barra teria duas formas por largura: entre 762 e 1602 px ela foi sempre `row`, e a forma de coluna era estado transitório de carregamento. O suporte a `coluna` ficou no código por ser barato. Na Task 2, a revisão pegou um vazamento que os testes não veriam: a folha de estilo é compartilhada com as bandejas dos cards, e o `:host` do CSS_ENXERTOS venceria o `all: initial` delas, dando `display: flex` ao host da bandeja e empurrando o conteúdo de todo card para baixo. A regra foi escopada para `:host(#copyhaunt-enxertos)` e dois testes de texto travam o caminho. Nas Tasks 3 e 4 a revisão pegou o mesmo vazamento uma segunda vez, agora por classe: `.botao` existe em CSS_BANDEJA e em CSS_ENXERTOS, e a folha compartilhada fazia a regra de baixo vencer dentro do shadow da bandeja — os botões de 30x30 dos cards virariam inline-flex de 36 px. Todo seletor de CSS_ENXERTOS e CSS_GAVETA passou a ser escopado com `:host(#copyhaunt-enxertos)`, e dois testes de texto travam o caminho. Regra para as tarefas seguintes: **CSS novo nessas folhas nasce escopado**. Suíte: 391 testes, 40 arquivos.
 
 **Goal:** Plantar na barra de filtros da Meta os três enxertos do spec — o `?`,
 o calendário e o Minerar — de modo que uma mineração real comece por um botão,
@@ -48,6 +48,12 @@ mas ninguém ainda os vê numa tela.
 - **Todo enxerto vive em shadow root**, criado por `criarShadow` de
   `src/content/estilo.ts`. O CSS da Meta não alcança o nosso, e o nosso não
   alcança o deles.
+- **Todo seletor novo em `CSS_ENXERTOS` e `CSS_GAVETA` nasce escopado com
+  `:host(#copyhaunt-enxertos)`.** A folha é compartilhada com as bandejas dos
+  cards: um `:host` solto, ou uma classe de mesmo nome — `.botao` já colidiu —
+  faz a regra de baixo vencer dentro do shadow da bandeja e quebra a grade
+  inteira. jsdom não faz layout, então quem pega isso são os testes de texto
+  em `tests/content/enxertos.test.ts`.
 - **Nunca guardar referência ao `input[type="search"]`.** A Meta troca esse nó
   a cada busca nova — medido. Toda operação reexecuta a busca pelo documento.
 - **Nenhuma profundidade fixa de DOM no código.** Os 17 níveis medidos são
@@ -787,7 +793,7 @@ as três seguintes só fornecem conteúdo.
   - `gavetaAberta(shadow: ShadowRoot): string | null` — a `chave` do botão dono
   - `alternarGaveta(shadow: ShadowRoot, botao: HTMLElement, montar: () => HTMLElement): void`
 
-- [ ] **Step 1: Escrever os testes que falham**
+- [x] **Step 1: Escrever os testes que falham**
 
 Criar `tests/content/gaveta.test.ts`:
 
@@ -894,13 +900,13 @@ describe('gaveta', () => {
 })
 ```
 
-- [ ] **Step 2: Rodar e confirmar que falham**
+- [x] **Step 2: Rodar e confirmar que falham**
 
 Run: `npx.cmd vitest run tests/content/gaveta.test.ts`
 
 Expected: FAIL com `Failed to resolve import "../../src/content/gaveta"`.
 
-- [ ] **Step 3: Acrescentar o CSS da gaveta**
+- [x] **Step 3: Acrescentar o CSS da gaveta**
 
 Em `src/content/estilo.ts`, acrescentar junto de `CSS_ENXERTOS`:
 
@@ -982,7 +988,7 @@ as bandejas dos cards, e um `:host` solto aqui daria `display: flex` ao host
 delas, empurrando o conteúdo de todo card para baixo. `tests/content/enxertos.test.ts`
 trava esse caminho.
 
-- [ ] **Step 4: Escrever a implementação**
+- [x] **Step 4: Escrever a implementação**
 
 Criar `src/content/gaveta.ts`:
 
@@ -1059,13 +1065,13 @@ export function alternarGaveta(
 }
 ```
 
-- [ ] **Step 5: Rodar e confirmar que passam**
+- [x] **Step 5: Rodar e confirmar que passam**
 
 Run: `npx.cmd vitest run tests/content/gaveta.test.ts`
 
 Expected: PASS, 9 testes.
 
-- [ ] **Step 6: Rodar a suíte e o typecheck**
+- [x] **Step 6: Rodar a suíte e o typecheck**
 
 ```
 npm.cmd test
@@ -1074,7 +1080,7 @@ npm.cmd run typecheck
 
 Expected: tudo passa.
 
-- [ ] **Step 7: Escrever a mensagem de commit**
+- [x] **Step 7: Escrever a mensagem de commit**
 
 Criar `.commit-msg` na raiz com:
 
@@ -1106,7 +1112,7 @@ um enxerto real. Clicar num exemplo escreve na busca da Meta.
   - `montarExemplos(doc: Document, aoEscolher: (termo: string) => void): HTMLElement`
   - `escreverNaBusca(doc: Document, termo: string): boolean`
 
-- [ ] **Step 1: Escrever os testes que falham**
+- [x] **Step 1: Escrever os testes que falham**
 
 Criar `tests/content/gaveta-exemplos.test.ts`:
 
@@ -1188,13 +1194,13 @@ describe('escreverNaBusca', () => {
 })
 ```
 
-- [ ] **Step 2: Rodar e confirmar que falham**
+- [x] **Step 2: Rodar e confirmar que falham**
 
 Run: `npx.cmd vitest run tests/content/gaveta-exemplos.test.ts`
 
 Expected: FAIL com `Failed to resolve import`.
 
-- [ ] **Step 3: Escrever a implementação**
+- [x] **Step 3: Escrever a implementação**
 
 Criar `src/content/gaveta-exemplos.ts`:
 
@@ -1285,13 +1291,13 @@ export function escreverNaBusca(doc: Document, termo: string): boolean {
 }
 ```
 
-- [ ] **Step 4: Rodar e confirmar que passam**
+- [x] **Step 4: Rodar e confirmar que passam**
 
 Run: `npx.cmd vitest run tests/content/gaveta-exemplos.test.ts`
 
 Expected: PASS, 7 testes.
 
-- [ ] **Step 5: Rodar a suíte e o typecheck**
+- [x] **Step 5: Rodar a suíte e o typecheck**
 
 ```
 npm.cmd test
@@ -1300,7 +1306,7 @@ npm.cmd run typecheck
 
 Expected: tudo passa.
 
-- [ ] **Step 6: Escrever a mensagem de commit**
+- [x] **Step 6: Escrever a mensagem de commit**
 
 Criar `.commit-msg` na raiz com:
 

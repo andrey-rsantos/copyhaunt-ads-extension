@@ -6,7 +6,7 @@ import {
   type Enxerto,
   type Plantio,
 } from '../../src/content/enxertos'
-import { CSS_ENXERTOS } from '../../src/content/estilo'
+import { CSS_ENXERTOS, CSS_GAVETA } from '../../src/content/estilo'
 
 let plantio: Plantio | null = null
 
@@ -149,5 +149,27 @@ describe('CSS_ENXERTOS', () => {
 
   it('escopa o :host ao host dos enxertos', () => {
     expect(CSS_ENXERTOS).toContain(':host(#copyhaunt-enxertos)')
+  })
+})
+
+/**
+ * A folha é compartilhada com as bandejas dos cards, e as duas usam a classe
+ * `.botao`. Sem escopo, a regra que vier depois vence dentro do shadow da
+ * outra: os botões de 30x30 da bandeja virariam inline-flex de 36 px com
+ * padding lateral. jsdom não faz layout, então só um teste do texto pega isto.
+ */
+describe('escopo das folhas dos enxertos', () => {
+  const seletoresSoltos = (css: string): string[] =>
+    css
+      .split(/\r?\n/)
+      .map((l) => l.trim())
+      .filter((l) => l.startsWith('.') && l.includes('{'))
+
+  it('CSS_ENXERTOS não tem seletor de classe sem escopo', () => {
+    expect(seletoresSoltos(CSS_ENXERTOS)).toEqual([])
+  })
+
+  it('CSS_GAVETA não tem seletor de classe sem escopo', () => {
+    expect(seletoresSoltos(CSS_GAVETA)).toEqual([])
   })
 })

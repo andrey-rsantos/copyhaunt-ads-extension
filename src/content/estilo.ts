@@ -114,9 +114,14 @@ export const CSS_ENXERTOS = `
      conta com o \`all: initial\` de CSS_BANDEJA para não ocupar espaço. Um
      \`:host\` solto aqui venceria aquele por vir depois, daria \`display:flex\`
      ao host da bandeja e empurraria o conteúdo de todo card para baixo. */
-  :host(#copyhaunt-enxertos) { all: initial; display: flex; align-items: center; }
+  :host(#copyhaunt-enxertos) {
+    all: initial;
+    display: flex;
+    align-items: center;
+    position: relative;
+  }
 
-  .fila {
+  :host(#copyhaunt-enxertos) .fila {
     display: flex;
     align-items: center;
     gap: 8px;
@@ -126,14 +131,14 @@ export const CSS_ENXERTOS = `
 
   /* O divisor separa o nosso do da Meta: dois enxertos avulsos viram um
      produto quando têm uma fronteira visível (spec, 7.1). */
-  .divisor {
+  :host(#copyhaunt-enxertos) .divisor {
     width: 1px;
     height: 24px;
     background: rgba(124, 58, 237, 0.28);
     margin-right: 2px;
   }
 
-  .botao {
+  :host(#copyhaunt-enxertos) .botao {
     height: 36px;
     padding: 0 14px;
     display: inline-flex;
@@ -147,19 +152,82 @@ export const CSS_ENXERTOS = `
     font-weight: 600;
     transition: filter 150ms ease;
   }
-  .botao:hover { filter: brightness(1.12); }
+  :host(#copyhaunt-enxertos) .botao:hover { filter: brightness(1.12); }
 
-  .botao[data-variante="solido"] {
+  :host(#copyhaunt-enxertos) .botao[data-variante="solido"] {
     background: #7C3AED;
     color: #FFFFFF;
     box-shadow: 0 0 20px rgba(124, 58, 237, 0.18);
   }
-  .botao[data-variante="contorno"] {
+  :host(#copyhaunt-enxertos) .botao[data-variante="contorno"] {
     background: transparent;
     color: #7C3AED;
     box-shadow: inset 0 0 0 1.5px #7C3AED;
   }
-  .botao[data-aberto] { filter: brightness(1.2); }
+  :host(#copyhaunt-enxertos) .botao[data-aberto] { filter: brightness(1.2); }
+`
+
+/**
+ * A gaveta que se abre sob os enxertos. Uma por vez (spec, 7.1).
+ *
+ * Como em CSS_ENXERTOS, todo seletor é escopado ao host dos enxertos: a folha
+ * é compartilhada com as bandejas dos cards, e classe de mesmo nome nas duas
+ * folhas faz a de baixo vencer dentro do shadow da outra.
+ */
+export const CSS_GAVETA = `
+  :host(#copyhaunt-enxertos) .gaveta {
+    position: absolute;
+    top: 44px;
+    right: 0;
+    min-width: 300px;
+    padding: 16px;
+    border-radius: 14px;
+    background: #08070D;
+    color: #FFFFFF;
+    box-shadow: 0 0 20px rgba(124, 58, 237, 0.25);
+    font-family: Inter, ui-sans-serif, system-ui, sans-serif;
+    font-size: 13px;
+    line-height: 1.5;
+    z-index: 2147483647;
+  }
+
+  :host(#copyhaunt-enxertos) .gaveta h3 {
+    margin: 0 0 10px;
+    font-family: Sora, Inter, ui-sans-serif, system-ui, sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+  }
+
+  :host(#copyhaunt-enxertos) .gaveta .linha {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 6px 0;
+  }
+
+  :host(#copyhaunt-enxertos) .gaveta .nota {
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px solid rgba(255, 255, 255, 0.12);
+    color: #C4A7FF;
+    font-size: 12px;
+  }
+
+  :host(#copyhaunt-enxertos) .gaveta .acao {
+    width: 100%;
+    margin-top: 12px;
+    height: 38px;
+    border: 0;
+    border-radius: 10px;
+    background: #7C3AED;
+    color: #FFFFFF;
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  :host(#copyhaunt-enxertos) .gaveta .acao:hover { filter: brightness(1.12); }
 `
 
 let folha: CSSStyleSheet | null = null
@@ -175,7 +243,7 @@ export function folhaCompartilhada(): CSSStyleSheet | null {
   if (folha) return folha
   try {
     folha = new CSSStyleSheet()
-    folha.replaceSync(CSS_BANDEJA + CSS_ENXERTOS)
+    folha.replaceSync(CSS_BANDEJA + CSS_ENXERTOS + CSS_GAVETA)
     return folha
   } catch {
     return null // navegador sem folha construída: cai para <style>
@@ -193,7 +261,7 @@ export function criarShadow(host: HTMLElement): ShadowRoot {
     shadow.adoptedStyleSheets = [compartilhada]
   } else {
     const style = document.createElement('style')
-    style.textContent = CSS_BANDEJA + CSS_ENXERTOS
+    style.textContent = CSS_BANDEJA + CSS_ENXERTOS + CSS_GAVETA
     shadow.appendChild(style)
   }
 
