@@ -6,8 +6,8 @@
 ## Progresso
 
 - **Estado:** em andamento
-- **Última tarefa concluída:** Task 5 — fim, degradação e limites seguros
-- **Próxima tarefa:** Task 6
+- **Última tarefa concluída:** Task 6 — ritmo na config remota
+- **Próxima tarefa:** Task 7
 - **Notas de retomada:** Task 1 foi executada manualmente pelo dono do projeto e fica pulada conforme instrução da sessão. Na Task 2, `colacaoDe` também herda o maior `collation_count` visto em outro membro do grupo, exigido pelo teste do plano. Na Task 3, `e2e/filtro.spec.ts` foi atualizado para os campos e atalhos da faixa. Na Task 4, os testes cedem microtasks após `avisarLote()` para o relógio falso registrar a próxima espera antes do avanço seguinte. Na Task 5, o dono aprovou alvo configurável de 1 a 100 aprovados e teto independente de rolagens. O RED revelou e o plano corrigiu dois sinais antes ambíguos: `esgotado` exige que não haja sinal de página incompreensível; cards visíveis com store vazio aguardam três voltas e viram `incompreensivel`. A altura inicial é capturada antes da primeira rolagem.
 
 **Goal:** Corrigir o laço do minerador para rolagem reativa e ligá-lo ao
@@ -1441,7 +1441,7 @@ Chrome Web Store. É o propósito declarado da config remota.
   `ConfigRemota` ganha `mining?: { pisoMs: number; timeoutMs: number; jitter: number }`;
   `CONFIG_EMBUTIDA.mining` traz os valores medidos.
 
-- [ ] **Step 1: Escrever os testes que falham**
+- [x] **Step 1: Escrever os testes que falham**
 
 Acrescentar a `tests/config.test.ts`:
 
@@ -1487,7 +1487,7 @@ describe('bloco mining', () => {
 })
 ```
 
-- [ ] **Step 2: Rodar e confirmar que falham**
+- [x] **Step 2: Rodar e confirmar que falham**
 
 ```bash
 npx.cmd vitest run tests/config.test.ts
@@ -1495,7 +1495,7 @@ npx.cmd vitest run tests/config.test.ts
 
 Esperado: FALHA.
 
-- [ ] **Step 3: Escrever a implementação**
+- [x] **Step 3: Escrever a implementação**
 
 Em `src/core/config.ts`, acrescentar à interface, depois de `advertiserDocId`:
 
@@ -1569,7 +1569,7 @@ E, em `validarConfig`, antes do `return config`:
   }
 ```
 
-- [ ] **Step 4: Rodar e confirmar que passam**
+- [x] **Step 4: Rodar e confirmar que passam**
 
 ```bash
 npx.cmd vitest run tests/config.test.ts tests/config-remota.test.ts
@@ -1577,7 +1577,7 @@ npx.cmd vitest run tests/config.test.ts tests/config-remota.test.ts
 
 Esperado: PASSA.
 
-- [ ] **Step 5: Rodar a suíte, o typecheck e o build**
+- [x] **Step 5: Rodar a suíte, o typecheck e o build**
 
 ```bash
 npm.cmd test
@@ -1587,7 +1587,7 @@ npm.cmd run verify:build
 
 Esperado no build: `manifest gerado OK: world MAIN preservado, permissões mínimas`.
 
-- [ ] **Step 6: Escrever a mensagem de commit**
+- [x] **Step 6: Escrever a mensagem de commit**
 
 Criar `.commit-msg` na raiz com:
 

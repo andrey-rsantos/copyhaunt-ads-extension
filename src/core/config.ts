@@ -24,6 +24,15 @@ export interface ConfigRemota {
    * o recurso em definitivo é apagá-lo dos dois lados.
    */
   advertiserDocId?: string
+  /** Ritmo recalibrável da mineração. Uma config sem o bloco é válida. */
+  mining?: {
+    /** Espera mínima entre rolagens. */
+    pisoMs: number
+    /** Quanto esperar pelo lote antes de desistir. */
+    timeoutMs: number
+    /** Margem de variação da espera, de 0 a 1. */
+    jitter: number
+  }
 }
 
 /**
@@ -36,6 +45,13 @@ export interface ConfigRemota {
  * contra uma entrada de teste antes de adotar.
  */
 const TAMANHO_MAXIMO_PADRAO = 500
+
+/** Faixas amplas que barram valores perigosos ou sem sentido. */
+const MINING_FAIXAS = {
+  pisoMs: { min: 1000, max: 30000 },
+  timeoutMs: { min: 1000, max: 30000 },
+  jitter: { min: 0, max: 1 },
+} as const
 
 /**
  * A cópia que viaja no pacote.
@@ -53,6 +69,8 @@ export const CONFIG_EMBUTIDA: ConfigRemota = {
   version: 0,
   anchors: { libraryIdPattern: '(?<!\\d)(\\d{15,17})(?!\\d)' },
   advertiserDocId: '26617181747964058',
+  // Medidos na Biblioteca real em 2026-09-10.
+  mining: { pisoMs: 2500, timeoutMs: 4500, jitter: 0.4 },
 }
 
 /**
@@ -93,6 +111,29 @@ export function validarConfig(bruto: unknown): ConfigRemota | null {
   const docId = raiz.advertiserDocId
   if (typeof docId === 'string' && /^\d+$/.test(docId)) {
     config.advertiserDocId = docId
+  }
+
+  // O bloco é aceito inteiro ou descartado inteiro: meia configuração de
+  // ritmo esconderia qual parte realmente está em vigor.
+  const mining = raiz.mining
+  if (typeof mining === 'object' && mining !== null) {
+    const m = mining as Record<string, unknown>
+    const dentro = (chave: keyof typeof MINING_FAIXAS): boolean => {
+      const valor = m[chave]
+      const faixa = MINING_FAIXAS[chave]
+      return typeof valor === 'number'
+        && Number.isFinite(valor)
+        && valor >= faixa.min
+        && valor <= faixa.max
+    }
+
+    if (dentro('pisoMs') && dentro('timeoutMs') && dentro('jitter')) {
+      const pisoMs = m.pisoMs as number
+      const timeoutMs = m.timeoutMs as number
+      if (timeoutMs > pisoMs) {
+        config.mining = { pisoMs, timeoutMs, jitter: m.jitter as number }
+      }
+    }
   }
 
   return config

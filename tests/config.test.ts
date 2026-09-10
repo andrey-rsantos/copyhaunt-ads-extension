@@ -103,3 +103,58 @@ describe('advertiserDocId', () => {
     expect(validarConfig({ ...VALIDA, advertiserDocId: docId })).toEqual(VALIDA)
   })
 })
+
+describe('bloco mining', () => {
+  const base = { version: 1, anchors: { libraryIdPattern: '(\\d+)' } }
+
+  it('a config embutida traz os valores medidos', () => {
+    expect(CONFIG_EMBUTIDA.mining).toEqual({
+      pisoMs: 2500,
+      timeoutMs: 4500,
+      jitter: 0.4,
+    })
+  })
+
+  it('aceita um bloco mining bem formado', () => {
+    const c = validarConfig({
+      ...base,
+      mining: { pisoMs: 3000, timeoutMs: 5000, jitter: 0.2 },
+    })
+    expect(c?.mining).toEqual({ pisoMs: 3000, timeoutMs: 5000, jitter: 0.2 })
+  })
+
+  it('config sem mining continua válida', () => {
+    const c = validarConfig(base)
+    expect(c).not.toBeNull()
+    expect(c?.mining).toBeUndefined()
+  })
+
+  it('descarta o bloco quando um campo está fora da faixa', () => {
+    expect(validarConfig({
+      ...base,
+      mining: { pisoMs: 500, timeoutMs: 5000, jitter: 0.2 },
+    })?.mining).toBeUndefined()
+    expect(validarConfig({
+      ...base,
+      mining: { pisoMs: 3000, timeoutMs: 40000, jitter: 0.2 },
+    })?.mining).toBeUndefined()
+    expect(validarConfig({
+      ...base,
+      mining: { pisoMs: 3000, timeoutMs: 5000, jitter: 2 },
+    })?.mining).toBeUndefined()
+  })
+
+  it('descarta o bloco quando um campo não é número', () => {
+    expect(validarConfig({
+      ...base,
+      mining: { pisoMs: '3000', timeoutMs: 5000, jitter: 0.2 },
+    })?.mining).toBeUndefined()
+  })
+
+  it('descarta o bloco quando o timeout não passa do piso', () => {
+    expect(validarConfig({
+      ...base,
+      mining: { pisoMs: 5000, timeoutMs: 3000, jitter: 0.2 },
+    })?.mining).toBeUndefined()
+  })
+})
