@@ -12,10 +12,11 @@ import { alternarGaveta, fecharGaveta } from './gaveta'
 import { escreverNaBusca, montarExemplos } from './gaveta-exemplos'
 import { montarCalendario } from './gaveta-calendario'
 import { montarMinerar, type PedidoMineracao } from './gaveta-minerar'
-import { definirDocIdAnunciante } from './instagram'
+import { buscarInstagram, definirDocIdAnunciante } from './instagram'
 import { observarGrade, type Observacao } from './observer'
 import { pintarGrade } from './overlay'
 import { processarCaptura, processarSsr } from './pipeline'
+import { filtrarPorInstagram } from './pos-instagram'
 import { atualizarProgresso, montarProgresso } from './progresso'
 
 /** Índice da sessão. Vive enquanto a aba viver. */
@@ -262,7 +263,36 @@ function dispararMineracao(pedido: PedidoMineracao, shadow: ShadowRoot): void {
 
   alvoAtual = pedido.limiteEncontrados
   mostrarProgresso(shadow)
-  iniciarMineracao(pedido)
+  const motor = iniciarMineracao(pedido)
+
+  // O pós-filtro só roda quando o laço termina — a trava da seção 6.4.
+  void motor.iniciar().then(async () => {
+    const p = motor.progresso()
+    if (p.estado === 'pausado') return
+
+    let finais = motor.encontrados()
+
+    if (pedido.exigirInstagram) {
+      const relogio = relogioDeWorker()
+      finais = await filtrarPorInstagram(finais, {
+        consultar: (pageId) =>
+          buscarInstagram(pageId, {
+            buscar: (...args) => fetch(...args),
+            html: () => document.documentElement.innerHTML,
+          }),
+        esperar: (ms) => relogio.esperar(ms),
+        aoProgredir: (feitos, total) => {
+          console.info(
+            `[CopyHaunt] Instagram: ${feitos} de ${total} anunciantes`,
+          )
+        },
+      })
+    }
+
+    console.info(
+      `[CopyHaunt] mineração encerrada em ${p.estado}: ${finais.length} aprovados finais`,
+    )
+  })
 }
 
 // O interceptador pode ter anunciado antes de este listener existir. O

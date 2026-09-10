@@ -6,9 +6,9 @@
 ## Progresso
 
 - **Estado:** em andamento
-- **Última tarefa concluída:** Task 9 — ligar tudo e aposentar o painel
-- **Próxima tarefa:** Task 10
-- **Notas de retomada:** A Task 1 foi validada contra a Meta real antes de ser executada, e a primeira versão da regra falhou lá: subir procurando o primeiro flex-row devolve um wrapper interno do campo de busca, com 20 px de altura. O plano e o spec da âncora foram corrigidos antes do despacho, e o teste de regressão que trava isso está em `tests/content/barra.test.ts`. Também caiu a afirmação de que a barra teria duas formas por largura: entre 762 e 1602 px ela foi sempre `row`, e a forma de coluna era estado transitório de carregamento. O suporte a `coluna` ficou no código por ser barato. Na Task 2, a revisão pegou um vazamento que os testes não veriam: a folha de estilo é compartilhada com as bandejas dos cards, e o `:host` do CSS_ENXERTOS venceria o `all: initial` delas, dando `display: flex` ao host da bandeja e empurrando o conteúdo de todo card para baixo. A regra foi escopada para `:host(#copyhaunt-enxertos)` e dois testes de texto travam o caminho. Nas Tasks 3 e 4 a revisão pegou o mesmo vazamento uma segunda vez, agora por classe: `.botao` existe em CSS_BANDEJA e em CSS_ENXERTOS, e a folha compartilhada fazia a regra de baixo vencer dentro do shadow da bandeja — os botões de 30x30 dos cards virariam inline-flex de 36 px. Todo seletor de CSS_ENXERTOS e CSS_GAVETA passou a ser escopado com `:host(#copyhaunt-enxertos)`, e dois testes de texto travam o caminho. Regra para as tarefas seguintes: **CSS novo nessas folhas nasce escopado**. Na Task 5 o executor divergiu do plano e acertou: `diasDesde` usa `Math.floor`, não `Math.round`. Como `montarUrlFiltro` trunca a data para YYYY-MM-DD, ler de volta à meia-noite dá 7,5 dias para uma faixa de 7, e `round` devolveria 8 — o rótulo do botão mentiria por um dia. O plano foi corrigido. Na Task 8 o CSS_PROGRESSO nasceu escopado, e o teste de escopo passou a cobrir as três folhas. Na Task 9 a suíte caiu de 435 para 433 e a queda foi conferida: saíram três testes de `veioDoPainel` e um da porta provisória do console, todos removidos por ordem do próprio plano, e entraram dois novos. `verify:build` passou com o manifest sem `web_accessible_resources`, permissões seguem `["storage"]`. Suíte: 433 testes, 46 arquivos.
+- **Última tarefa concluída:** Task 10 — o pós-filtro de Instagram
+- **Próxima tarefa:** Verificação final, que é manual e depende do dono do projeto
+- **Notas de retomada:** A Task 1 foi validada contra a Meta real antes de ser executada, e a primeira versão da regra falhou lá: subir procurando o primeiro flex-row devolve um wrapper interno do campo de busca, com 20 px de altura. O plano e o spec da âncora foram corrigidos antes do despacho, e o teste de regressão que trava isso está em `tests/content/barra.test.ts`. Também caiu a afirmação de que a barra teria duas formas por largura: entre 762 e 1602 px ela foi sempre `row`, e a forma de coluna era estado transitório de carregamento. O suporte a `coluna` ficou no código por ser barato. Na Task 2, a revisão pegou um vazamento que os testes não veriam: a folha de estilo é compartilhada com as bandejas dos cards, e o `:host` do CSS_ENXERTOS venceria o `all: initial` delas, dando `display: flex` ao host da bandeja e empurrando o conteúdo de todo card para baixo. A regra foi escopada para `:host(#copyhaunt-enxertos)` e dois testes de texto travam o caminho. Nas Tasks 3 e 4 a revisão pegou o mesmo vazamento uma segunda vez, agora por classe: `.botao` existe em CSS_BANDEJA e em CSS_ENXERTOS, e a folha compartilhada fazia a regra de baixo vencer dentro do shadow da bandeja — os botões de 30x30 dos cards virariam inline-flex de 36 px. Todo seletor de CSS_ENXERTOS e CSS_GAVETA passou a ser escopado com `:host(#copyhaunt-enxertos)`, e dois testes de texto travam o caminho. Regra para as tarefas seguintes: **CSS novo nessas folhas nasce escopado**. Na Task 5 o executor divergiu do plano e acertou: `diasDesde` usa `Math.floor`, não `Math.round`. Como `montarUrlFiltro` trunca a data para YYYY-MM-DD, ler de volta à meia-noite dá 7,5 dias para uma faixa de 7, e `round` devolveria 8 — o rótulo do botão mentiria por um dia. O plano foi corrigido. Na Task 8 o CSS_PROGRESSO nasceu escopado, e o teste de escopo passou a cobrir as três folhas. Na Task 9 a suíte caiu de 435 para 433 e a queda foi conferida: saíram três testes de `veioDoPainel` e um da porta provisória do console, todos removidos por ordem do próprio plano, e entraram dois novos. `verify:build` passou com o manifest sem `web_accessible_resources`, permissões seguem `["storage"]`. Na Task 10 o executor parou ao ver um teste existente falhar, em vez de mascarar: `planta os três enxertos` estourou o teto padrão de 1 s do `vi.waitFor` com a suíte inteira disputando CPU. Três rodadas seguintes passaram limpas, e o teto virou 5 s explícito — o `waitFor` continua saindo assim que a condição vale, então não é espera fixa. Suíte: 442 testes, 47 arquivos; verify:build OK.
 
 **Goal:** Plantar na barra de filtros da Meta os três enxertos do spec — o `?`,
 o calendário e o Minerar — de modo que uma mineração real comece por um botão,
@@ -38,10 +38,11 @@ mas ninguém ainda os vê numa tela.
 
 - **Permissões continuam exatamente `["storage"]`** e os hosts atuais. Se uma
   tarefa parecer pedir permissão nova, pare: o desenho está errado.
-- **Nada aqui pode emitir requisição.** A seção 2 do spec de 2026-09-05 abre
-  uma única exceção, o Instagram ao clique, e ela não está neste plano. Se
+- **Nada aqui pode emitir requisição, com uma única exceção.** A seção 2 do
+  spec de 2026-09-05 abre uma exceção só — o Instagram do anunciante —, e ela
+  vive na **Task 10**, depois que o laço da mineração encerra. Fora dali, se
   você escrever `fetch` ou `XMLHttpRequest` em qualquer arquivo deste plano,
-  está errado.
+  está errado. E mesmo na Task 10 a consulta nunca roda dentro do laço.
 - **Degradar em silêncio** (spec, 7.7). Âncora não encontrada significa
   enxerto que não aparece, e nada mais quebrado. Nunca deixe subir exceção
   por falta de âncora.
@@ -2952,7 +2953,7 @@ espaçada; um laço de dezoito seguidas não é a mesma coisa.
   - `interface DepsPosFiltro { consultar: (pageId: string) => Promise<string | null>; esperar: (ms: number) => Promise<void>; espacoMs?: number; aoProgredir?: (feitos: number, total: number) => void }`
   - `filtrarPorInstagram(aprovados: Ad[], deps: DepsPosFiltro): Promise<Ad[]>`
 
-- [ ] **Step 1: Escrever os testes que falham**
+- [x] **Step 1: Escrever os testes que falham**
 
 Criar `tests/content/pos-instagram.test.ts`:
 
@@ -3090,13 +3091,13 @@ describe('filtrarPorInstagram', () => {
 })
 ```
 
-- [ ] **Step 2: Rodar e confirmar que falham**
+- [x] **Step 2: Rodar e confirmar que falham**
 
 Run: `npx.cmd vitest run tests/content/pos-instagram.test.ts`
 
 Expected: FAIL, import sem resolver.
 
-- [ ] **Step 3: Escrever a implementação**
+- [x] **Step 3: Escrever a implementação**
 
 Criar `src/content/pos-instagram.ts`:
 
@@ -3167,13 +3168,13 @@ export async function filtrarPorInstagram(
 }
 ```
 
-- [ ] **Step 4: Rodar e confirmar que passam**
+- [x] **Step 4: Rodar e confirmar que passam**
 
 Run: `npx.cmd vitest run tests/content/pos-instagram.test.ts`
 
 Expected: PASS, 9 testes.
 
-- [ ] **Step 5: Ligar ao fim da varredura**
+- [x] **Step 5: Ligar ao fim da varredura**
 
 Em `src/content/index.ts`, dentro de `dispararMineracao`, substituir a linha
 `iniciarMineracao(pedido)` por:
@@ -3224,7 +3225,7 @@ segundo parâmetro for obrigatório, monte-o aqui do mesmo modo que
 `src/content/tray.ts` monta, em vez de mudar a assinatura — a bandeja é
 chamadora dela e não pode quebrar.
 
-- [ ] **Step 6: Rodar a verificação completa**
+- [x] **Step 6: Rodar a verificação completa**
 
 ```
 npm.cmd test
@@ -3235,7 +3236,7 @@ npm.cmd run verify:build
 Expected: tudo passa. **As permissões continuam `["storage"]`** — a consulta
 usa os hosts já declarados, exatamente como a bandeja faz hoje.
 
-- [ ] **Step 7: Escrever a mensagem de commit**
+- [x] **Step 7: Escrever a mensagem de commit**
 
 Criar `.commit-msg` na raiz com:
 
