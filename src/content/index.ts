@@ -4,12 +4,19 @@ import { createMessage, isCopyHauntMessage } from '../core/messages'
 import { Minerador } from '../core/miner'
 import { AdStore } from '../core/store'
 import type { Captura } from '../interceptor/xhr-patch'
+import { lerFaixaDaUrl, montarUrlFiltro, rotuloDaFaixa } from '../core/dateFilter'
+import { precisaOrdenar, urlOrdenada } from '../core/ordenacao'
 import { acharCards, definirPadraoAncora } from './anchor'
+import { plantarEnxertos, type Enxerto, type Plantio } from './enxertos'
+import { alternarGaveta, fecharGaveta } from './gaveta'
+import { escreverNaBusca, montarExemplos } from './gaveta-exemplos'
+import { montarCalendario } from './gaveta-calendario'
+import { montarMinerar, type PedidoMineracao } from './gaveta-minerar'
 import { definirDocIdAnunciante } from './instagram'
 import { observarGrade, type Observacao } from './observer'
 import { pintarGrade } from './overlay'
 import { processarCaptura, processarSsr } from './pipeline'
-import { tratarComandoFiltro, veioDoPainel } from './comando'
+import { atualizarProgresso, montarProgresso } from './progresso'
 
 /** Índice da sessão. Vive enquanto a aba viver. */
 const store = new AdStore()
@@ -57,6 +64,10 @@ export function criarMinerador(
       console.info(
         `[CopyHaunt] ${p.estado}: ${p.encontrados} de ${limiteEncontrados} encontrados; ${p.analisados} analisados em ${p.rolagens} rolagens`,
       )
+      const cartao = plantio
+        ?.hospedeiro()
+        ?.shadowRoot?.querySelector<HTMLElement>('[data-chave="progresso"]')
+      if (cartao) atualizarProgresso(cartao, p, alvoAtual)
     },
   })
 }
@@ -75,10 +86,6 @@ export function iniciarMineracao(pedido: {
   void minerador.iniciar()
   return minerador
 }
-
-// Porta provisória para o teste manual no contexto do content script. A
-// futura gaveta chama a mesma função e elimina a necessidade do console.
-Object.assign(globalThis, { iniciarMineracao })
 
 let observacao: Observacao | null = null
 
@@ -127,32 +134,6 @@ function aplicarConfig(): void {
   })
 }
 
-const PANEL_ID = 'copyhaunt-panel'
-let painel: HTMLIFrameElement | null = null
-
-/** Monta o painel num iframe, que isola o CSS da página da Meta. */
-function mountPanel(): void {
-  if (document.getElementById(PANEL_ID)) return
-
-  const frame = document.createElement('iframe')
-  frame.id = PANEL_ID
-  frame.src = chrome.runtime.getURL('src/panel/index.html')
-  frame.style.cssText = [
-    'position:fixed',
-    'top:16px',
-    'right:16px',
-    'width:320px',
-    'height:220px',
-    'border:0',
-    'border-radius:14px',
-    'z-index:2147483647',
-    'box-shadow:0 0 20px rgba(124, 58, 237, 0.18)',
-  ].join(';')
-
-  painel = frame
-  document.documentElement.appendChild(frame)
-}
-
 /**
  * Lê o lote que a Meta embutiu no HTML da primeira carga.
  *
@@ -168,24 +149,12 @@ function lerLoteInicial(): void {
 }
 
 window.addEventListener('message', (event) => {
-  // Duas fontes legítimas, e nenhuma outra: o main world, que manda capturas,
-  // e o iframe do painel, que manda comandos.
-  const doPainel = veioDoPainel(event.source, painel)
-  if (event.source !== window && !doPainel) return
+  // A única fonte legítima é o main world, que manda capturas.
+  if (event.source !== window) return
   if (!isCopyHauntMessage(event.data)) return
 
   if (event.data.kind === 'interceptor-ready') {
     console.info('[CopyHaunt] interceptador confirmado pelo content script')
-    return
-  }
-
-  if (doPainel && event.data.kind === 'panel-command') {
-    tratarComandoFiltro(
-      event.data.payload,
-      location.href,
-      new Date(),
-      (url) => location.assign(url),
-    )
     return
   }
 
@@ -199,6 +168,103 @@ window.addEventListener('message', (event) => {
   }
 })
 
+/** O plantio dos enxertos. Vive enquanto a aba viver. */
+let plantio: Plantio | null = null
+
+/** O alvo da mineração em curso, para a barra de progresso ter denominador. */
+let alvoAtual = 100
+
+/**
+ * Troca o botão Minerar pelo cartão de progresso, e o mantém atualizado.
+ *
+ * O cartão é replantado junto com os enxertos: quando a Meta refaz a barra, o
+ * host novo não tem cartão, e sem isto o progresso sumiria no meio da
+ * varredura.
+ */
+function mostrarProgresso(shadow: ShadowRoot): void {
+  fecharGaveta(shadow)
+
+  const botao = shadow.querySelector<HTMLElement>('[data-chave="minerar"]')
+  if (!botao) return
+
+  const cartao = montarProgresso(document, () => {
+    const p = minerador?.progresso()
+    if (p?.estado === 'pausado') void minerador?.iniciar()
+    else minerador?.parar()
+  })
+  cartao.dataset.chave = 'progresso'
+  botao.replaceWith(cartao)
+}
+
+/** Um enxerto por gaveta, mais o disparo. */
+function montarEnxertos(): Enxerto[] {
+  return [
+    {
+      chave: 'ajuda',
+      glifo: '?',
+      titulo: 'Exemplos de busca',
+      variante: 'contorno',
+      aoClicar: (botao) => {
+        const shadow = botao.getRootNode() as ShadowRoot
+        alternarGaveta(shadow, botao, () =>
+          montarExemplos(document, (termo) => {
+            escreverNaBusca(document, termo)
+            fecharGaveta(shadow)
+          }),
+        )
+      },
+    },
+    {
+      chave: 'calendario',
+      glifo: rotuloDaFaixa(lerFaixaDaUrl(location.href, new Date())),
+      titulo: 'Tempo ativo',
+      variante: 'contorno',
+      aoClicar: (botao) => {
+        const shadow = botao.getRootNode() as ShadowRoot
+        const agora = new Date()
+        alternarGaveta(shadow, botao, () =>
+          montarCalendario(document, lerFaixaDaUrl(location.href, agora), (f) => {
+            location.assign(montarUrlFiltro(location.href, f, new Date()))
+          }),
+        )
+      },
+    },
+    {
+      chave: 'minerar',
+      glifo: 'Minerar',
+      titulo: 'Minerar',
+      variante: 'solido',
+      aoClicar: (botao) => {
+        const shadow = botao.getRootNode() as ShadowRoot
+        alternarGaveta(shadow, botao, () =>
+          montarMinerar(document, location.href, new Date(), (pedido) => {
+            dispararMineracao(pedido, shadow)
+          }),
+        )
+      },
+    },
+  ]
+}
+
+/**
+ * O que acontece ao apertar Iniciar.
+ *
+ * A ordenação é verificada com a URL **em vigor agora** — a Meta já a
+ * reescreveu ao carregar, e decidir com a URL digitada recarregaria à toa. A
+ * recarga descarta o `AdStore`, que ainda está vazio neste instante, então
+ * não custa nada (spec, 7.6).
+ */
+function dispararMineracao(pedido: PedidoMineracao, shadow: ShadowRoot): void {
+  if (precisaOrdenar(location.href)) {
+    location.assign(urlOrdenada(location.href))
+    return
+  }
+
+  alvoAtual = pedido.limiteEncontrados
+  mostrarProgresso(shadow)
+  iniciarMineracao(pedido)
+}
+
 // O interceptador pode ter anunciado antes de este listener existir. O
 // handshake pede a confirmação novamente e elimina essa corrida de carga.
 window.postMessage(createMessage('content-ready', {}), location.origin)
@@ -210,7 +276,7 @@ window.postMessage(createMessage('content-ready', {}), location.origin)
  */
 function iniciar(): void {
   aplicarConfig()
-  mountPanel()
+  plantio = plantarEnxertos(document, montarEnxertos())
   lerLoteInicial()
   garantirObservador()
   repintar()

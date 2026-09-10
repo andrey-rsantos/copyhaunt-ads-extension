@@ -1,33 +1,9 @@
 // @vitest-environment jsdom
 import { describe, expect, it, vi } from 'vitest'
-import { tratarComandoFiltro, veioDoPainel } from '../src/content/comando'
+import { tratarComandoFiltro } from '../src/content/comando'
 
 const BUSCA = 'https://www.facebook.com/ads/library/?q=emagrecer'
 const AGORA = new Date('2026-09-06T12:00:00Z')
-
-describe('veioDoPainel', () => {
-  function painel(): HTMLIFrameElement {
-    const frame = document.createElement('iframe')
-    document.body.appendChild(frame)
-    return frame
-  }
-
-  it('reconhece a janela do próprio painel', () => {
-    const frame = painel()
-    expect(veioDoPainel(frame.contentWindow, frame)).toBe(true)
-  })
-
-  it('recusa qualquer outra janela', () => {
-    const frame = painel()
-    const intruso = painel()
-    expect(veioDoPainel(intruso.contentWindow, frame)).toBe(false)
-    expect(veioDoPainel(window, frame)).toBe(false)
-  })
-
-  it('recusa quando o painel ainda não montou', () => {
-    expect(veioDoPainel(window, null)).toBe(false)
-  })
-})
 
 describe('tratarComandoFiltro', () => {
   it('navega para a URL com o corte aplicado', () => {

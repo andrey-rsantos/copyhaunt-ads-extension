@@ -6,9 +6,9 @@
 ## Progresso
 
 - **Estado:** em andamento
-- **Última tarefa concluída:** Task 8 — o cartão de progresso
-- **Próxima tarefa:** Task 9
-- **Notas de retomada:** A Task 1 foi validada contra a Meta real antes de ser executada, e a primeira versão da regra falhou lá: subir procurando o primeiro flex-row devolve um wrapper interno do campo de busca, com 20 px de altura. O plano e o spec da âncora foram corrigidos antes do despacho, e o teste de regressão que trava isso está em `tests/content/barra.test.ts`. Também caiu a afirmação de que a barra teria duas formas por largura: entre 762 e 1602 px ela foi sempre `row`, e a forma de coluna era estado transitório de carregamento. O suporte a `coluna` ficou no código por ser barato. Na Task 2, a revisão pegou um vazamento que os testes não veriam: a folha de estilo é compartilhada com as bandejas dos cards, e o `:host` do CSS_ENXERTOS venceria o `all: initial` delas, dando `display: flex` ao host da bandeja e empurrando o conteúdo de todo card para baixo. A regra foi escopada para `:host(#copyhaunt-enxertos)` e dois testes de texto travam o caminho. Nas Tasks 3 e 4 a revisão pegou o mesmo vazamento uma segunda vez, agora por classe: `.botao` existe em CSS_BANDEJA e em CSS_ENXERTOS, e a folha compartilhada fazia a regra de baixo vencer dentro do shadow da bandeja — os botões de 30x30 dos cards virariam inline-flex de 36 px. Todo seletor de CSS_ENXERTOS e CSS_GAVETA passou a ser escopado com `:host(#copyhaunt-enxertos)`, e dois testes de texto travam o caminho. Regra para as tarefas seguintes: **CSS novo nessas folhas nasce escopado**. Na Task 5 o executor divergiu do plano e acertou: `diasDesde` usa `Math.floor`, não `Math.round`. Como `montarUrlFiltro` trunca a data para YYYY-MM-DD, ler de volta à meia-noite dá 7,5 dias para uma faixa de 7, e `round` devolveria 8 — o rótulo do botão mentiria por um dia. O plano foi corrigido. Na Task 8 o CSS_PROGRESSO nasceu escopado, e o teste de escopo passou a cobrir as três folhas. Suíte: 435 testes, 45 arquivos.
+- **Última tarefa concluída:** Task 9 — ligar tudo e aposentar o painel
+- **Próxima tarefa:** Task 10
+- **Notas de retomada:** A Task 1 foi validada contra a Meta real antes de ser executada, e a primeira versão da regra falhou lá: subir procurando o primeiro flex-row devolve um wrapper interno do campo de busca, com 20 px de altura. O plano e o spec da âncora foram corrigidos antes do despacho, e o teste de regressão que trava isso está em `tests/content/barra.test.ts`. Também caiu a afirmação de que a barra teria duas formas por largura: entre 762 e 1602 px ela foi sempre `row`, e a forma de coluna era estado transitório de carregamento. O suporte a `coluna` ficou no código por ser barato. Na Task 2, a revisão pegou um vazamento que os testes não veriam: a folha de estilo é compartilhada com as bandejas dos cards, e o `:host` do CSS_ENXERTOS venceria o `all: initial` delas, dando `display: flex` ao host da bandeja e empurrando o conteúdo de todo card para baixo. A regra foi escopada para `:host(#copyhaunt-enxertos)` e dois testes de texto travam o caminho. Nas Tasks 3 e 4 a revisão pegou o mesmo vazamento uma segunda vez, agora por classe: `.botao` existe em CSS_BANDEJA e em CSS_ENXERTOS, e a folha compartilhada fazia a regra de baixo vencer dentro do shadow da bandeja — os botões de 30x30 dos cards virariam inline-flex de 36 px. Todo seletor de CSS_ENXERTOS e CSS_GAVETA passou a ser escopado com `:host(#copyhaunt-enxertos)`, e dois testes de texto travam o caminho. Regra para as tarefas seguintes: **CSS novo nessas folhas nasce escopado**. Na Task 5 o executor divergiu do plano e acertou: `diasDesde` usa `Math.floor`, não `Math.round`. Como `montarUrlFiltro` trunca a data para YYYY-MM-DD, ler de volta à meia-noite dá 7,5 dias para uma faixa de 7, e `round` devolveria 8 — o rótulo do botão mentiria por um dia. O plano foi corrigido. Na Task 8 o CSS_PROGRESSO nasceu escopado, e o teste de escopo passou a cobrir as três folhas. Na Task 9 a suíte caiu de 435 para 433 e a queda foi conferida: saíram três testes de `veioDoPainel` e um da porta provisória do console, todos removidos por ordem do próprio plano, e entraram dois novos. `verify:build` passou com o manifest sem `web_accessible_resources`, permissões seguem `["storage"]`. Suíte: 433 testes, 46 arquivos.
 
 **Goal:** Plantar na barra de filtros da Meta os três enxertos do spec — o `?`,
 o calendário e o Minerar — de modo que uma mineração real comece por um botão,
@@ -2667,7 +2667,7 @@ de ter função.
 - Consumes: tudo das Tasks 1 a 8.
 - Produces: nada novo para fora; `iniciarMineracao` continua exportada.
 
-- [ ] **Step 1: Escrever o teste que falha**
+- [x] **Step 1: Escrever o teste que falha**
 
 Acrescentar a `tests/content/index.test.ts`:
 
@@ -2699,13 +2699,13 @@ it('não monta mais o painel flutuante em iframe', async () => {
 })
 ```
 
-- [ ] **Step 2: Rodar e confirmar que falha**
+- [x] **Step 2: Rodar e confirmar que falha**
 
 Run: `npx.cmd vitest run tests/content/index.test.ts`
 
 Expected: FAIL — nenhum host `copyhaunt-enxertos`, e o painel ainda montado.
 
-- [ ] **Step 3: Ligar os enxertos no content script**
+- [x] **Step 3: Ligar os enxertos no content script**
 
 Em `src/content/index.ts`:
 
@@ -2855,7 +2855,7 @@ function dispararMineracao(pedido: PedidoMineracao, shadow: ShadowRoot): void {
 Object.assign(globalThis, { iniciarMineracao })
 ```
 
-- [ ] **Step 4: Sair o painel do manifest**
+- [x] **Step 4: Sair o painel do manifest**
 
 Em `src/manifest.config.ts`, remover o bloco `web_accessible_resources`
 inteiro. Ele existia para a página da Meta poder carregar o iframe do painel;
@@ -2865,7 +2865,7 @@ Os arquivos `src/panel/` **ficam no repositório**: o plano irmão reaproveita
 esse esqueleto como a página de resultados em aba própria, e uma página da
 extensão aberta em aba não precisa de `web_accessible_resources`.
 
-- [ ] **Step 5: Rodar e confirmar que passa**
+- [x] **Step 5: Rodar e confirmar que passa**
 
 ```
 npx.cmd vitest run tests/content/index.test.ts
@@ -2879,7 +2879,7 @@ Expected: tudo passa. O `verify:build` precisa aceitar o manifest sem
 dele, **atualize essa afirmação**: o manifest travado é o de permissões e
 hosts, e o painel saiu por decisão de desenho.
 
-- [ ] **Step 6: Verificar que nada ficou órfão**
+- [x] **Step 6: Verificar que nada ficou órfão**
 
 ```
 npx.cmd tsc --noEmit
@@ -2896,7 +2896,7 @@ o caso, **remova `veioDoPainel` e os testes dela** — ela existia para separar
 o nosso painel de outros scripts no main world, e sem painel não separa nada.
 `tratarComandoFiltro` fica.
 
-- [ ] **Step 7: Escrever a mensagem de commit**
+- [x] **Step 7: Escrever a mensagem de commit**
 
 Criar `.commit-msg` na raiz com:
 

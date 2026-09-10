@@ -1,27 +1,6 @@
 import { lerComandoFiltro, urlDoComando } from '../core/filtro'
 
 /**
- * Os comandos que vêm do painel.
- *
- * O painel é deliberadamente burro (seção 5 do spec): manda o que o usuário
- * pediu e não sabe o que acontece depois. Quem decide é aqui.
- */
-
-/**
- * A mensagem veio da janela do nosso painel?
- *
- * O main world é território compartilhado. Comparar a `source` com o
- * `contentWindow` do iframe que nós mesmos criamos é o que separa o nosso
- * painel de qualquer outro script que poste mensagem na mesma página.
- */
-export function veioDoPainel(
-  source: unknown,
-  painel: HTMLIFrameElement | null,
-): boolean {
-  return painel !== null && source === painel.contentWindow
-}
-
-/**
  * Aplica o filtro de data, navegando para a URL reescrita.
  *
  * Devolve `false` — sem navegar — quando o comando não presta ou quando a

@@ -1,7 +1,7 @@
 /** @vitest-environment jsdom */
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { criarMinerador, iniciarMineracao } from '../src/content/index'
+import { criarMinerador } from '../src/content/index'
 import { CRITERIOS_PADRAO } from '../src/core/criteria'
 import { AdStore } from '../src/core/store'
 
@@ -54,11 +54,4 @@ describe('criarMinerador', () => {
     )).toThrow(RangeError)
   })
 
-  it('expõe o comando provisório no contexto do content script', () => {
-    const contexto = globalThis as typeof globalThis & {
-      iniciarMineracao?: unknown
-    }
-    expect(iniciarMineracao).toBeTypeOf('function')
-    expect(contexto.iniciarMineracao).toBe(iniciarMineracao)
-  })
 })
