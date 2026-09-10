@@ -5,9 +5,9 @@
 
 ## Progresso
 
-- **Estado:** em andamento
+- **Estado:** concluído
 - **Última tarefa concluída:** Task 9 — handshake entre os mundos
-- **Próxima tarefa:** Verificação final
+- **Próxima tarefa:** —
 - **Notas de retomada:** Task 1 foi executada manualmente pelo dono do projeto e fica pulada conforme instrução da sessão. Na Task 2, `colacaoDe` também herda o maior `collation_count` visto em outro membro do grupo, exigido pelo teste do plano. Na Task 3, `e2e/filtro.spec.ts` foi atualizado para os campos e atalhos da faixa. Na Task 4, os testes cedem microtasks após `avisarLote()` para o relógio falso registrar a próxima espera antes do avanço seguinte. Na Task 5, o dono aprovou alvo configurável de 1 a 100 aprovados e teto independente de rolagens. O RED revelou e o plano corrigiu dois sinais antes ambíguos: `esgotado` exige que não haja sinal de página incompreensível; cards visíveis com store vazio aguardam três voltas e viram `incompreensivel`. A altura inicial é capturada antes da primeira rolagem. Na Task 7, o teste usa jsdom e Worker falso; o comando de órfãos com `grep` não é sintaticamente executável no PowerShell, então a mesma busca foi confirmada com `rg`, apontando ambos para `src/content/index.ts`. O comando provisório foi exposto no contexto isolado do content script para viabilizar a verificação manual antes da gaveta existir. A primeira verificação final sem CDP mediu 19 amostras ocultas, 0→22 rolagens e 0→152 analisados, sem bloqueio nem erro. Ela revelou falso `esgotado` após duas voltas vazias numa busca que voltou a crescer ao retomar; a Task 8 corrige essa descoberta antes de repetir o teste. Na Task 9, a verificação capturou a corrida do aviso único entre MAIN e mundo isolado; o handshake eliminou-a. Uma carga ao vivo sem lote SSR falhou uma vez e passou na repetição isolada; a suíte completa seguinte passou 12/12.
 
 **Goal:** Corrigir o laço do minerador para rolagem reativa e ligá-lo ao
@@ -90,12 +90,12 @@ debugger do CDP impede. Falta confirmar sem CDP.
 **Files:**
 - Create: `docs/superpowers/specs/2026-09-10-medicao-aba-oculta.md`
 
-- [ ] **Step 1: Preparar o navegador**
+- [x] **Step 1: Preparar o navegador**
 
 Perfil dedicado do Chrome, **sem login no Facebook**, **sem `--remote-debugging-port`**.
 A porta de debug é justamente o que invalidou a medição anterior.
 
-- [ ] **Step 2: Abrir a Biblioteca e colar o instrumento no console**
+- [x] **Step 2: Abrir a Biblioteca e colar o instrumento no console**
 
 Navegue para:
 
@@ -143,7 +143,7 @@ window.__med = { amostras: [], lotes: [], inicio: Date.now(), parar: false };
 })();
 ```
 
-- [ ] **Step 3: Medir com a aba oculta de verdade**
+- [x] **Step 3: Medir com a aba oculta de verdade**
 
 Deixe rodar 30 s com a aba à frente. Depois **abra outra aba do navegador e
 fique nela por 90 s**. Volte e rode no console:
@@ -172,13 +172,19 @@ fique nela por 90 s**. Volte e rode no console:
 | `amostrasOcultas` > 0 e `lotesOcultos` > 0 e a altura cresceu | **passou** — segue o plano |
 | `amostrasOcultas` > 0 e `lotesOcultos` = 0 | **PARE e reporte** |
 
-- [ ] **Step 4: Registrar o resultado**
+- [x] **Step 4: Registrar o resultado**
 
 Criar `docs/superpowers/specs/2026-09-10-medicao-aba-oculta.md` com: data, o
 JSON devolvido pelo Step 3, e uma linha de veredito. Sem isto, a próxima
 sessão refaz a medição inteira.
 
-- [ ] **Step 5: Escrever a mensagem de commit**
+- [x] **Step 5: Escrever a mensagem de commit**
+
+> **Nota da revisão (2026-09-10).** O `.commit-msg` deste passo não existe mais
+> no disco: a Task 1 foi executada à mão pelo dono do projeto e nunca foi
+> commitada isolada, então a sua mensagem foi absorvida pelo commit de
+> encerramento do plano, junto do spec de medição e da verificação final. O
+> `[x]` acima vale pelo trabalho feito, não por um arquivo que se possa achar.
 
 Criar `.commit-msg` na raiz com:
 
@@ -1988,6 +1994,19 @@ extensão carregada:
 4. **Trocar de aba por dois minutos** e voltar: os números continuaram subindo.
 5. Deixar rodar até o fim dos resultados e conferir que o estado vira
    `esgotado` — não `concluido` por teto de rolagens.
+
+### Resultado da verificação final
+
+- `npm.cmd test`: **36 arquivos, 352 testes passando**.
+- `npm.cmd run typecheck`: **sem erros**.
+- `npm.cmd run verify:build`: **manifest gerado OK, `world MAIN` preservado e
+  permissões mínimas**.
+- `npx.cmd playwright test`: **12 testes passando**. Uma carga da Meta veio
+  sem lote SSR e passou na repetição isolada; a suíte completa seguinte passou
+  12/12.
+- Teste sem CDP: **22 amostras ocultas, rolagens 2 → 10, pausa e retomada
+  confirmadas, busca vazia encerrada como `esgotado`, sem bloqueio nem erro**.
+- Instrumento e perfil temporários removidos; build definitivo refeito.
 
 **O que este plano NÃO entrega**, tudo indo para o plano irmão:
 
