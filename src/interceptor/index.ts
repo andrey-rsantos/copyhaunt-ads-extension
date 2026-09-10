@@ -1,4 +1,5 @@
 import { createMessage } from '../core/messages'
+import { instalarConfirmacao } from './handshake'
 import { aplicarPatch, ehEndpointDeAnuncios } from './xhr-patch'
 
 /**
@@ -19,5 +20,9 @@ aplicarPatch(window.XMLHttpRequest as never, (captura) => {
   window.postMessage(createMessage('raw-capture', captura), DESTINO)
 })
 
-window.postMessage(createMessage('interceptor-ready', {}), DESTINO)
+instalarConfirmacao(
+  (listener) => window.addEventListener('message', listener),
+  () => window.postMessage(createMessage('interceptor-ready', {}), DESTINO),
+  window,
+)
 console.info('[CopyHaunt] interceptador ativo no main world')

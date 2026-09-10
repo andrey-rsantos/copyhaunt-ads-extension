@@ -9,6 +9,7 @@ export const NAMESPACE = 'copyhaunt'
 
 export type MessageKind =
   | 'interceptor-ready'
+  | 'content-ready'
   | 'raw-capture'
   | 'panel-ready'
   | 'panel-command'

@@ -6,9 +6,9 @@
 ## Progresso
 
 - **Estado:** em andamento
-- **Última tarefa concluída:** Task 8 — tolerância a pausas transitórias
+- **Última tarefa concluída:** Task 9 — handshake entre os mundos
 - **Próxima tarefa:** Verificação final
-- **Notas de retomada:** Task 1 foi executada manualmente pelo dono do projeto e fica pulada conforme instrução da sessão. Na Task 2, `colacaoDe` também herda o maior `collation_count` visto em outro membro do grupo, exigido pelo teste do plano. Na Task 3, `e2e/filtro.spec.ts` foi atualizado para os campos e atalhos da faixa. Na Task 4, os testes cedem microtasks após `avisarLote()` para o relógio falso registrar a próxima espera antes do avanço seguinte. Na Task 5, o dono aprovou alvo configurável de 1 a 100 aprovados e teto independente de rolagens. O RED revelou e o plano corrigiu dois sinais antes ambíguos: `esgotado` exige que não haja sinal de página incompreensível; cards visíveis com store vazio aguardam três voltas e viram `incompreensivel`. A altura inicial é capturada antes da primeira rolagem. Na Task 7, o teste usa jsdom e Worker falso; o comando de órfãos com `grep` não é sintaticamente executável no PowerShell, então a mesma busca foi confirmada com `rg`, apontando ambos para `src/content/index.ts`. O comando provisório foi exposto no contexto isolado do content script para viabilizar a verificação manual antes da gaveta existir. A primeira verificação final sem CDP mediu 19 amostras ocultas, 0→22 rolagens e 0→152 analisados, sem bloqueio nem erro. Ela revelou falso `esgotado` após duas voltas vazias numa busca que voltou a crescer ao retomar; a Task 8 corrige essa descoberta antes de repetir o teste.
+- **Notas de retomada:** Task 1 foi executada manualmente pelo dono do projeto e fica pulada conforme instrução da sessão. Na Task 2, `colacaoDe` também herda o maior `collation_count` visto em outro membro do grupo, exigido pelo teste do plano. Na Task 3, `e2e/filtro.spec.ts` foi atualizado para os campos e atalhos da faixa. Na Task 4, os testes cedem microtasks após `avisarLote()` para o relógio falso registrar a próxima espera antes do avanço seguinte. Na Task 5, o dono aprovou alvo configurável de 1 a 100 aprovados e teto independente de rolagens. O RED revelou e o plano corrigiu dois sinais antes ambíguos: `esgotado` exige que não haja sinal de página incompreensível; cards visíveis com store vazio aguardam três voltas e viram `incompreensivel`. A altura inicial é capturada antes da primeira rolagem. Na Task 7, o teste usa jsdom e Worker falso; o comando de órfãos com `grep` não é sintaticamente executável no PowerShell, então a mesma busca foi confirmada com `rg`, apontando ambos para `src/content/index.ts`. O comando provisório foi exposto no contexto isolado do content script para viabilizar a verificação manual antes da gaveta existir. A primeira verificação final sem CDP mediu 19 amostras ocultas, 0→22 rolagens e 0→152 analisados, sem bloqueio nem erro. Ela revelou falso `esgotado` após duas voltas vazias numa busca que voltou a crescer ao retomar; a Task 8 corrige essa descoberta antes de repetir o teste. Na Task 9, a verificação capturou a corrida do aviso único entre MAIN e mundo isolado; o handshake eliminou-a. Uma carga ao vivo sem lote SSR falhou uma vez e passou na repetição isolada; a suíte completa seguinte passou 12/12.
 
 **Goal:** Corrigir o laço do minerador para rolagem reativa e ligá-lo ao
 content script, de modo que uma mineração real rode do começo ao fim.
@@ -1910,6 +1910,60 @@ O que foi feito:
 Considerações:
 - O limiar foi corrigido a partir da verificação real sem CDP: a busca voltou
   a crescer logo depois de ter sido declarada esgotada
+```
+
+---
+
+## Task 9: Tornar a confirmação entre os dois mundos determinística
+
+Na verificação final, os logs mostraram o interceptador e o content script
+ativos, mas a confirmação não chegou. O `interceptor-ready` era emitido uma
+vez só e podia anteceder o registro do listener no mundo isolado.
+
+**Files:**
+- Create: `src/interceptor/handshake.ts`
+- Modify: `src/interceptor/index.ts`
+- Modify: `src/content/index.ts`
+- Modify: `src/core/messages.ts`
+- Test: `tests/handshake.test.ts`
+
+- [x] **Step 1: Escrever o teste que falha**
+
+Provar que a confirmação é enviada na instalação e enviada novamente quando
+chega `content-ready` da própria janela; mensagens de outra origem ou outro
+namespace não recebem resposta.
+
+- [x] **Step 2: Rodar e confirmar que falha**
+
+```bash
+npx.cmd vitest run tests/handshake.test.ts
+```
+
+- [x] **Step 3: Implementar o handshake**
+
+Acrescentar `content-ready` ao contrato. O content script posta essa mensagem
+logo depois de instalar seu listener. O interceptador mantém o anúncio inicial
+e responde a cada `content-ready`, cobrindo as duas ordens possíveis de carga.
+
+- [x] **Step 4: Rodar e confirmar que passa**
+
+```bash
+npx.cmd vitest run tests/handshake.test.ts tests/messages.test.ts
+```
+
+- [x] **Step 5: Rodar a verificação completa**
+
+```bash
+npm.cmd test
+npm.cmd run typecheck
+npm.cmd run verify:build
+npx.cmd playwright test
+```
+
+- [x] **Step 6: Commitar**
+
+```text
+🐛 fix(interceptor): confirmar o content script sem corrida
 ```
 
 ---

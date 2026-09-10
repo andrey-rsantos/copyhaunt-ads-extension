@@ -1,6 +1,6 @@
 import type { Criterios } from '../core/criteria'
 import { relogioDeWorker } from '../core/clock'
-import { isCopyHauntMessage } from '../core/messages'
+import { createMessage, isCopyHauntMessage } from '../core/messages'
 import { Minerador } from '../core/miner'
 import { AdStore } from '../core/store'
 import type { Captura } from '../interceptor/xhr-patch'
@@ -198,6 +198,10 @@ window.addEventListener('message', (event) => {
     }
   }
 })
+
+// O interceptador pode ter anunciado antes de este listener existir. O
+// handshake pede a confirmação novamente e elimina essa corrida de carga.
+window.postMessage(createMessage('content-ready', {}), location.origin)
 
 /**
  * O content script roda em `document_start`, quando `document.body` ainda não
