@@ -8,6 +8,9 @@ export type EstadoMineracao =
   | 'minerando'
   | 'pausado'
   | 'concluido'
+  | 'esgotado'
+  | 'incompreensivel'
+  | 'limite-seguranca'
 
 export interface Progresso {
   estado: EstadoMineracao
@@ -42,6 +45,10 @@ export interface OpcoesMineracao {
   aleatorio?: () => number
   maxRolagens: number
   limiteEncontrados: number
+  /** Altura do documento. Cresce quando a Meta entrega mais anúncios. */
+  alturaDaPagina: () => number
+  /** Quantos cards a Meta renderizou no DOM atual. */
+  cardsNaTela: () => number
   aoProgredir?: (p: Progresso) => void
 }
 
@@ -60,8 +67,15 @@ export class Minerador {
   private readonly aprovados: Ad[] = []
   private laco: Promise<void> | null = null
   private avisarPendente: (() => void) | null = null
+  private voltasVazias = 0
+  private alturaAnterior = 0
 
-  constructor(private readonly opcoes: OpcoesMineracao) {}
+  constructor(private readonly opcoes: OpcoesMineracao) {
+    const limite = opcoes.limiteEncontrados
+    if (!Number.isInteger(limite) || limite < 1 || limite > 100) {
+      throw new RangeError('limiteEncontrados deve ser um inteiro entre 1 e 100')
+    }
+  }
 
   progresso(): Progresso {
     return {
@@ -97,6 +111,8 @@ export class Minerador {
   iniciar(): Promise<void> {
     if (this.laco) return this.laco
     this.estado = 'minerando'
+    this.voltasVazias = 0
+    this.alturaAnterior = this.opcoes.alturaDaPagina()
     this.laco = this.rodar().finally(() => {
       this.laco = null
     })
@@ -113,18 +129,40 @@ export class Minerador {
       o.rolar()
       this.rolagens += 1
 
-      await this.esperarLote()
+      const veioLote = await this.esperarLote()
       if (this.estado !== 'minerando') break
 
       this.avaliarNovos()
       o.aoProgredir?.(this.progresso())
 
+      const altura = o.alturaDaPagina()
+      const cresceu = altura > this.alturaAnterior
+      this.alturaAnterior = altura
+
+      if (!veioLote && !cresceu) this.voltasVazias += 1
+      else this.voltasVazias = 0
+
+      const paginaIncompreensivel = o.cardsNaTela() > 0 && o.store.total() === 0
+      if (this.voltasVazias >= 3 && paginaIncompreensivel) {
+        this.estado = 'incompreensivel'
+        o.aoProgredir?.(this.progresso())
+        break
+      }
+
+      if (this.voltasVazias >= 2 && !paginaIncompreensivel) {
+        this.estado = 'esgotado'
+        o.aoProgredir?.(this.progresso())
+        break
+      }
+
       if (this.aprovados.length >= o.limiteEncontrados) {
         this.estado = 'concluido'
+        o.aoProgredir?.(this.progresso())
         break
       }
       if (this.rolagens >= o.maxRolagens) {
-        this.estado = 'concluido'
+        this.estado = 'limite-seguranca'
+        o.aoProgredir?.(this.progresso())
         break
       }
     }
@@ -162,6 +200,7 @@ export class Minerador {
     const agora = o.relogio.agora()
 
     for (const ad of o.store.todos()) {
+      if (this.aprovados.length >= o.limiteEncontrados) break
       if (this.avaliados.has(ad.id)) continue
       this.avaliados.add(ad.id)
 

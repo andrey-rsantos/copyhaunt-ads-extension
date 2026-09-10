@@ -6,9 +6,9 @@
 ## Progresso
 
 - **Estado:** em andamento
-- **Última tarefa concluída:** Task 4 — o laço reativo
-- **Próxima tarefa:** Task 5
-- **Notas de retomada:** Task 1 foi executada manualmente pelo dono do projeto e fica pulada conforme instrução da sessão. Na Task 2, `colacaoDe` também herda o maior `collation_count` visto em outro membro do grupo, exigido pelo teste do plano. Na Task 3, `e2e/filtro.spec.ts` foi atualizado para os campos e atalhos da faixa. Na Task 4, os testes cedem microtasks após `avisarLote()` para o relógio falso registrar a próxima espera antes do avanço seguinte.
+- **Última tarefa concluída:** Task 5 — fim, degradação e limites seguros
+- **Próxima tarefa:** Task 6
+- **Notas de retomada:** Task 1 foi executada manualmente pelo dono do projeto e fica pulada conforme instrução da sessão. Na Task 2, `colacaoDe` também herda o maior `collation_count` visto em outro membro do grupo, exigido pelo teste do plano. Na Task 3, `e2e/filtro.spec.ts` foi atualizado para os campos e atalhos da faixa. Na Task 4, os testes cedem microtasks após `avisarLote()` para o relógio falso registrar a próxima espera antes do avanço seguinte. Na Task 5, o dono aprovou alvo configurável de 1 a 100 aprovados e teto independente de rolagens. O RED revelou e o plano corrigiu dois sinais antes ambíguos: `esgotado` exige que não haja sinal de página incompreensível; cards visíveis com store vazio aguardam três voltas e viram `incompreensivel`. A altura inicial é capturada antes da primeira rolagem.
 
 **Goal:** Corrigir o laço do minerador para rolagem reativa e ligá-lo ao
 content script, de modo que uma mineração real rode do começo ao fim.
@@ -16,7 +16,9 @@ content script, de modo que uma mineração real rode do começo ao fim.
 **Architecture:** Todas as peças puras já existem em `src/core/`. Este plano
 conserta duas delas — a colação e o laço —, troca o filtro de data de modos
 nomeados para faixa, move os números do ritmo para a config remota, e por fim
-instancia o `Minerador` no content script. Nada aqui desenha interface.
+instancia o `Minerador` no content script. O alvo configurável entra no
+contrato do motor; seu campo visual fica para o plano irmão. Nada aqui desenha
+interface.
 
 **Tech Stack:** TypeScript 7, Vitest 5.
 
@@ -1147,7 +1149,9 @@ Considerações:
 
 Duas condições de parada que a seção 9 do spec de 2026-09-05 exige e que o
 laço nunca teve. Sem elas, a mineração roda até o teto de rolagens mesmo
-depois de a Biblioteca ter acabado.
+depois de a Biblioteca ter acabado. Esta tarefa também fixa o contrato
+aprovado em 2026-09-10: alvo de 1 a 100 anúncios aprovados, sem ultrapassá-lo,
+e teto de rolagens tratado como interrupção de segurança.
 
 **Files:**
 - Modify: `src/core/miner.ts`
@@ -1156,10 +1160,11 @@ depois de a Biblioteca ter acabado.
 **Interfaces:**
 - Consumes: tudo da Task 4.
 - Produces, de `src/core/miner.ts`:
-  `EstadoMineracao` ganha `'esgotado'` e `'incompreensivel'`;
+  `EstadoMineracao` ganha `'esgotado'`, `'incompreensivel'` e
+  `'limite-seguranca'`;
   `OpcoesMineracao` ganha `alturaDaPagina: () => number` e `cardsNaTela: () => number`.
 
-- [ ] **Step 1: Escrever os testes que falham**
+- [x] **Step 1: Escrever os testes que falham**
 
 Acrescentar a `tests/miner.test.ts`:
 
@@ -1182,14 +1187,14 @@ describe('condições de parada', () => {
       maxRolagens: 50,
       limiteEncontrados: 100,
       alturaDaPagina: () => 10000,
-      cardsNaTela: () => 30,
+      cardsNaTela: () => 0,
       ...extra,
     })
     return { m, relogio, store }
   }
 
   it('declara esgotado quando o lote não vem e a página não cresce', async () => {
-    const { m, relogio } = montar()
+    const { m, relogio } = montar({ cardsNaTela: () => 0 })
 
     void m.iniciar()
     // duas voltas sem lote e sem a página crescer
@@ -1229,7 +1234,7 @@ describe('condições de parada', () => {
   })
 
   it('não declara incompreensível quando o store recebeu anúncios', async () => {
-    const { m, relogio, store } = montar()
+    const { m, relogio, store } = montar({ cardsNaTela: () => 30 })
     store.adicionar([{
       id: '1',
       iniciouEm: new Date('2026-08-01T12:00:00Z'),
@@ -1248,18 +1253,44 @@ describe('condições de parada', () => {
 
     expect(m.progresso().estado).not.toBe('incompreensivel')
   })
+
+  it('interrompe no teto de segurança sem dizer que concluiu', async () => {
+    const { m, relogio } = montar({
+      maxRolagens: 1,
+      alturaDaPagina: () => 13000,
+    })
+
+    void m.iniciar()
+    await relogio.avancar(1000)
+    await relogio.avancar(2000)
+
+    expect(m.progresso().estado).toBe('limite-seguranca')
+  })
 })
 ```
 
-- [ ] **Step 2: Rodar e confirmar que falham**
+No `describe('Minerador')`, completar o teste do limite de encontrados para
+provar que o lote não faz o resultado ultrapassar o alvo:
+
+```ts
+  expect(minerador.progresso().encontrados).toBe(2)
+  expect(minerador.encontrados().map((a) => a.id)).toEqual(['1', '2'])
+```
+
+Acrescentar também um teste de validação: `limiteEncontrados` menor que 1,
+maior que 100, fracionário ou não finito deve lançar `RangeError`. Reprovados
+continuam entrando em `analisados`, mas nunca aproximam o contador do alvo.
+
+- [x] **Step 2: Rodar e confirmar que falham**
 
 ```bash
 npx.cmd vitest run tests/miner.test.ts
 ```
 
-Esperado: FALHA. Os estados novos e os dois efeitos injetados não existem.
+Esperado: FALHA. Os estados novos, os dois efeitos injetados, a validação e o
+corte exato do alvo não existem.
 
-- [ ] **Step 3: Escrever a implementação**
+- [x] **Step 3: Escrever a implementação**
 
 Em `src/core/miner.ts`, ampliar o tipo de estado:
 
@@ -1273,6 +1304,8 @@ export type EstadoMineracao =
   | 'esgotado'
   /** Há cards na tela e nada no store: não estamos entendendo a página. */
   | 'incompreensivel'
+  /** A trava de rolagens interrompeu a sessão antes do alvo. */
+  | 'limite-seguranca'
 ```
 
 Acrescentar a `OpcoesMineracao`:
@@ -1295,6 +1328,12 @@ Acrescentar os contadores à classe:
   private alturaAnterior = 0
 ```
 
+No construtor, rejeitar `limiteEncontrados` que não seja inteiro entre 1 e
+100. Em `iniciar`, zerar as voltas vazias e capturar
+`this.alturaAnterior = this.opcoes.alturaDaPagina()` antes de abrir o laço.
+Assim a primeira volta compara a altura com uma linha de base real, e retomar
+depois de uma pausa não herda uma suspeita incompleta.
+
 E as verificações no fim de cada volta de `rodar`, logo depois de
 `this.avaliarNovos()` e do `aoProgredir`:
 
@@ -1308,13 +1347,15 @@ E as verificações no fim de cada volta de `rodar`, logo depois de
 
       // Falha barulhenta, nunca silenciosa: o modo de falha que importa é a
       // extensão parecer funcionar e não coletar nada.
-      if (this.voltasVazias >= 3 && o.cardsNaTela() > 0 && o.store.total() === 0) {
+      const paginaIncompreensivel = o.cardsNaTela() > 0 && o.store.total() === 0
+
+      if (this.voltasVazias >= 3 && paginaIncompreensivel) {
         this.estado = 'incompreensivel'
         o.aoProgredir?.(this.progresso())
         break
       }
 
-      if (this.voltasVazias >= 2) {
+      if (this.voltasVazias >= 2 && !paginaIncompreensivel) {
         this.estado = 'esgotado'
         o.aoProgredir?.(this.progresso())
         break
@@ -1327,12 +1368,17 @@ Para isso, guarde o retorno da espera:
       const veioLote = await this.esperarLote()
 ```
 
-**Ordem importa:** o teste de `incompreensivel` vem antes do de `esgotado`,
-e exige uma volta vazia a mais. Uma busca legitimamente sem resultados
-esgota; uma busca com cards que não conseguimos ler é outra coisa, e merece
-outro nome.
+**O sinal importa:** uma busca sem cards esgota em duas voltas. Cards visíveis
+com store vazio não podem virar `esgotado` antes da terceira volta; são sinal
+de que deixamos de compreender a página e terminam como `incompreensivel`.
 
-- [ ] **Step 4: Rodar e confirmar que passam**
+Em `avaliarNovos`, parar de acrescentar aprovados assim que
+`this.aprovados.length === o.limiteEncontrados`. No teste antigo que atingia
+`maxRolagens`, trocar o estado esperado de `concluido` para
+`limite-seguranca`; atingir `limiteEncontrados` continua sendo a única saída
+`concluido`.
+
+- [x] **Step 4: Rodar e confirmar que passam**
 
 ```bash
 npx.cmd vitest run tests/miner.test.ts
@@ -1345,14 +1391,14 @@ Esperado: PASSA.
 `() => 10000` e `() => 30`. Nos testes que não param sozinhos, faça a altura
 crescer, senão eles esgotam antes do esperado.
 
-- [ ] **Step 5: Rodar a suíte e o typecheck**
+- [x] **Step 5: Rodar a suíte e o typecheck**
 
 ```bash
 npm.cmd test
 npm.cmd run typecheck
 ```
 
-- [ ] **Step 6: Escrever a mensagem de commit**
+- [x] **Step 6: Escrever a mensagem de commit**
 
 Criar `.commit-msg` na raiz com:
 
@@ -1363,12 +1409,14 @@ O que foi feito:
 - Encerrar como `esgotado` após duas voltas sem lote e sem a página crescer
 - Encerrar como `incompreensivel` quando há cards na tela e o store vazio
 - Receber a altura da página e a contagem de cards como efeitos injetados
+- Limitar o alvo a 100 aprovados e não ultrapassá-lo dentro do último lote
+- Distinguir o teto de rolagens como `limite-seguranca`
 
 Como foi feito:
 - As duas condições saem da mesma volta do laço: se não veio lote e a
   altura não mudou, a volta foi vazia. Duas seguidas encerram
-- A degradação exige uma volta a mais que o esgotamento, e olha o store: é
-  o que separa "a busca acabou" de "paramos de entender a resposta"
+- A degradação aguarda três voltas com cards e store vazio; o esgotamento só
+  vale quando esse sinal de página incompreensível não existe
 
 Considerações:
 - A seção 9 do spec de 2026-09-05 diz que o modo de falha que importa é a
@@ -1580,7 +1628,9 @@ seção 1 do spec.
 **Interfaces:**
 - Consumes: `Minerador` e `OpcoesMineracao` (Tasks 4 e 5); `relogioDeWorker` de `src/core/clock.ts`; `AdStore.colacaoDe` (Task 2); `ConfigRemota.mining` (Task 6).
 - Produces, de `src/content/index.ts`:
-  `criarMinerador(store: AdStore, criterios: Criterios, ritmo: { pisoMs: number; timeoutMs: number; jitter: number }): Minerador` — exportada para poder ser testada sem navegador.
+  `criarMinerador(store: AdStore, criterios: Criterios, limiteEncontrados: number, ritmo: { pisoMs: number; timeoutMs: number; jitter: number }): Minerador` — exportada para poder ser testada sem navegador;
+  `iniciarMineracao({ criterios, limiteEncontrados })` — contrato provisório
+  para o console e contrato definitivo da futura gaveta.
 
 - [ ] **Step 1: Escrever o teste que falha**
 
@@ -1596,7 +1646,7 @@ describe('criarMinerador', () => {
   const RITMO = { pisoMs: 2500, timeoutMs: 4500, jitter: 0.4 }
 
   it('monta um minerador parado, sem rolar nada', () => {
-    const m = criarMinerador(new AdStore(), CRITERIOS_PADRAO, RITMO)
+    const m = criarMinerador(new AdStore(), CRITERIOS_PADRAO, 100, RITMO)
     expect(m.progresso()).toEqual({
       estado: 'parado',
       analisados: 0,
@@ -1610,7 +1660,7 @@ describe('criarMinerador', () => {
     vi.stubGlobal('scrollBy', scrollBy)
     vi.stubGlobal('innerHeight', 800)
 
-    const m = criarMinerador(new AdStore(), CRITERIOS_PADRAO, RITMO)
+    const m = criarMinerador(new AdStore(), CRITERIOS_PADRAO, 100, RITMO)
     // o efeito é privado ao minerador; disparamos pela porta pública
     m.parar()
     expect(m.progresso().estado).toBe('parado')
@@ -1660,6 +1710,7 @@ let minerador: Minerador | null = null
 export function criarMinerador(
   store: AdStore,
   criterios: Criterios,
+  limiteEncontrados: number,
   ritmoAtual: { pisoMs: number; timeoutMs: number; jitter: number },
 ): Minerador {
   return new Minerador({
@@ -1671,7 +1722,7 @@ export function criarMinerador(
     timeoutMs: ritmoAtual.timeoutMs,
     jitter: ritmoAtual.jitter,
     maxRolagens: 400,
-    limiteEncontrados: 200,
+    limiteEncontrados,
     alturaDaPagina: () => document.documentElement.scrollHeight,
     cardsNaTela: () => acharCards(document.body).size,
     aoProgredir: (p) => {
@@ -1687,8 +1738,16 @@ export function criarMinerador(
  *
  * Chamar duas vezes não abre uma segunda: o `Minerador` devolve o mesmo laço.
  */
-export function iniciarMineracao(criterios: Criterios): Minerador {
-  minerador ??= criarMinerador(store, criterios, ritmo)
+export function iniciarMineracao(pedido: {
+  criterios: Criterios
+  limiteEncontrados: number
+}): Minerador {
+  minerador ??= criarMinerador(
+    store,
+    pedido.criterios,
+    pedido.limiteEncontrados,
+    ritmo,
+  )
   void minerador.iniciar()
   return minerador
 }
@@ -1792,7 +1851,7 @@ git status --short
 extensão carregada:
 
 1. Abrir a Biblioteca com uma busca de nicho grande.
-2. No console: `iniciarMineracao({ colacaoMinima: 5, diasMin: 7, diasMax: null, presencaMinima: 10 })`.
+2. No console: `iniciarMineracao({ criterios: { colacaoMinima: 5, diasMin: 7, diasMax: null, presencaMinima: 10 }, limiteEncontrados: 100 })`.
 3. Conferir no console que os progressos aparecem e que os números sobem.
 4. **Trocar de aba por dois minutos** e voltar: os números continuaram subindo.
 5. Deixar rodar até o fim dos resultados e conferir que o estado vira

@@ -334,12 +334,13 @@ Só uma gaveta aberta por vez.
 - o botão mostra o filtro em vigor: `7+ dias no ar`, ou `7–30 dias no ar`
 - botão **Aplicar na página** — é o único enxerto que reescreve a URL
 
-**Minerar — os três critérios que só nós temos:**
+**Minerar — os três critérios que só nós temos, mais o alvo:**
 
 ```
 Criativos repetidos      ?     [− 5+ +]
 Anúncios do anunciante   ?     [− 10+ +]
 Possui Instagram                (———o)
+Quantidade de aprovados         [ 100 ]
 ─────────────────────────────────────────
 Vai varrer: emagrecimento kiwify.com ·
             Brasil · Vídeo · Ativos · 7+ dias
@@ -352,6 +353,19 @@ substitui o resumo que o painel próprio tinha. Sem ela, o usuário aperta
 Minerar sem perceber que os filtros da Meta estão valendo — e essa herança é o
 que faz o desenho inteiro funcionar.
 
+**Quantidade de aprovados é o alvo, não o volume lido.** Aceita inteiros de
+1 a 100, começa em 100 e conta somente anúncios que passaram pelos critérios
+do motor. Se uma página leva 600 anúncios ao store e 500 são reprovados, o
+resultado é 100 — não 600. O lote que cruza o alvo é cortado exatamente nele:
+96 seguidos de mais 9 aprovados terminam em 100, nunca 105.
+
+O Instagram continua sendo pós-filtro, pela regra da seção 6.4. Quando o
+toggle estiver ligado, a quantidade é o alvo antes dessa consulta e o total
+final pode diminuir. Tentar repor cada descarte exigiria continuar a varredura
+e consultar anunciantes em série, aproximando o produto da coleta ativa que o
+desenho proíbe. A interface precisa dizer: *"Instagram é verificado ao final e
+pode reduzir o total."*
+
 ### 7.3 O que desaparece, e por quê
 
 | Sai | Motivo |
@@ -362,7 +376,7 @@ que faz o desenho inteiro funcionar.
 | Linha de resumo `Brasil · Instagram · …` | o estado está visível na barra da Meta; duplicar é dívida |
 | Abas, e o painel recolhível de 344 px | não há mais o que abrigar |
 
-Sobram **três controles e um botão**, contra doze campos do desenho anterior.
+Sobram **quatro controles e um botão**, contra doze campos do desenho anterior.
 
 ### 7.4 "Provadas" e "Subindo" saem
 
@@ -445,6 +459,25 @@ Iniciada a varredura, o botão Minerar dá lugar a um cartão com barra,
 contadores (analisados, encontrados, rolagens), *Pausar* e o atalho para a
 tela de resultados. Ele fica na página, acima da grade: a mineração é longa, e
 o usuário continua rolando a Biblioteca enquanto ela roda.
+
+### 7.10 Limites de segurança
+
+O teto de 100 aprovados limita o resultado, mas não basta para limitar a
+coleta: filtros apertados podem exigir centenas de anúncios lidos para achar
+100 que passem. Por isso o motor conserva uma segunda trava, independente,
+por número máximo de rolagens.
+
+- atingir o alvo encerra como `concluido`;
+- acabar a página antes dele encerra como `esgotado` e informa, por exemplo,
+  *"37 de 100 encontrados — fim dos resultados"*;
+- atingir o teto de rolagens encerra como `limite-seguranca` e informa que a
+  busca foi interrompida, nunca que os resultados acabaram;
+- CAPTCHA, bloqueio ou página com cards que o interceptador deixou de
+  compreender interrompem a sessão de forma barulhenta.
+
+O teto de rolagens não é promessa de volume e não muda quando o usuário pede
+menos resultados. Ele existe para impedir uma sessão sem fim e pode ser
+recalibrado junto do ritmo se a Meta mudar de comportamento.
 
 ---
 
