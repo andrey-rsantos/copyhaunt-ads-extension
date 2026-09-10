@@ -6,9 +6,9 @@
 ## Progresso
 
 - **Estado:** em andamento
-- **Última tarefa concluída:** Task 3 — o filtro de data vira faixa
-- **Próxima tarefa:** Task 4
-- **Notas de retomada:** Task 1 foi executada manualmente pelo dono do projeto e fica pulada conforme instrução da sessão. Na Task 2, `colacaoDe` também herda o maior `collation_count` visto em outro membro do grupo, exigido pelo teste do plano. Na Task 3, `e2e/filtro.spec.ts` foi atualizado para os campos e atalhos da faixa.
+- **Última tarefa concluída:** Task 4 — o laço reativo
+- **Próxima tarefa:** Task 5
+- **Notas de retomada:** Task 1 foi executada manualmente pelo dono do projeto e fica pulada conforme instrução da sessão. Na Task 2, `colacaoDe` também herda o maior `collation_count` visto em outro membro do grupo, exigido pelo teste do plano. Na Task 3, `e2e/filtro.spec.ts` foi atualizado para os campos e atalhos da faixa. Na Task 4, os testes cedem microtasks após `avisarLote()` para o relógio falso registrar a próxima espera antes do avanço seguinte.
 
 **Goal:** Corrigir o laço do minerador para rolagem reativa e ligá-lo ao
 content script, de modo que uma mineração real rode do começo ao fim.
@@ -860,7 +860,7 @@ chegou. Medido: **162 rolagens para 83 lotes — 49% desperdiçadas**.
   `OpcoesMineracao` passa a ter `pisoMs: number`, `timeoutMs: number`, `jitter: number`, `aleatorio?: () => number`, e **perde** `intervaloMs`;
   `Minerador.avisarLote(): void` — o content script chama quando um lote inédito chega.
 
-- [ ] **Step 1: Escrever os testes que falham**
+- [x] **Step 1: Escrever os testes que falham**
 
 Acrescentar a `tests/miner.test.ts`:
 
@@ -960,7 +960,7 @@ describe('laço reativo', () => {
 })
 ```
 
-- [ ] **Step 2: Rodar e confirmar que falham**
+- [x] **Step 2: Rodar e confirmar que falham**
 
 ```bash
 npx.cmd vitest run tests/miner.test.ts
@@ -968,7 +968,7 @@ npx.cmd vitest run tests/miner.test.ts
 
 Esperado: FALHA. `pisoMs`, `timeoutMs`, `jitter` e `avisarLote` não existem.
 
-- [ ] **Step 3: Escrever a implementação**
+- [x] **Step 3: Escrever a implementação**
 
 Em `src/core/miner.ts`, substituir `OpcoesMineracao` por:
 
@@ -1093,7 +1093,7 @@ Em `avaliarNovos`, passar a colação efetiva:
       })
 ```
 
-- [ ] **Step 4: Rodar e confirmar que passam**
+- [x] **Step 4: Rodar e confirmar que passam**
 
 ```bash
 npx.cmd vitest run tests/miner.test.ts
@@ -1106,14 +1106,14 @@ por `pisoMs`, e acrescente `timeoutMs: 4500`, `jitter: 0` e
 `aleatorio: () => 0.5` às opções. Testes com jitter zero não precisam de
 `aleatorio`, mas explicitá-lo documenta a intenção.
 
-- [ ] **Step 5: Rodar a suíte e o typecheck**
+- [x] **Step 5: Rodar a suíte e o typecheck**
 
 ```bash
 npm.cmd test
 npm.cmd run typecheck
 ```
 
-- [ ] **Step 6: Escrever a mensagem de commit**
+- [x] **Step 6: Escrever a mensagem de commit**
 
 Criar `.commit-msg` na raiz com:
 
