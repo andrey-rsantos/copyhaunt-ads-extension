@@ -6,7 +6,11 @@ import {
   type Enxerto,
   type Plantio,
 } from '../../src/content/enxertos'
-import { CSS_ENXERTOS, CSS_GAVETA } from '../../src/content/estilo'
+import {
+  CSS_ENXERTOS,
+  CSS_GAVETA,
+  CSS_PROGRESSO,
+} from '../../src/content/estilo'
 
 let plantio: Plantio | null = null
 
@@ -171,5 +175,9 @@ describe('escopo das folhas dos enxertos', () => {
 
   it('CSS_GAVETA não tem seletor de classe sem escopo', () => {
     expect(seletoresSoltos(CSS_GAVETA)).toEqual([])
+  })
+
+  it('CSS_PROGRESSO não tem seletor de classe sem escopo', () => {
+    expect(seletoresSoltos(CSS_PROGRESSO)).toEqual([])
   })
 })

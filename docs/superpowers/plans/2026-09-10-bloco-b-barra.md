@@ -6,9 +6,9 @@
 ## Progresso
 
 - **Estado:** em andamento
-- **Última tarefa concluída:** Task 6 — a gaveta Minerar
-- **Próxima tarefa:** Task 7
-- **Notas de retomada:** A Task 1 foi validada contra a Meta real antes de ser executada, e a primeira versão da regra falhou lá: subir procurando o primeiro flex-row devolve um wrapper interno do campo de busca, com 20 px de altura. O plano e o spec da âncora foram corrigidos antes do despacho, e o teste de regressão que trava isso está em `tests/content/barra.test.ts`. Também caiu a afirmação de que a barra teria duas formas por largura: entre 762 e 1602 px ela foi sempre `row`, e a forma de coluna era estado transitório de carregamento. O suporte a `coluna` ficou no código por ser barato. Na Task 2, a revisão pegou um vazamento que os testes não veriam: a folha de estilo é compartilhada com as bandejas dos cards, e o `:host` do CSS_ENXERTOS venceria o `all: initial` delas, dando `display: flex` ao host da bandeja e empurrando o conteúdo de todo card para baixo. A regra foi escopada para `:host(#copyhaunt-enxertos)` e dois testes de texto travam o caminho. Nas Tasks 3 e 4 a revisão pegou o mesmo vazamento uma segunda vez, agora por classe: `.botao` existe em CSS_BANDEJA e em CSS_ENXERTOS, e a folha compartilhada fazia a regra de baixo vencer dentro do shadow da bandeja — os botões de 30x30 dos cards virariam inline-flex de 36 px. Todo seletor de CSS_ENXERTOS e CSS_GAVETA passou a ser escopado com `:host(#copyhaunt-enxertos)`, e dois testes de texto travam o caminho. Regra para as tarefas seguintes: **CSS novo nessas folhas nasce escopado**. Na Task 5 o executor divergiu do plano e acertou: `diasDesde` usa `Math.floor`, não `Math.round`. Como `montarUrlFiltro` trunca a data para YYYY-MM-DD, ler de volta à meia-noite dá 7,5 dias para uma faixa de 7, e `round` devolveria 8 — o rótulo do botão mentiria por um dia. O plano foi corrigido. Suíte: 419 testes, 43 arquivos.
+- **Última tarefa concluída:** Task 8 — o cartão de progresso
+- **Próxima tarefa:** Task 9
+- **Notas de retomada:** A Task 1 foi validada contra a Meta real antes de ser executada, e a primeira versão da regra falhou lá: subir procurando o primeiro flex-row devolve um wrapper interno do campo de busca, com 20 px de altura. O plano e o spec da âncora foram corrigidos antes do despacho, e o teste de regressão que trava isso está em `tests/content/barra.test.ts`. Também caiu a afirmação de que a barra teria duas formas por largura: entre 762 e 1602 px ela foi sempre `row`, e a forma de coluna era estado transitório de carregamento. O suporte a `coluna` ficou no código por ser barato. Na Task 2, a revisão pegou um vazamento que os testes não veriam: a folha de estilo é compartilhada com as bandejas dos cards, e o `:host` do CSS_ENXERTOS venceria o `all: initial` delas, dando `display: flex` ao host da bandeja e empurrando o conteúdo de todo card para baixo. A regra foi escopada para `:host(#copyhaunt-enxertos)` e dois testes de texto travam o caminho. Nas Tasks 3 e 4 a revisão pegou o mesmo vazamento uma segunda vez, agora por classe: `.botao` existe em CSS_BANDEJA e em CSS_ENXERTOS, e a folha compartilhada fazia a regra de baixo vencer dentro do shadow da bandeja — os botões de 30x30 dos cards virariam inline-flex de 36 px. Todo seletor de CSS_ENXERTOS e CSS_GAVETA passou a ser escopado com `:host(#copyhaunt-enxertos)`, e dois testes de texto travam o caminho. Regra para as tarefas seguintes: **CSS novo nessas folhas nasce escopado**. Na Task 5 o executor divergiu do plano e acertou: `diasDesde` usa `Math.floor`, não `Math.round`. Como `montarUrlFiltro` trunca a data para YYYY-MM-DD, ler de volta à meia-noite dá 7,5 dias para uma faixa de 7, e `round` devolveria 8 — o rótulo do botão mentiria por um dia. O plano foi corrigido. Na Task 8 o CSS_PROGRESSO nasceu escopado, e o teste de escopo passou a cobrir as três folhas. Suíte: 435 testes, 45 arquivos.
 
 **Goal:** Plantar na barra de filtros da Meta os três enxertos do spec — o `?`,
 o calendário e o Minerar — de modo que uma mineração real comece por um botão,
@@ -2192,7 +2192,7 @@ que o usuário digitou. Feita antes da reescrita, a recarga dispara à toa.
   - `precisaOrdenar(url: string): boolean`
   - `urlOrdenada(url: string): string`
 
-- [ ] **Step 1: Escrever os testes que falham**
+- [x] **Step 1: Escrever os testes que falham**
 
 Criar `tests/core/ordenacao.test.ts`:
 
@@ -2247,13 +2247,13 @@ describe('urlOrdenada', () => {
 })
 ```
 
-- [ ] **Step 2: Rodar e confirmar que falham**
+- [x] **Step 2: Rodar e confirmar que falham**
 
 Run: `npx.cmd vitest run tests/core/ordenacao.test.ts`
 
 Expected: FAIL, import sem resolver.
 
-- [ ] **Step 3: Escrever a implementação**
+- [x] **Step 3: Escrever a implementação**
 
 Criar `src/core/ordenacao.ts`:
 
@@ -2288,20 +2288,20 @@ export function urlOrdenada(url: string): string {
 }
 ```
 
-- [ ] **Step 4: Rodar e confirmar que passam**
+- [x] **Step 4: Rodar e confirmar que passam**
 
 Run: `npx.cmd vitest run tests/core/ordenacao.test.ts`
 
 Expected: PASS, 7 testes.
 
-- [ ] **Step 5: Rodar a suíte e o typecheck**
+- [x] **Step 5: Rodar a suíte e o typecheck**
 
 ```
 npm.cmd test
 npm.cmd run typecheck
 ```
 
-- [ ] **Step 6: Escrever a mensagem de commit**
+- [x] **Step 6: Escrever a mensagem de commit**
 
 Criar `.commit-msg` na raiz com:
 
@@ -2338,7 +2338,7 @@ interface.
   - `atualizarProgresso(cartao: HTMLElement, p: Progresso, alvo: number): void`
   - `rotuloDoEstado(estado: EstadoMineracao): string`
 
-- [ ] **Step 1: Escrever os testes que falham**
+- [x] **Step 1: Escrever os testes que falham**
 
 Criar `tests/content/progresso.test.ts`:
 
@@ -2436,20 +2436,23 @@ describe('cartão de progresso', () => {
 })
 ```
 
-- [ ] **Step 2: Rodar e confirmar que falham**
+- [x] **Step 2: Rodar e confirmar que falham**
 
 Run: `npx.cmd vitest run tests/content/progresso.test.ts`
 
 Expected: FAIL, import sem resolver.
 
-- [ ] **Step 3: Acrescentar o CSS**
+- [x] **Step 3: Acrescentar o CSS**
 
 Em `src/content/estilo.ts`, junto de `CSS_GAVETA`:
 
 ```ts
 /** O cartão de progresso, que ocupa o lugar do botão durante a varredura. */
 export const CSS_PROGRESSO = `
-  .progresso {
+  /* Escopado como CSS_ENXERTOS e CSS_GAVETA: a folha é compartilhada com as
+     bandejas dos cards, e classe de mesmo nome faz a regra de baixo vencer
+     dentro do shadow da outra. */
+  :host(#copyhaunt-enxertos) .progresso {
     display: flex;
     align-items: center;
     gap: 12px;
@@ -2463,23 +2466,23 @@ export const CSS_PROGRESSO = `
     white-space: nowrap;
   }
 
-  .progresso .trilho {
+  :host(#copyhaunt-enxertos) .progresso .trilho {
     width: 90px;
     height: 6px;
     border-radius: 3px;
     background: rgba(255, 255, 255, 0.14);
     overflow: hidden;
   }
-  .progresso .barra {
+  :host(#copyhaunt-enxertos) .progresso .barra {
     height: 100%;
     width: 0%;
     background: #7C3AED;
     transition: width 300ms ease;
   }
 
-  .progresso .numero { font-weight: 600; color: #C4A7FF; }
+  :host(#copyhaunt-enxertos) .progresso .numero { font-weight: 600; color: #C4A7FF; }
 
-  .progresso .pausar {
+  :host(#copyhaunt-enxertos) .progresso .pausar {
     border: 0;
     background: transparent;
     color: #C4A7FF;
@@ -2492,7 +2495,7 @@ export const CSS_PROGRESSO = `
 
 Inclua `CSS_PROGRESSO` nas duas montagens de folha, junto das outras.
 
-- [ ] **Step 4: Escrever a implementação**
+- [x] **Step 4: Escrever a implementação**
 
 Criar `src/content/progresso.ts`:
 
@@ -2616,20 +2619,20 @@ function contador(doc: Document, papel: string, rotulo: string): HTMLElement {
 }
 ```
 
-- [ ] **Step 5: Rodar e confirmar que passam**
+- [x] **Step 5: Rodar e confirmar que passam**
 
 Run: `npx.cmd vitest run tests/content/progresso.test.ts`
 
 Expected: PASS, 8 testes.
 
-- [ ] **Step 6: Rodar a suíte e o typecheck**
+- [x] **Step 6: Rodar a suíte e o typecheck**
 
 ```
 npm.cmd test
 npm.cmd run typecheck
 ```
 
-- [ ] **Step 7: Escrever a mensagem de commit**
+- [x] **Step 7: Escrever a mensagem de commit**
 
 Criar `.commit-msg` na raiz com:
 

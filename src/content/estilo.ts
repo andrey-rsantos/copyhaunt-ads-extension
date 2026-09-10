@@ -230,6 +230,48 @@ export const CSS_GAVETA = `
   :host(#copyhaunt-enxertos) .gaveta .acao:hover { filter: brightness(1.12); }
 `
 
+/** O cartão de progresso, que ocupa o lugar do botão durante a varredura. */
+export const CSS_PROGRESSO = `
+  :host(#copyhaunt-enxertos) .progresso {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    height: 36px;
+    padding: 0 14px;
+    border-radius: 10px;
+    background: #08070D;
+    color: #FFFFFF;
+    font-family: Inter, ui-sans-serif, system-ui, sans-serif;
+    font-size: 12px;
+    white-space: nowrap;
+  }
+
+  :host(#copyhaunt-enxertos) .progresso .trilho {
+    width: 90px;
+    height: 6px;
+    border-radius: 3px;
+    background: rgba(255, 255, 255, 0.14);
+    overflow: hidden;
+  }
+  :host(#copyhaunt-enxertos) .progresso .barra {
+    height: 100%;
+    width: 0%;
+    background: #7C3AED;
+    transition: width 300ms ease;
+  }
+
+  :host(#copyhaunt-enxertos) .progresso .numero { font-weight: 600; color: #C4A7FF; }
+
+  :host(#copyhaunt-enxertos) .progresso .pausar {
+    border: 0;
+    background: transparent;
+    color: #C4A7FF;
+    font: inherit;
+    font-weight: 600;
+    cursor: pointer;
+  }
+`
+
 let folha: CSSStyleSheet | null = null
 
 /**
@@ -243,7 +285,7 @@ export function folhaCompartilhada(): CSSStyleSheet | null {
   if (folha) return folha
   try {
     folha = new CSSStyleSheet()
-    folha.replaceSync(CSS_BANDEJA + CSS_ENXERTOS + CSS_GAVETA)
+    folha.replaceSync(CSS_BANDEJA + CSS_ENXERTOS + CSS_GAVETA + CSS_PROGRESSO)
     return folha
   } catch {
     return null // navegador sem folha construída: cai para <style>
@@ -261,7 +303,7 @@ export function criarShadow(host: HTMLElement): ShadowRoot {
     shadow.adoptedStyleSheets = [compartilhada]
   } else {
     const style = document.createElement('style')
-    style.textContent = CSS_BANDEJA + CSS_ENXERTOS + CSS_GAVETA
+    style.textContent = CSS_BANDEJA + CSS_ENXERTOS + CSS_GAVETA + CSS_PROGRESSO
     shadow.appendChild(style)
   }
 
