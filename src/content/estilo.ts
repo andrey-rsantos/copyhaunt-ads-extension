@@ -101,6 +101,67 @@ export const CSS_BANDEJA = `
   .menu .item[data-desabilitado="sim"]:hover { background: transparent; }
 `
 
+/**
+ * Estilo dos enxertos na barra da Meta.
+ *
+ * Cores de `CopyHaunt-IDV.md`. A altura de 36 px é a dos controles da Meta,
+ * medida em 2026-09-10 — nada aqui pode mudar a altura da fila, ou a barra
+ * inteira se desloca.
+ */
+export const CSS_ENXERTOS = `
+  /* Escopado ao host dos enxertos de propósito. Esta folha é compartilhada
+     com as bandejas dos cards, cujo host é um div sem estilo próprio que
+     conta com o \`all: initial\` de CSS_BANDEJA para não ocupar espaço. Um
+     \`:host\` solto aqui venceria aquele por vir depois, daria \`display:flex\`
+     ao host da bandeja e empurraria o conteúdo de todo card para baixo. */
+  :host(#copyhaunt-enxertos) { all: initial; display: flex; align-items: center; }
+
+  .fila {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-left: 8px;
+    font-family: Inter, ui-sans-serif, system-ui, sans-serif;
+  }
+
+  /* O divisor separa o nosso do da Meta: dois enxertos avulsos viram um
+     produto quando têm uma fronteira visível (spec, 7.1). */
+  .divisor {
+    width: 1px;
+    height: 24px;
+    background: rgba(124, 58, 237, 0.28);
+    margin-right: 2px;
+  }
+
+  .botao {
+    height: 36px;
+    padding: 0 14px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    border-radius: 10px;
+    cursor: pointer;
+    user-select: none;
+    white-space: nowrap;
+    font-size: 13px;
+    font-weight: 600;
+    transition: filter 150ms ease;
+  }
+  .botao:hover { filter: brightness(1.12); }
+
+  .botao[data-variante="solido"] {
+    background: #7C3AED;
+    color: #FFFFFF;
+    box-shadow: 0 0 20px rgba(124, 58, 237, 0.18);
+  }
+  .botao[data-variante="contorno"] {
+    background: transparent;
+    color: #7C3AED;
+    box-shadow: inset 0 0 0 1.5px #7C3AED;
+  }
+  .botao[data-aberto] { filter: brightness(1.2); }
+`
+
 let folha: CSSStyleSheet | null = null
 
 /**
@@ -114,7 +175,7 @@ export function folhaCompartilhada(): CSSStyleSheet | null {
   if (folha) return folha
   try {
     folha = new CSSStyleSheet()
-    folha.replaceSync(CSS_BANDEJA)
+    folha.replaceSync(CSS_BANDEJA + CSS_ENXERTOS)
     return folha
   } catch {
     return null // navegador sem folha construída: cai para <style>
@@ -132,7 +193,7 @@ export function criarShadow(host: HTMLElement): ShadowRoot {
     shadow.adoptedStyleSheets = [compartilhada]
   } else {
     const style = document.createElement('style')
-    style.textContent = CSS_BANDEJA
+    style.textContent = CSS_BANDEJA + CSS_ENXERTOS
     shadow.appendChild(style)
   }
 

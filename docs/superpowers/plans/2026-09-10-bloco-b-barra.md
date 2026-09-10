@@ -6,9 +6,9 @@
 ## Progresso
 
 - **Estado:** em andamento
-- **Última tarefa concluída:** Task 1 — achar a barra e a fila da busca
-- **Próxima tarefa:** Task 2
-- **Notas de retomada:** A Task 1 foi validada contra a Meta real antes de ser executada, e a primeira versão da regra falhou lá: subir procurando o primeiro flex-row devolve um wrapper interno do campo de busca, com 20 px de altura. O plano e o spec da âncora foram corrigidos antes do despacho, e o teste de regressão que trava isso está em `tests/content/barra.test.ts`. Também caiu a afirmação de que a barra teria duas formas por largura: entre 762 e 1602 px ela foi sempre `row`, e a forma de coluna era estado transitório de carregamento. O suporte a `coluna` ficou no código por ser barato. Suíte: 363 testes, 37 arquivos.
+- **Última tarefa concluída:** Task 2 — plantar os enxertos e mantê-los vivos
+- **Próxima tarefa:** Task 3
+- **Notas de retomada:** A Task 1 foi validada contra a Meta real antes de ser executada, e a primeira versão da regra falhou lá: subir procurando o primeiro flex-row devolve um wrapper interno do campo de busca, com 20 px de altura. O plano e o spec da âncora foram corrigidos antes do despacho, e o teste de regressão que trava isso está em `tests/content/barra.test.ts`. Também caiu a afirmação de que a barra teria duas formas por largura: entre 762 e 1602 px ela foi sempre `row`, e a forma de coluna era estado transitório de carregamento. O suporte a `coluna` ficou no código por ser barato. Na Task 2, a revisão pegou um vazamento que os testes não veriam: a folha de estilo é compartilhada com as bandejas dos cards, e o `:host` do CSS_ENXERTOS venceria o `all: initial` delas, dando `display: flex` ao host da bandeja e empurrando o conteúdo de todo card para baixo. A regra foi escopada para `:host(#copyhaunt-enxertos)` e dois testes de texto travam o caminho. Suíte: 373 testes, 38 arquivos.
 
 **Goal:** Plantar na barra de filtros da Meta os três enxertos do spec — o `?`,
 o calendário e o Minerar — de modo que uma mineração real comece por um botão,
@@ -382,7 +382,7 @@ forma da barra.
   - `interface Plantio { parar(): void; hospedeiro(): HTMLElement | null }`
   - `const ID_ENXERTOS = 'copyhaunt-enxertos'`
 
-- [ ] **Step 1: Escrever os testes que falham**
+- [x] **Step 1: Escrever os testes que falham**
 
 Criar `tests/content/enxertos.test.ts`:
 
@@ -524,13 +524,13 @@ describe('plantarEnxertos', () => {
 })
 ```
 
-- [ ] **Step 2: Rodar e confirmar que falham**
+- [x] **Step 2: Rodar e confirmar que falham**
 
 Run: `npx.cmd vitest run tests/content/enxertos.test.ts`
 
 Expected: FAIL com `Failed to resolve import "../../src/content/enxertos"`.
 
-- [ ] **Step 3: Acrescentar o CSS dos enxertos**
+- [x] **Step 3: Acrescentar o CSS dos enxertos**
 
 Em `src/content/estilo.ts`, acrescentar ao fim do arquivo, antes de
 `criarShadow`:
@@ -544,7 +544,12 @@ Em `src/content/estilo.ts`, acrescentar ao fim do arquivo, antes de
  * inteira se desloca.
  */
 export const CSS_ENXERTOS = `
-  :host { all: initial; display: flex; align-items: center; }
+  /* Escopado ao host dos enxertos de propósito. Esta folha é compartilhada
+     com as bandejas dos cards, cujo host é um div sem estilo próprio que
+     conta com o \`all: initial\` de CSS_BANDEJA para não ocupar espaço. Um
+     \`:host\` solto aqui venceria aquele por vir depois, daria \`display:flex\`
+     ao host da bandeja e empurraria o conteúdo de todo card para baixo. */
+  :host(#copyhaunt-enxertos) { all: initial; display: flex; align-items: center; }
 
   .fila {
     display: flex;
@@ -600,7 +605,7 @@ hoje está `style.textContent = CSS_BANDEJA`, passar a
 conteúdo, senão o navegador com `adoptedStyleSheets` vê um CSS e o sem vê
 outro.
 
-- [ ] **Step 4: Escrever a implementação**
+- [x] **Step 4: Escrever a implementação**
 
 Criar `src/content/enxertos.ts`:
 
@@ -718,7 +723,7 @@ export function plantarEnxertos(
 }
 ```
 
-- [ ] **Step 5: Rodar e confirmar que passam**
+- [x] **Step 5: Rodar e confirmar que passam**
 
 Run: `npx.cmd vitest run tests/content/enxertos.test.ts`
 
@@ -729,7 +734,7 @@ aumente espera nenhuma**: confirme que `observarGrade` está observando
 `doc.body` e não a barra. Um observador preso na barra antiga não dispara —
 foi esse exato erro que o comentário de `garantirObservador` registra.
 
-- [ ] **Step 6: Rodar a suíte e o typecheck**
+- [x] **Step 6: Rodar a suíte e o typecheck**
 
 ```
 npm.cmd test
@@ -738,7 +743,7 @@ npm.cmd run typecheck
 
 Expected: tudo passa.
 
-- [ ] **Step 7: Escrever a mensagem de commit**
+- [x] **Step 7: Escrever a mensagem de commit**
 
 Criar `.commit-msg` na raiz com:
 
@@ -960,11 +965,22 @@ export const CSS_GAVETA = `
 
 E inclua `CSS_GAVETA` nas duas montagens de folha, ao lado de `CSS_BANDEJA` e
 `CSS_ENXERTOS`. O host dos enxertos precisa de `position: relative` para a
-gaveta se posicionar por ele — acrescente à regra `:host` de `CSS_ENXERTOS`:
+gaveta se posicionar por ele — acrescente `position: relative` à regra
+`:host(#copyhaunt-enxertos)` de `CSS_ENXERTOS`, **mantendo o escopo**:
 
 ```
-  :host { all: initial; display: flex; align-items: center; position: relative; }
+  :host(#copyhaunt-enxertos) {
+    all: initial;
+    display: flex;
+    align-items: center;
+    position: relative;
+  }
 ```
+
+**Nunca troque isso por um `:host` sem escopo.** A folha é compartilhada com
+as bandejas dos cards, e um `:host` solto aqui daria `display: flex` ao host
+delas, empurrando o conteúdo de todo card para baixo. `tests/content/enxertos.test.ts`
+trava esse caminho.
 
 - [ ] **Step 4: Escrever a implementação**
 
