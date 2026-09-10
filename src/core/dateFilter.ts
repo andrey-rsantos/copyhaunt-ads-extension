@@ -61,3 +61,45 @@ export function montarUrlFiltro(
 
   return url.toString()
 }
+
+/**
+ * O rótulo do botão, que mostra o filtro em vigor (spec, 7.2).
+ *
+ * O travessão de `7–30` é `en dash`, não hífen: é intervalo, e a tipografia
+ * de `CopyHaunt-IDV.md` pede o traço de intervalo.
+ */
+export function rotuloDaFaixa(faixa: FaixaDias): string {
+  const { diasMin, diasMax } = faixa
+
+  if (diasMin !== null && diasMax !== null) {
+    return `${diasMin}–${diasMax} dias no ar`
+  }
+  if (diasMin !== null) return `${diasMin}+ dias no ar`
+  if (diasMax !== null) return `até ${diasMax} dias no ar`
+  return 'Tempo ativo'
+}
+
+/**
+ * A faixa que a URL em vigor representa — o inverso de `montarUrlFiltro`.
+ *
+ * Sem isto o botão mente depois de qualquer recarga: a URL carrega o filtro,
+ * e a gaveta abriria em branco. A inversão é a mesma da ida, e pelo mesmo
+ * motivo: `start_date[max]` guarda o mínimo de dias no ar.
+ */
+export function lerFaixaDaUrl(url: string, agora: Date): FaixaDias {
+  const p = new URL(url).searchParams
+  return {
+    diasMin: diasDesde(p.get('start_date[max]'), agora),
+    diasMax: diasDesde(p.get('start_date[min]'), agora),
+  }
+}
+
+function diasDesde(iso: string | null, agora: Date): number | null {
+  if (!iso) return null
+
+  const quando = new Date(`${iso}T00:00:00Z`).getTime()
+  if (Number.isNaN(quando)) return null
+
+  const dias = Math.floor((agora.getTime() - quando) / UM_DIA)
+  return dias >= 1 ? dias : null
+}

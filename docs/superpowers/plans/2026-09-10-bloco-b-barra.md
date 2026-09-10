@@ -6,9 +6,9 @@
 ## Progresso
 
 - **Estado:** em andamento
-- **Última tarefa concluída:** Task 4 — a gaveta de exemplos
-- **Próxima tarefa:** Task 5
-- **Notas de retomada:** A Task 1 foi validada contra a Meta real antes de ser executada, e a primeira versão da regra falhou lá: subir procurando o primeiro flex-row devolve um wrapper interno do campo de busca, com 20 px de altura. O plano e o spec da âncora foram corrigidos antes do despacho, e o teste de regressão que trava isso está em `tests/content/barra.test.ts`. Também caiu a afirmação de que a barra teria duas formas por largura: entre 762 e 1602 px ela foi sempre `row`, e a forma de coluna era estado transitório de carregamento. O suporte a `coluna` ficou no código por ser barato. Na Task 2, a revisão pegou um vazamento que os testes não veriam: a folha de estilo é compartilhada com as bandejas dos cards, e o `:host` do CSS_ENXERTOS venceria o `all: initial` delas, dando `display: flex` ao host da bandeja e empurrando o conteúdo de todo card para baixo. A regra foi escopada para `:host(#copyhaunt-enxertos)` e dois testes de texto travam o caminho. Nas Tasks 3 e 4 a revisão pegou o mesmo vazamento uma segunda vez, agora por classe: `.botao` existe em CSS_BANDEJA e em CSS_ENXERTOS, e a folha compartilhada fazia a regra de baixo vencer dentro do shadow da bandeja — os botões de 30x30 dos cards virariam inline-flex de 36 px. Todo seletor de CSS_ENXERTOS e CSS_GAVETA passou a ser escopado com `:host(#copyhaunt-enxertos)`, e dois testes de texto travam o caminho. Regra para as tarefas seguintes: **CSS novo nessas folhas nasce escopado**. Suíte: 391 testes, 40 arquivos.
+- **Última tarefa concluída:** Task 6 — a gaveta Minerar
+- **Próxima tarefa:** Task 7
+- **Notas de retomada:** A Task 1 foi validada contra a Meta real antes de ser executada, e a primeira versão da regra falhou lá: subir procurando o primeiro flex-row devolve um wrapper interno do campo de busca, com 20 px de altura. O plano e o spec da âncora foram corrigidos antes do despacho, e o teste de regressão que trava isso está em `tests/content/barra.test.ts`. Também caiu a afirmação de que a barra teria duas formas por largura: entre 762 e 1602 px ela foi sempre `row`, e a forma de coluna era estado transitório de carregamento. O suporte a `coluna` ficou no código por ser barato. Na Task 2, a revisão pegou um vazamento que os testes não veriam: a folha de estilo é compartilhada com as bandejas dos cards, e o `:host` do CSS_ENXERTOS venceria o `all: initial` delas, dando `display: flex` ao host da bandeja e empurrando o conteúdo de todo card para baixo. A regra foi escopada para `:host(#copyhaunt-enxertos)` e dois testes de texto travam o caminho. Nas Tasks 3 e 4 a revisão pegou o mesmo vazamento uma segunda vez, agora por classe: `.botao` existe em CSS_BANDEJA e em CSS_ENXERTOS, e a folha compartilhada fazia a regra de baixo vencer dentro do shadow da bandeja — os botões de 30x30 dos cards virariam inline-flex de 36 px. Todo seletor de CSS_ENXERTOS e CSS_GAVETA passou a ser escopado com `:host(#copyhaunt-enxertos)`, e dois testes de texto travam o caminho. Regra para as tarefas seguintes: **CSS novo nessas folhas nasce escopado**. Na Task 5 o executor divergiu do plano e acertou: `diasDesde` usa `Math.floor`, não `Math.round`. Como `montarUrlFiltro` trunca a data para YYYY-MM-DD, ler de volta à meia-noite dá 7,5 dias para uma faixa de 7, e `round` devolveria 8 — o rótulo do botão mentiria por um dia. O plano foi corrigido. Suíte: 419 testes, 43 arquivos.
 
 **Goal:** Plantar na barra de filtros da Meta os três enxertos do spec — o `?`,
 o calendário e o Minerar — de modo que uma mineração real comece por um botão,
@@ -1344,7 +1344,7 @@ faltam — o rótulo e a leitura de volta — e desenha a gaveta.
   - `lerFaixaDaUrl(url: string, agora: Date): FaixaDias`
   - `montarCalendario(doc: Document, inicial: FaixaDias, aoAplicar: (f: FaixaDias) => void): HTMLElement`
 
-- [ ] **Step 1: Escrever os testes que falham**
+- [x] **Step 1: Escrever os testes que falham**
 
 Acrescentar a `tests/core/dateFilter.test.ts`:
 
@@ -1490,7 +1490,7 @@ describe('montarCalendario', () => {
 })
 ```
 
-- [ ] **Step 2: Rodar e confirmar que falham**
+- [x] **Step 2: Rodar e confirmar que falham**
 
 ```
 npx.cmd vitest run tests/core/dateFilter.test.ts tests/content/gaveta-calendario.test.ts
@@ -1499,7 +1499,7 @@ npx.cmd vitest run tests/core/dateFilter.test.ts tests/content/gaveta-calendario
 Expected: FAIL — `rotuloDaFaixa is not a function` e o import da gaveta sem
 resolver.
 
-- [ ] **Step 3: Acrescentar as duas funções puras**
+- [x] **Step 3: Acrescentar as duas funções puras**
 
 Em `src/core/dateFilter.ts`, ao fim do arquivo:
 
@@ -1542,12 +1542,15 @@ function diasDesde(iso: string | null, agora: Date): number | null {
   const quando = new Date(`${iso}T00:00:00Z`).getTime()
   if (Number.isNaN(quando)) return null
 
-  const dias = Math.round((agora.getTime() - quando) / UM_DIA)
+  // `floor`, não `round`. `montarUrlFiltro` trunca a data para YYYY-MM-DD, e
+  // ler de volta à meia-noite dá 7,5 dias para uma faixa de 7 — `round`
+  // devolveria 8, e o rótulo do botão mentiria por um dia.
+  const dias = Math.floor((agora.getTime() - quando) / UM_DIA)
   return dias >= 1 ? dias : null
 }
 ```
 
-- [ ] **Step 4: Escrever a gaveta**
+- [x] **Step 4: Escrever a gaveta**
 
 Criar `src/content/gaveta-calendario.ts`:
 
@@ -1678,7 +1681,7 @@ function lerCampo(el: HTMLInputElement): number | null {
 }
 ```
 
-- [ ] **Step 5: Rodar e confirmar que passam**
+- [x] **Step 5: Rodar e confirmar que passam**
 
 ```
 npx.cmd vitest run tests/core/dateFilter.test.ts tests/content/gaveta-calendario.test.ts
@@ -1686,7 +1689,7 @@ npx.cmd vitest run tests/core/dateFilter.test.ts tests/content/gaveta-calendario
 
 Expected: PASS — 8 novos em `dateFilter`, 6 na gaveta.
 
-- [ ] **Step 6: Rodar a suíte e o typecheck**
+- [x] **Step 6: Rodar a suíte e o typecheck**
 
 ```
 npm.cmd test
@@ -1695,7 +1698,7 @@ npm.cmd run typecheck
 
 Expected: tudo passa.
 
-- [ ] **Step 7: Escrever a mensagem de commit**
+- [x] **Step 7: Escrever a mensagem de commit**
 
 Criar `.commit-msg` na raiz com:
 
@@ -1744,7 +1747,7 @@ com cache por `pageId` —, e a lista de aprovados existe ao fim da varredura, e
   - `interface PedidoMineracao { criterios: Criterios; limiteEncontrados: number }`
   - `montarMinerar(doc, urlAtual, agora, aoIniciar: (p: PedidoMineracao) => void): HTMLElement`
 
-- [ ] **Step 1: Escrever os testes que falham**
+- [x] **Step 1: Escrever os testes que falham**
 
 Criar `tests/core/busca-descrita.test.ts`:
 
@@ -1913,7 +1916,7 @@ describe('montarMinerar', () => {
 })
 ```
 
-- [ ] **Step 2: Rodar e confirmar que falham**
+- [x] **Step 2: Rodar e confirmar que falham**
 
 ```
 npx.cmd vitest run tests/core/busca-descrita.test.ts tests/content/gaveta-minerar.test.ts
@@ -1921,7 +1924,7 @@ npx.cmd vitest run tests/core/busca-descrita.test.ts tests/content/gaveta-minera
 
 Expected: FAIL, imports sem resolver.
 
-- [ ] **Step 3: Escrever a descrição da busca**
+- [x] **Step 3: Escrever a descrição da busca**
 
 Criar `src/core/busca-descrita.ts`:
 
@@ -1981,7 +1984,7 @@ export function descreverBusca(url: string, agora: Date): string {
 }
 ```
 
-- [ ] **Step 4: Escrever a gaveta**
+- [x] **Step 4: Escrever a gaveta**
 
 Criar `src/content/gaveta-minerar.ts`:
 
@@ -2127,7 +2130,7 @@ function ler(el: HTMLInputElement): number | null {
 }
 ```
 
-- [ ] **Step 5: Rodar e confirmar que passam**
+- [x] **Step 5: Rodar e confirmar que passam**
 
 ```
 npx.cmd vitest run tests/core/busca-descrita.test.ts tests/content/gaveta-minerar.test.ts
@@ -2135,7 +2138,7 @@ npx.cmd vitest run tests/core/busca-descrita.test.ts tests/content/gaveta-minera
 
 Expected: PASS — 6 em `busca-descrita`, 6 na gaveta.
 
-- [ ] **Step 6: Rodar a suíte e o typecheck**
+- [x] **Step 6: Rodar a suíte e o typecheck**
 
 ```
 npm.cmd test
@@ -2144,7 +2147,7 @@ npm.cmd run typecheck
 
 Expected: tudo passa.
 
-- [ ] **Step 7: Escrever a mensagem de commit**
+- [x] **Step 7: Escrever a mensagem de commit**
 
 Criar `.commit-msg` na raiz com:
 

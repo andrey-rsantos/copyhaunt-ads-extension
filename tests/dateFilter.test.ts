@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vitest'
-import { montarUrlFiltro, PRESETS } from '../src/core/dateFilter'
+import {
+  lerFaixaDaUrl,
+  montarUrlFiltro,
+  PRESETS,
+  rotuloDaFaixa,
+} from '../src/core/dateFilter'
 
 const AGORA = new Date('2026-09-10T12:00:00Z')
 const BASE = 'https://www.facebook.com/ads/library/?q=teste'
@@ -66,5 +71,64 @@ describe('montarUrlFiltro', () => {
     const url = new URL(montarUrlFiltro(BASE, { diasMin: 7, diasMax: null }, AGORA))
     expect(url.searchParams.get('sort_data[mode]')).toBe('total_impressions')
     expect(url.searchParams.get('sort_data[direction]')).toBe('desc')
+  })
+})
+
+describe('rotuloDaFaixa', () => {
+  it('só mínimo vira "7+ dias no ar"', () => {
+    expect(rotuloDaFaixa({ diasMin: 7, diasMax: null })).toBe('7+ dias no ar')
+  })
+
+  it('faixa fechada vira "7–30 dias no ar", com travessão', () => {
+    expect(rotuloDaFaixa({ diasMin: 7, diasMax: 30 })).toBe(
+      '7–30 dias no ar',
+    )
+  })
+
+  it('só máximo vira "até 30 dias no ar"', () => {
+    expect(rotuloDaFaixa({ diasMin: null, diasMax: 30 })).toBe(
+      'até 30 dias no ar',
+    )
+  })
+
+  it('faixa vazia vira "Tempo ativo"', () => {
+    expect(rotuloDaFaixa({ diasMin: null, diasMax: null })).toBe('Tempo ativo')
+  })
+})
+
+describe('lerFaixaDaUrl', () => {
+  const agora = new Date('2026-09-10T12:00:00Z')
+
+  it('lê de volta o que montarUrlFiltro escreveu', () => {
+    const url = montarUrlFiltro(
+      'https://www.facebook.com/ads/library/?q=x',
+      { diasMin: 7, diasMax: 30 },
+      agora,
+    )
+    expect(lerFaixaDaUrl(url, agora)).toEqual({ diasMin: 7, diasMax: 30 })
+  })
+
+  it('lê a faixa aberta de um lado só', () => {
+    const url = montarUrlFiltro(
+      'https://www.facebook.com/ads/library/?q=x',
+      { diasMin: 14, diasMax: null },
+      agora,
+    )
+    expect(lerFaixaDaUrl(url, agora)).toEqual({ diasMin: 14, diasMax: null })
+  })
+
+  it('URL sem filtro devolve faixa vazia', () => {
+    expect(
+      lerFaixaDaUrl('https://www.facebook.com/ads/library/?q=x', agora),
+    ).toEqual({ diasMin: null, diasMax: null })
+  })
+
+  it('data ilegível vira null em vez de NaN', () => {
+    expect(
+      lerFaixaDaUrl(
+        'https://www.facebook.com/ads/library/?start_date[max]=ontem',
+        agora,
+      ),
+    ).toEqual({ diasMin: null, diasMax: null })
   })
 })
