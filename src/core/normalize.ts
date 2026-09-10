@@ -76,6 +76,7 @@ function normalizarAnuncio(bruto: unknown): Ad | null {
     colacao: typeof colacaoBruta === 'number' && colacaoBruta > 0
       ? colacaoBruta
       : 1,
+    colacaoId: texto(prop(bruto, 'collation_id')),
     anunciante: {
       pageId,
       pageName,

@@ -33,6 +33,7 @@ export function pintarGrade(
 
     const veredito = avaliar(ad, criterios, {
       presenca: store.presenca(ad.anunciante.pageId),
+      colacao: store.colacaoDe(ad),
       agora,
     })
 

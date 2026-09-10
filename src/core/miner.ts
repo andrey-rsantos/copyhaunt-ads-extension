@@ -107,6 +107,7 @@ export class Minerador {
 
       const veredito = avaliar(ad, o.criterios, {
         presenca: o.store.presenca(ad.anunciante.pageId),
+        colacao: o.store.colacaoDe(ad),
         agora,
       })
       if (veredito.passa) this.aprovados.push(ad)

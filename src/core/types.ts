@@ -33,6 +33,13 @@ export interface Ad {
   iniciouEm: Date
   /** Quantos anúncios usam este mesmo criativo. Mínimo 1. */
   colacao: number
+  /**
+   * O grupo de colação da Meta. Vem mesmo quando `collation_count` é nulo, e
+   * é o que permite recuperar a contagem: ela grava o número só no líder do
+   * grupo. Medido: 95% de cobertura somando os dois campos, contra 86% do
+   * número sozinho.
+   */
+  colacaoId?: string
   anunciante: Anunciante
   /** URL de destino real, com parâmetros de campanha. */
   destino?: string

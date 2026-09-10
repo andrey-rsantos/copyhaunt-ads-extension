@@ -5,10 +5,10 @@
 
 ## Progresso
 
-- **Estado:** não iniciado
-- **Última tarefa concluída:** —
-- **Próxima tarefa:** Task 1
-- **Notas de retomada:** —
+- **Estado:** em andamento
+- **Última tarefa concluída:** Task 2 — a colação recuperada pelo grupo
+- **Próxima tarefa:** Task 3
+- **Notas de retomada:** Task 1 foi executada manualmente pelo dono do projeto e fica pulada conforme instrução da sessão. Na Task 2, `colacaoDe` também herda o maior `collation_count` visto em outro membro do grupo, exigido pelo teste do plano.
 
 **Goal:** Corrigir o laço do minerador para rolagem reativa e ligá-lo ao
 content script, de modo que uma mineração real rode do começo ao fim.
@@ -214,7 +214,7 @@ vindo, e ele agrupa. A cobertura sobe de 86% para 95%.
 - Produces, de `src/core/store.ts`: `colacaoDe(ad: Ad): number`.
 - Produces, de `src/core/criteria.ts`: `avaliar(ad: Ad, c: Criterios, ctx: { presenca: number; colacao: number; agora: Date })` — o campo `colacao` é **novo e obrigatório** no contexto.
 
-- [ ] **Step 1: Escrever os testes que falham**
+- [x] **Step 1: Escrever os testes que falham**
 
 Acrescentar a `tests/store.test.ts`:
 
@@ -302,7 +302,7 @@ it('reprova por colação baixa e diz o motivo', () => {
 })
 ```
 
-- [ ] **Step 2: Rodar e confirmar que falham**
+- [x] **Step 2: Rodar e confirmar que falham**
 
 ```bash
 npx.cmd vitest run tests/store.test.ts tests/normalize.test.ts tests/criteria.test.ts
@@ -311,7 +311,7 @@ npx.cmd vitest run tests/store.test.ts tests/normalize.test.ts tests/criteria.te
 Esperado: FALHA. `colacaoDe` não existe, `colacaoId` não existe no tipo, e
 `avaliar` ignora `ctx.colacao`.
 
-- [ ] **Step 3: Escrever a implementação**
+- [x] **Step 3: Escrever a implementação**
 
 Em `src/core/types.ts`, dentro de `interface Ad`, logo abaixo de `colacao`:
 
@@ -379,7 +379,7 @@ Em `src/content/overlay.ts`, na chamada a `avaliar`:
     })
 ```
 
-- [ ] **Step 4: Rodar e confirmar que passam**
+- [x] **Step 4: Rodar e confirmar que passam**
 
 ```bash
 npx.cmd vitest run tests/store.test.ts tests/normalize.test.ts tests/criteria.test.ts tests/overlay.test.ts
@@ -391,7 +391,7 @@ Esperado: PASSA.
 contexto à mão em algum caso. Acrescente `colacao` ali, com o valor que o
 teste já espera.
 
-- [ ] **Step 5: Medir a cobertura contra as fixtures reais**
+- [x] **Step 5: Medir a cobertura contra as fixtures reais**
 
 ```bash
 node -e "const fs=require('fs');let ads=[];function acha(o,out){if(Array.isArray(o)){o.forEach(x=>acha(x,out));return}if(o&&typeof o==='object'){if(o.ad_archive_id)out.push(o);Object.values(o).forEach(v=>acha(v,out))}};['payload-01.json','payload-02.json','payload-03.json','ssr-01.json'].forEach(f=>acha(JSON.parse(fs.readFileSync('tests/fixtures/'+f,'utf8')),ads));const v=new Set();ads=ads.filter(a=>!v.has(a.ad_archive_id)&&v.add(a.ad_archive_id));const comId=ads.filter(a=>a.collation_id).length;console.log('anuncios:',ads.length,'| com collation_id:',comId,'|',Math.round(comId/ads.length*100)+'%')"
@@ -402,14 +402,14 @@ Esperado: `anuncios: 57 | com collation_id: 54 | 95%`.
 **Se o número não bater, PARE e reporte.** As fixtures mudaram, ou a extração
 está errada.
 
-- [ ] **Step 6: Rodar a suíte inteira**
+- [x] **Step 6: Rodar a suíte inteira**
 
 ```bash
 npm.cmd test
 npm.cmd run typecheck
 ```
 
-- [ ] **Step 7: Escrever a mensagem de commit**
+- [x] **Step 7: Escrever a mensagem de commit**
 
 Criar `.commit-msg` na raiz com:
 

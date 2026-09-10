@@ -78,6 +78,25 @@ describe('normalizarBusca com payload sintético', () => {
     expect(normalizarBusca(corpo)[0].colacao).toBe(1)
   })
 
+  it('lê o collation_id quando ele vem', () => {
+    const corpo = {
+      data: { ad_library_main: { search_results_connection: { edges: [
+        { node: { collated_results: [{
+          ad_archive_id: '1',
+          page_id: 'p1',
+          page_name: 'A',
+          start_date: 1754049600,
+          collation_count: null,
+          collation_id: '1541173110816865',
+          snapshot: {},
+        }] } },
+      ] } } },
+    }
+    const [ad] = normalizarBusca(corpo)
+    expect(ad.colacaoId).toBe('1541173110816865')
+    expect(ad.colacao).toBe(1)
+  })
+
   it('lê o texto de snapshot.body.text, que é objeto e não string', () => {
     const corpo = {
       data: {

@@ -25,6 +25,8 @@ export const CRITERIOS_PADRAO: Criterios = {
 export interface Contexto {
   /** Quantos anúncios deste anunciante já apareceram na busca. */
   presenca: number
+  /** Colação efetiva, combinando o número da Meta com o grupo visto. */
+  colacao: number
   agora: Date
 }
 
@@ -45,8 +47,8 @@ export function avaliar(ad: Ad, c: Criterios, ctx: Contexto): Veredito {
   const motivos: string[] = []
   const dias = diasAtivos(ad.iniciouEm, ctx.agora)
 
-  if (c.colacaoMinima !== null && ad.colacao < c.colacaoMinima) {
-    motivos.push(`colação ${ad.colacao} abaixo de ${c.colacaoMinima}`)
+  if (c.colacaoMinima !== null && ctx.colacao < c.colacaoMinima) {
+    motivos.push(`colação ${ctx.colacao} abaixo de ${c.colacaoMinima}`)
   }
   if (c.diasMin !== null && dias < c.diasMin) {
     motivos.push(`${dias} dias ativos, abaixo de ${c.diasMin}`)

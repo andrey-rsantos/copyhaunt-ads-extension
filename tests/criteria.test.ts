@@ -17,8 +17,8 @@ function ad(extra: Partial<Ad> = {}): Ad {
   }
 }
 
-function ctx(presenca = 10) {
-  return { presenca, agora: AGORA }
+function ctx(presenca = 10, colacao = 5) {
+  return { presenca, colacao, agora: AGORA }
 }
 
 describe('CRITERIOS_PADRAO', () => {
@@ -38,7 +38,7 @@ describe('avaliar', () => {
   })
 
   it('reprova por colação baixa e diz o motivo', () => {
-    const r = avaliar(ad({ colacao: 2 }), CRITERIOS_PADRAO, ctx())
+    const r = avaliar(ad(), CRITERIOS_PADRAO, ctx(10, 2))
     expect(r.passa).toBe(false)
     expect(r.motivos.join(' ')).toContain('colação')
   })
@@ -63,7 +63,7 @@ describe('avaliar', () => {
 
   it('acumula todos os motivos, não só o primeiro', () => {
     const ruim = ad({ colacao: 1, iniciouEm: new Date('2026-09-05T12:00:00Z') })
-    const r = avaliar(ruim, CRITERIOS_PADRAO, ctx(1))
+    const r = avaliar(ruim, CRITERIOS_PADRAO, ctx(1, 1))
     expect(r.motivos.length).toBe(3)
   })
 
@@ -93,7 +93,7 @@ describe('avaliar', () => {
   it('a colação padrão de 5 reprova a maioria, como medido', () => {
     // 94 anúncios reais: só 18% têm colação >= 5.
     const passam = [1, 1, 2, 3, 5, 1, 2, 14, 1, 1].filter(
-      (n) => avaliar(ad({ colacao: n }), CRITERIOS_PADRAO, ctx()).passa,
+      (n) => avaliar(ad(), CRITERIOS_PADRAO, ctx(10, n)).passa,
     )
     expect(passam).toEqual([5, 14])
   })
