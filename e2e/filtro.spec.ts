@@ -10,7 +10,7 @@ const PAGINA_FALSA = `
 const URL_ALVO =
   'https://www.facebook.com/ads/library/?active_status=active&q=emagrecer'
 
-test('o preset do painel reescreve a URL da Biblioteca', async ({ context }) => {
+test('o preset de mínimo do painel reescreve a URL da Biblioteca', async ({ context }) => {
   const page = await context.newPage()
   await page.route('https://www.facebook.com/ads/library/**', (route) =>
     route.fulfill({ contentType: 'text/html', body: PAGINA_FALSA }),
@@ -18,8 +18,8 @@ test('o preset do painel reescreve a URL da Biblioteca', async ({ context }) => 
   await page.goto(URL_ALVO)
 
   const painel = page.frameLocator('#copyhaunt-panel')
-  await painel.getByRole('button', { name: 'Provadas' }).click()
-  await painel.getByRole('button', { name: '1 sem' }).click()
+  await painel.getByRole('button', { name: '3+' }).click()
+  await painel.getByRole('button', { name: 'Aplicar' }).click()
 
   // A Meta recarrega com o corte; a busca do usuário sobrevive.
   await expect
@@ -28,7 +28,7 @@ test('o preset do painel reescreve a URL da Biblioteca', async ({ context }) => 
   expect(page.url()).toContain('q=emagrecer')
 })
 
-test('o modo subindo corta pelo mínimo', async ({ context }) => {
+test('o máximo de dias corta pela data mínima', async ({ context }) => {
   const page = await context.newPage()
   await page.route('https://www.facebook.com/ads/library/**', (route) =>
     route.fulfill({ contentType: 'text/html', body: PAGINA_FALSA }),
@@ -36,8 +36,9 @@ test('o modo subindo corta pelo mínimo', async ({ context }) => {
   await page.goto(URL_ALVO)
 
   const painel = page.frameLocator('#copyhaunt-panel')
-  await painel.getByRole('button', { name: 'Subindo' }).click()
-  await painel.getByRole('button', { name: '3 dias' }).click()
+  await painel.getByLabel('mínimo de dias no ar').fill('')
+  await painel.getByLabel('máximo de dias no ar').fill('3')
+  await painel.getByRole('button', { name: 'Aplicar' }).click()
 
   await expect
     .poll(() => decodeURIComponent(page.url()), { timeout: 10_000 })

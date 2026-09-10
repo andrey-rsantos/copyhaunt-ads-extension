@@ -33,7 +33,7 @@ describe('tratarComandoFiltro', () => {
   it('navega para a URL com o corte aplicado', () => {
     const navegar = vi.fn()
     const ok = tratarComandoFiltro(
-      { modo: 'provadas', dias: 7 },
+      { diasMin: 7, diasMax: null },
       BUSCA,
       AGORA,
       navegar,
@@ -47,7 +47,7 @@ describe('tratarComandoFiltro', () => {
 
   it('não navega quando o comando não presta', () => {
     const navegar = vi.fn()
-    expect(tratarComandoFiltro({ modo: 'x' }, BUSCA, AGORA, navegar)).toBe(false)
+    expect(tratarComandoFiltro({ diasMin: 7 }, BUSCA, AGORA, navegar)).toBe(false)
     expect(navegar).not.toHaveBeenCalled()
   })
 
@@ -56,7 +56,7 @@ describe('tratarComandoFiltro', () => {
     const navegar = vi.fn()
     const alvo = urlDeReferencia()
     expect(
-      tratarComandoFiltro({ modo: 'provadas', dias: 7 }, alvo, AGORA, navegar),
+      tratarComandoFiltro({ diasMin: 7, diasMax: null }, alvo, AGORA, navegar),
     ).toBe(false)
     expect(navegar).not.toHaveBeenCalled()
   })
@@ -64,7 +64,7 @@ describe('tratarComandoFiltro', () => {
   /** A URL que o próprio comando produz, para comparar com ela mesma. */
   function urlDeReferencia(): string {
     const navegar = vi.fn()
-    tratarComandoFiltro({ modo: 'provadas', dias: 7 }, BUSCA, AGORA, navegar)
+    tratarComandoFiltro({ diasMin: 7, diasMax: null }, BUSCA, AGORA, navegar)
     return navegar.mock.calls[0][0] as string
   }
 })

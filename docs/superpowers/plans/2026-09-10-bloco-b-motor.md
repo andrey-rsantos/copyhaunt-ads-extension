@@ -6,9 +6,9 @@
 ## Progresso
 
 - **Estado:** em andamento
-- **Última tarefa concluída:** Task 2 — a colação recuperada pelo grupo
-- **Próxima tarefa:** Task 3
-- **Notas de retomada:** Task 1 foi executada manualmente pelo dono do projeto e fica pulada conforme instrução da sessão. Na Task 2, `colacaoDe` também herda o maior `collation_count` visto em outro membro do grupo, exigido pelo teste do plano.
+- **Última tarefa concluída:** Task 3 — o filtro de data vira faixa
+- **Próxima tarefa:** Task 4
+- **Notas de retomada:** Task 1 foi executada manualmente pelo dono do projeto e fica pulada conforme instrução da sessão. Na Task 2, `colacaoDe` também herda o maior `collation_count` visto em outro membro do grupo, exigido pelo teste do plano. Na Task 3, `e2e/filtro.spec.ts` foi atualizado para os campos e atalhos da faixa.
 
 **Goal:** Corrigir o laço do minerador para rolagem reativa e ligá-lo ao
 content script, de modo que uma mineração real rode do começo ao fim.
@@ -464,7 +464,7 @@ modos não permitiam.
 ar** vira `start_date[max]`, e o **máximo de dias** vira `start_date[min]`.
 Mais dias no ar significa data de início mais antiga.
 
-- [ ] **Step 1: Escrever os testes que falham**
+- [x] **Step 1: Escrever os testes que falham**
 
 Substituir os testes de modo em `tests/dateFilter.test.ts` por:
 
@@ -571,7 +571,7 @@ describe('lerComandoFiltro', () => {
 })
 ```
 
-- [ ] **Step 2: Rodar e confirmar que falham**
+- [x] **Step 2: Rodar e confirmar que falham**
 
 ```bash
 npx.cmd vitest run tests/dateFilter.test.ts tests/filtro.test.ts
@@ -579,7 +579,7 @@ npx.cmd vitest run tests/dateFilter.test.ts tests/filtro.test.ts
 
 Esperado: FALHA.
 
-- [ ] **Step 3: Escrever a implementação**
+- [x] **Step 3: Escrever a implementação**
 
 Substituir `src/core/dateFilter.ts` inteiro por:
 
@@ -795,7 +795,7 @@ export function App() {
 }
 ```
 
-- [ ] **Step 4: Rodar e confirmar que passam**
+- [x] **Step 4: Rodar e confirmar que passam**
 
 ```bash
 npx.cmd vitest run tests/dateFilter.test.ts tests/filtro.test.ts tests/comando.test.ts
@@ -806,7 +806,7 @@ Esperado: PASSA.
 **Se `tests/comando.test.ts` falhar**, ele monta comandos no formato antigo.
 Troque `{ modo: 'provadas', dias: 7 }` por `{ diasMin: 7, diasMax: null }`.
 
-- [ ] **Step 5: Rodar a suíte, o typecheck e o e2e do filtro**
+- [x] **Step 5: Rodar a suíte, o typecheck e o e2e do filtro**
 
 ```bash
 npm.cmd test
@@ -817,7 +817,7 @@ npx.cmd playwright test e2e/filtro.spec.ts
 **Se o e2e falhar**, ele clica nos botões "Provadas"/"Subindo", que não
 existem mais. Ajuste-o para preencher os campos e clicar em "Aplicar".
 
-- [ ] **Step 6: Escrever a mensagem de commit**
+- [x] **Step 6: Escrever a mensagem de commit**
 
 Criar `.commit-msg` na raiz com:
 

@@ -5,69 +5,62 @@ const BUSCA =
   'https://www.facebook.com/ads/library/?active_status=active&q=emagrecer'
 
 describe('lerComandoFiltro', () => {
-  it.each([
-    ['provadas', 7],
-    ['subindo', 3],
-    ['provadas', DIAS_MAX],
-  ])('aceita o comando bem formado %s/%i', (modo, dias) => {
-    expect(lerComandoFiltro({ modo, dias })).toEqual({ modo, dias })
+  it('aceita só o mínimo', () => {
+    expect(lerComandoFiltro({ diasMin: 7, diasMax: null })).toEqual({ diasMin: 7, diasMax: null })
   })
 
-  it.each([
-    ['modo desconhecido', { modo: 'escaladas', dias: 7 }],
-    ['modo ausente', { dias: 7 }],
-    ['dias zero', { modo: 'provadas', dias: 0 }],
-    ['dias negativo', { modo: 'provadas', dias: -7 }],
-    ['dias fracionário', { modo: 'provadas', dias: 7.5 }],
-    ['dias acima do teto', { modo: 'provadas', dias: DIAS_MAX + 1 }],
-    ['dias como texto', { modo: 'provadas', dias: '7' }],
-    ['dias NaN', { modo: 'provadas', dias: Number.NaN }],
-    ['objeto vazio', {}],
-    ['nulo', null],
-    ['texto solto', 'provadas 7'],
-    ['array', ['provadas', 7]],
-  ])('recusa %s', (_caso, valor) => {
-    // O main world é território compartilhado: qualquer script da página posta
-    // mensagem ali. Nada entra sem passar por aqui.
-    expect(lerComandoFiltro(valor)).toBeNull()
+  it('aceita só o máximo', () => {
+    expect(lerComandoFiltro({ diasMin: null, diasMax: 7 })).toEqual({ diasMin: null, diasMax: 7 })
   })
 
-  it('ignora campos a mais em vez de recusar o comando', () => {
-    // Campo extra é sinal de versão diferente, não de ataque. O que
-    // interessa é que os dois campos conhecidos estejam certos.
-    expect(lerComandoFiltro({ modo: 'subindo', dias: 5, extra: 'x' })).toEqual({
-      modo: 'subindo',
-      dias: 5,
-    })
+  it('aceita a faixa', () => {
+    expect(lerComandoFiltro({ diasMin: 7, diasMax: 30 })).toEqual({ diasMin: 7, diasMax: 30 })
+  })
+
+  it('recusa faixa invertida', () => {
+    expect(lerComandoFiltro({ diasMin: 30, diasMax: 7 })).toBeNull()
+  })
+
+  it('recusa fora do intervalo permitido', () => {
+    expect(lerComandoFiltro({ diasMin: 0, diasMax: null })).toBeNull()
+    expect(lerComandoFiltro({ diasMin: DIAS_MAX + 1, diasMax: null })).toBeNull()
+  })
+
+  it('recusa não inteiro', () => {
+    expect(lerComandoFiltro({ diasMin: 7.5, diasMax: null })).toBeNull()
+  })
+
+  it('recusa o que não é comando', () => {
+    expect(lerComandoFiltro(null)).toBeNull()
+    expect(lerComandoFiltro([])).toBeNull()
+    expect(lerComandoFiltro({ modo: 'provadas', dias: 7 })).toBeNull()
   })
 })
 
 describe('urlDoComando', () => {
   const agora = new Date('2026-09-06T12:00:00Z')
 
-  it('corta pelo máximo no modo provadas', () => {
-    const url = new URL(urlDoComando({ modo: 'provadas', dias: 7 }, BUSCA, agora))
+  it('aplica o mínimo pela data máxima de início', () => {
+    const url = new URL(urlDoComando({ diasMin: 7, diasMax: null }, BUSCA, agora))
     expect(url.searchParams.get('start_date[max]')).toBe('2026-08-30')
     expect(url.searchParams.get('start_date[min]')).toBeNull()
   })
 
-  it('corta pelo mínimo no modo subindo', () => {
-    const url = new URL(urlDoComando({ modo: 'subindo', dias: 3 }, BUSCA, agora))
+  it('aplica o máximo pela data mínima de início', () => {
+    const url = new URL(urlDoComando({ diasMin: null, diasMax: 3 }, BUSCA, agora))
     expect(url.searchParams.get('start_date[min]')).toBe('2026-09-03')
     expect(url.searchParams.get('start_date[max]')).toBeNull()
   })
 
   it('preserva a busca do usuário', () => {
-    const url = new URL(urlDoComando({ modo: 'provadas', dias: 7 }, BUSCA, agora))
+    const url = new URL(urlDoComando({ diasMin: 7, diasMax: null }, BUSCA, agora))
     expect(url.searchParams.get('q')).toBe('emagrecer')
     expect(url.searchParams.get('active_status')).toBe('active')
   })
 
   it('troca o filtro anterior em vez de acumular', () => {
-    // Sem isto, provadas depois de subindo viraria a interseção dos dois
-    // cortes, e a grade voltaria vazia sem explicação.
-    const antes = urlDoComando({ modo: 'subindo', dias: 3 }, BUSCA, agora)
-    const url = new URL(urlDoComando({ modo: 'provadas', dias: 7 }, antes, agora))
+    const antes = urlDoComando({ diasMin: null, diasMax: 3 }, BUSCA, agora)
+    const url = new URL(urlDoComando({ diasMin: 7, diasMax: null }, antes, agora))
     expect(url.searchParams.get('start_date[min]')).toBeNull()
     expect(url.searchParams.get('start_date[max]')).toBe('2026-08-30')
   })
