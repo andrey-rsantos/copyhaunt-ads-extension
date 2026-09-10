@@ -6,9 +6,11 @@ const PAGINA_FALSA = `
 <html lang="pt-BR">
   <head><meta charset="utf-8"><title>Biblioteca de Anúncios (simulada)</title></head>
   <body style="margin:0;font-family:system-ui">
-    <div id="grade" style="width:400px;padding:24px;background:#fff;color:#000">
-      Identificação da biblioteca: 2366492917183805
+    <div id="barra" style="display:flex;flex-direction:row;align-items:center">
+      <div><div role="combobox">Brazil</div></div>
+      <div><input type="search" placeholder="Search by keyword or advertiser"></div>
     </div>
+    <div id="grade" style="width:400px;padding:24px;background:#fff;color:#000">Identificação da biblioteca: 2366492917183805</div>
   </body>
 </html>`
 
@@ -40,7 +42,7 @@ test('o interceptador roda no main world e o content script confirma', async ({
   expect(logs.join('\n')).toContain('[CopyHaunt] content script ativo')
 })
 
-test('o painel monta como iframe sem vazar estilo na página', async ({
+test('os enxertos plantam na barra sem vazar estilo na página', async ({
   context,
 }) => {
   const page = await context.newPage()
@@ -49,16 +51,12 @@ test('o painel monta como iframe sem vazar estilo na página', async ({
   )
   await page.goto(URL_ALVO)
 
-  const painel = page.locator('#copyhaunt-panel')
-  await expect(painel).toBeAttached({ timeout: 10_000 })
+  const host = page.locator('#copyhaunt-enxertos')
+  await expect(host).toBeAttached({ timeout: 10_000 })
 
-  // O iframe precisa estar por cima de tudo e no canto superior direito.
-  const estilo = await painel.evaluate((el) => {
-    const s = getComputedStyle(el)
-    return { position: s.position, zIndex: s.zIndex, top: s.top }
-  })
-  expect(estilo.position).toBe('fixed')
-  expect(Number(estilo.zIndex)).toBeGreaterThan(1000)
+  // Plantado dentro da barra da Meta, não solto no body.
+  const paiId = await host.evaluate((el) => el.parentElement?.id)
+  expect(paiId).toBe('barra')
 
   // A página hospedeira não pode ter sido tocada: fundo branco, texto preto.
   const grade = await page.locator('#grade').evaluate((el) => {
@@ -68,11 +66,9 @@ test('o painel monta como iframe sem vazar estilo na página', async ({
   expect(grade.cor).toBe('rgb(0, 0, 0)')
   expect(grade.fundo).toBe('rgb(255, 255, 255)')
 
-  // O conteúdo do painel vive dentro do iframe, não na página.
-  await expect(page.locator('body >> text=CopyHaunt')).toHaveCount(0)
 })
 
-test('o painel React renderiza a marca dentro do iframe', async ({
+test('os três botões vivem no shadow root, na cor da marca', async ({
   context,
 }) => {
   const page = await context.newPage()
@@ -81,14 +77,17 @@ test('o painel React renderiza a marca dentro do iframe', async ({
   )
   await page.goto(URL_ALVO)
 
-  const painel = page.frameLocator('#copyhaunt-panel')
-  await expect(painel.locator('h1')).toContainText('CopyHaunt', {
-    timeout: 10_000,
-  })
+  const host = page.locator('#copyhaunt-enxertos')
+  await expect(host).toBeAttached({ timeout: 10_000 })
 
-  const roxo = await painel
-    .locator('h1 span')
-    .evaluate((el) => getComputedStyle(el).color)
-  // #7C3AED é o roxo principal do CopyHaunt-IDV.md
-  expect(roxo).toBe('rgb(124, 58, 237)')
+  // O Playwright atravessa shadow root aberto sozinho.
+  await expect(host.locator('[data-chave="ajuda"]')).toBeAttached()
+  await expect(host.locator('[data-chave="calendario"]')).toBeAttached()
+  await expect(host.locator('[data-chave="minerar"]')).toBeAttached()
+
+  // #7C3AED é o roxo principal de CopyHaunt-IDV.md; Minerar é a ação sólida.
+  const fundo = await host
+    .locator('[data-chave="minerar"]')
+    .evaluate((el) => getComputedStyle(el).backgroundColor)
+  expect(fundo).toBe('rgb(124, 58, 237)')
 })

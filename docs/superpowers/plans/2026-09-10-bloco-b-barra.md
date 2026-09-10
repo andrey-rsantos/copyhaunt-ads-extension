@@ -5,9 +5,9 @@
 
 ## Progresso
 
-- **Estado:** em andamento
-- **Última tarefa concluída:** Task 10 — o pós-filtro de Instagram
-- **Próxima tarefa:** Verificação final, que é manual e depende do dono do projeto
+- **Estado:** em andamento — código pronto, falta o teste manual
+- **Última tarefa concluída:** Task 11 — o e2e do painel aposentado
+- **Próxima tarefa:** o teste manual da Verificação final, que depende do dono do projeto
 - **Notas de retomada:** A Task 1 foi validada contra a Meta real antes de ser executada, e a primeira versão da regra falhou lá: subir procurando o primeiro flex-row devolve um wrapper interno do campo de busca, com 20 px de altura. O plano e o spec da âncora foram corrigidos antes do despacho, e o teste de regressão que trava isso está em `tests/content/barra.test.ts`. Também caiu a afirmação de que a barra teria duas formas por largura: entre 762 e 1602 px ela foi sempre `row`, e a forma de coluna era estado transitório de carregamento. O suporte a `coluna` ficou no código por ser barato. Na Task 2, a revisão pegou um vazamento que os testes não veriam: a folha de estilo é compartilhada com as bandejas dos cards, e o `:host` do CSS_ENXERTOS venceria o `all: initial` delas, dando `display: flex` ao host da bandeja e empurrando o conteúdo de todo card para baixo. A regra foi escopada para `:host(#copyhaunt-enxertos)` e dois testes de texto travam o caminho. Nas Tasks 3 e 4 a revisão pegou o mesmo vazamento uma segunda vez, agora por classe: `.botao` existe em CSS_BANDEJA e em CSS_ENXERTOS, e a folha compartilhada fazia a regra de baixo vencer dentro do shadow da bandeja — os botões de 30x30 dos cards virariam inline-flex de 36 px. Todo seletor de CSS_ENXERTOS e CSS_GAVETA passou a ser escopado com `:host(#copyhaunt-enxertos)`, e dois testes de texto travam o caminho. Regra para as tarefas seguintes: **CSS novo nessas folhas nasce escopado**. Na Task 5 o executor divergiu do plano e acertou: `diasDesde` usa `Math.floor`, não `Math.round`. Como `montarUrlFiltro` trunca a data para YYYY-MM-DD, ler de volta à meia-noite dá 7,5 dias para uma faixa de 7, e `round` devolveria 8 — o rótulo do botão mentiria por um dia. O plano foi corrigido. Na Task 8 o CSS_PROGRESSO nasceu escopado, e o teste de escopo passou a cobrir as três folhas. Na Task 9 a suíte caiu de 435 para 433 e a queda foi conferida: saíram três testes de `veioDoPainel` e um da porta provisória do console, todos removidos por ordem do próprio plano, e entraram dois novos. `verify:build` passou com o manifest sem `web_accessible_resources`, permissões seguem `["storage"]`. Na Task 10 o executor parou ao ver um teste existente falhar, em vez de mascarar: `planta os três enxertos` estourou o teto padrão de 1 s do `vi.waitFor` com a suíte inteira disputando CPU. Três rodadas seguintes passaram limpas, e o teto virou 5 s explícito — o `waitFor` continua saindo assim que a condição vale, então não é espera fixa. Suíte: 442 testes, 47 arquivos; verify:build OK.
 
 **Goal:** Plantar na barra de filtros da Meta os três enxertos do spec — o `?`,
@@ -3263,6 +3263,216 @@ Considerações:
 E pare. Quem commita é o revisor.
 
 ---
+## Task 11: O e2e do painel aposentado
+
+**Lacuna do plano, encontrada na verificação final.** A Task 9 aposentou o
+painel flutuante, e quatro testes do Playwright ainda o procuram: dois em
+`e2e/extension.spec.ts` e dois em `e2e/filtro.spec.ts`. Eles falham por
+obsolescência, não por defeito — mas suíte vermelha é estado falso, e o plano
+não previu isto.
+
+Os quatro usam `PAGINA_FALSA`, uma página simulada servida por `page.route`.
+Não batem na Meta real, então dá para reescrevê-los inteiros.
+
+**Nota sobre `e2e/acoes.spec.ts`:** ele também falhou na primeira execução da
+suíte completa, mas **passa isolado em 5,9 s** e não tem relação com o painel.
+A causa é carga: cinco specs em paralelo contra a Meta ao vivo, com teto de
+30 s. Não mexa nele.
+
+**Files:**
+- Modify: `e2e/extension.spec.ts`
+- Modify: `e2e/filtro.spec.ts`
+
+- [x] **Step 1: Dar uma barra de filtros à página simulada**
+
+Nos dois arquivos, a `PAGINA_FALSA` precisa do que a âncora procura — um
+`input[type="search"]` e um `[role="combobox"]` no mesmo ancestral:
+
+```ts
+const PAGINA_FALSA = `
+<!doctype html>
+<html lang="pt-BR">
+  <head><meta charset="utf-8"><title>Biblioteca de Anúncios (simulada)</title></head>
+  <body style="margin:0;font-family:system-ui">
+    <div id="barra" style="display:flex;flex-direction:row;align-items:center">
+      <div><div role="combobox">Brazil</div></div>
+      <div><input type="search" placeholder="Search by keyword or advertiser"></div>
+    </div>
+    <div id="grade" style="width:400px;padding:24px;background:#fff;color:#000">Identificação da biblioteca: 2366492917183805</div>
+  </body>
+</html>`
+```
+
+**Preserve o `style` inline do `#grade` em `extension.spec.ts`**, exatamente
+como está acima. O teste "sem vazar estilo na página" compara a cor e o fundo
+dele com branco e preto: num `div` sem estilo o fundo computa
+`rgba(0, 0, 0, 0)` e a asserção perde o sentido — foi assim que esta tarefa
+falhou na primeira execução. Em `filtro.spec.ts` o `#grade` não precisa de
+estilo, porque lá ninguém compara cor.
+
+Mantenha o `#grade` com o ID da biblioteca nos dois: é o que a bandeja ancora,
+e outros testes dependem dele.
+
+- [x] **Step 2: Trocar os dois testes do painel em `e2e/extension.spec.ts`**
+
+Apague `o painel monta como iframe sem vazar estilo na página` e `o painel
+React renderiza a marca dentro do iframe`. No lugar:
+
+```ts
+test('os enxertos plantam na barra sem vazar estilo na página', async ({
+  context,
+}) => {
+  const page = await context.newPage()
+  await page.route('https://www.facebook.com/ads/library/**', (route) =>
+    route.fulfill({ contentType: 'text/html', body: PAGINA_FALSA }),
+  )
+  await page.goto(URL_ALVO)
+
+  const host = page.locator('#copyhaunt-enxertos')
+  await expect(host).toBeAttached({ timeout: 10_000 })
+
+  // Plantado dentro da barra da Meta, não solto no body.
+  const paiId = await host.evaluate((el) => el.parentElement?.id)
+  expect(paiId).toBe('barra')
+
+  // A página hospedeira não pode ter sido tocada: fundo branco, texto preto.
+  const grade = await page.locator('#grade').evaluate((el) => {
+    const s = getComputedStyle(el)
+    return { cor: s.color, fundo: s.backgroundColor }
+  })
+  expect(grade.cor).toBe('rgb(0, 0, 0)')
+  expect(grade.fundo).toBe('rgb(255, 255, 255)')
+})
+
+test('os três botões vivem no shadow root, na cor da marca', async ({
+  context,
+}) => {
+  const page = await context.newPage()
+  await page.route('https://www.facebook.com/ads/library/**', (route) =>
+    route.fulfill({ contentType: 'text/html', body: PAGINA_FALSA }),
+  )
+  await page.goto(URL_ALVO)
+
+  const host = page.locator('#copyhaunt-enxertos')
+  await expect(host).toBeAttached({ timeout: 10_000 })
+
+  // O Playwright atravessa shadow root aberto sozinho.
+  await expect(host.locator('[data-chave="ajuda"]')).toBeAttached()
+  await expect(host.locator('[data-chave="calendario"]')).toBeAttached()
+  await expect(host.locator('[data-chave="minerar"]')).toBeAttached()
+
+  // #7C3AED é o roxo principal de CopyHaunt-IDV.md; Minerar é a ação sólida.
+  const fundo = await host
+    .locator('[data-chave="minerar"]')
+    .evaluate((el) => getComputedStyle(el).backgroundColor)
+  expect(fundo).toBe('rgb(124, 58, 237)')
+})
+```
+
+**Se o teste da cor falhar**, não relaxe a asserção: significa que o CSS
+escopado com `:host(#copyhaunt-enxertos)` não está alcançando os botões, e é
+defeito de verdade. Pare e relate.
+
+- [x] **Step 3: Reescrever os dois testes de `e2e/filtro.spec.ts`**
+
+O caminho mudou: não há mais iframe nem botão "Aplicar" de painel. Agora é
+abrir a gaveta do calendário pelo enxerto e usar os campos dela.
+
+```ts
+test('o atalho do calendário reescreve a URL da Biblioteca', async ({
+  context,
+}) => {
+  const page = await context.newPage()
+  await page.route('https://www.facebook.com/ads/library/**', (route) =>
+    route.fulfill({ contentType: 'text/html', body: PAGINA_FALSA }),
+  )
+  await page.goto(URL_ALVO)
+
+  const host = page.locator('#copyhaunt-enxertos')
+  await expect(host).toBeAttached({ timeout: 10_000 })
+
+  await host.locator('[data-chave="calendario"]').click()
+  await host.locator('[data-preset="3"]').click()
+  await host.locator('[data-acao="aplicar"]').click()
+
+  // A Meta recarrega com o corte; a busca do usuário sobrevive.
+  await expect
+    .poll(() => decodeURIComponent(page.url()), { timeout: 10_000 })
+    .toContain('start_date[max]=')
+  expect(page.url()).toContain('q=emagrecer')
+})
+
+test('o máximo de dias corta pela data mínima', async ({ context }) => {
+  const page = await context.newPage()
+  await page.route('https://www.facebook.com/ads/library/**', (route) =>
+    route.fulfill({ contentType: 'text/html', body: PAGINA_FALSA }),
+  )
+  await page.goto(URL_ALVO)
+
+  const host = page.locator('#copyhaunt-enxertos')
+  await expect(host).toBeAttached({ timeout: 10_000 })
+
+  await host.locator('[data-chave="calendario"]').click()
+  await host.locator('[data-campo="diasMin"]').fill('')
+  await host.locator('[data-campo="diasMax"]').fill('3')
+  await host.locator('[data-acao="aplicar"]').click()
+
+  await expect
+    .poll(() => decodeURIComponent(page.url()), { timeout: 10_000 })
+    .toContain('start_date[min]=')
+})
+```
+
+- [x] **Step 4: Rodar o e2e**
+
+```
+npx.cmd playwright test e2e/extension.spec.ts e2e/filtro.spec.ts
+```
+
+Expected: todos passando.
+
+Depois, a suíte e2e inteira:
+
+```
+npx.cmd playwright test
+```
+
+Se `e2e/acoes.spec.ts` falhar por timeout de 30 s, **rode-o isolado antes de
+concluir qualquer coisa**: ele passa em 5,9 s sozinho, e a falha em paralelo é
+carga contra a Meta ao vivo, não defeito.
+
+- [x] **Step 5: Rodar a verificação completa**
+
+```
+npm.cmd test
+npm.cmd run typecheck
+npm.cmd run verify:build
+```
+
+Expected: 442 testes, typecheck limpo, manifest OK.
+
+- [x] **Step 6: Escrever a mensagem de commit**
+
+Criar `.commit-msg` na raiz com:
+
+```
+🧪 test(overlay): levar o e2e do painel aposentado para os enxertos
+
+O que foi feito:
+- Dar uma barra de filtros à página simulada, para a âncora ter onde plantar
+- Trocar os testes do painel em iframe pelos dos enxertos na barra
+- Reescrever o filtro de data pelo caminho da gaveta do calendário
+
+Considerações:
+- Lacuna do plano, encontrada na verificação final: a Task 9 aposentou o
+  painel e quatro testes do Playwright continuaram procurando por ele
+- `e2e/acoes.spec.ts` não foi tocado: ele falha só em paralelo, por carga
+  contra a Meta ao vivo, e passa isolado em 5,9 s
+```
+
+E pare. Quem commita é o revisor.
+
+---
 ## Verificação final
 
 ```
@@ -3309,7 +3519,24 @@ importa aqui.
 
 ### Resultado da verificação final
 
-*(preencher ao executar — sem a saída conferida, a tarefa não está pronta)*
+**A parte automatizada passou**, em 2026-09-10:
+
+- `npm.cmd test`: **47 arquivos, 442 testes**.
+- `npm.cmd run typecheck`: sem erros.
+- `npm.cmd run verify:build`: manifest OK, `world MAIN` preservado,
+  permissões mínimas — seguem `["storage"]`.
+- `npx.cmd playwright test`: **12 testes**.
+
+**O teste manual dos 13 passos acima continua pendente** e depende do dono do
+projeto: ele exige a Biblioteca real, em perfil deslogado, com a extensão
+carregada. Nada do que a suíte cobre substitui os passos 2, 6, 7 e 13 — a
+barra estreita, a busca nova, a rolagem, e a conferência na aba Network de que
+nenhuma consulta de Instagram sai durante a varredura.
+
+**Sobre o `e2e/acoes.spec.ts`:** ele falha quando a suíte roda em paralelo, por
+carga contra a Meta ao vivo, e passa isolado em 5,9 s. Não é defeito deste
+plano. Se voltar a incomodar, o conserto é dar mais teto ao `waitFor` dele, não
+mexer no código.
 
 **O que este plano NÃO entrega**, tudo indo para o plano irmão:
 
