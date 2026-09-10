@@ -6,9 +6,9 @@
 ## Progresso
 
 - **Estado:** em andamento
-- **Última tarefa concluída:** Task 7 — motor ligado ao content script
+- **Última tarefa concluída:** Task 8 — tolerância a pausas transitórias
 - **Próxima tarefa:** Verificação final
-- **Notas de retomada:** Task 1 foi executada manualmente pelo dono do projeto e fica pulada conforme instrução da sessão. Na Task 2, `colacaoDe` também herda o maior `collation_count` visto em outro membro do grupo, exigido pelo teste do plano. Na Task 3, `e2e/filtro.spec.ts` foi atualizado para os campos e atalhos da faixa. Na Task 4, os testes cedem microtasks após `avisarLote()` para o relógio falso registrar a próxima espera antes do avanço seguinte. Na Task 5, o dono aprovou alvo configurável de 1 a 100 aprovados e teto independente de rolagens. O RED revelou e o plano corrigiu dois sinais antes ambíguos: `esgotado` exige que não haja sinal de página incompreensível; cards visíveis com store vazio aguardam três voltas e viram `incompreensivel`. A altura inicial é capturada antes da primeira rolagem. Na Task 7, o teste usa jsdom e Worker falso; o comando de órfãos com `grep` não é sintaticamente executável no PowerShell, então a mesma busca foi confirmada com `rg`, apontando ambos para `src/content/index.ts`. O comando provisório foi exposto no contexto isolado do content script para viabilizar a verificação manual antes da gaveta existir.
+- **Notas de retomada:** Task 1 foi executada manualmente pelo dono do projeto e fica pulada conforme instrução da sessão. Na Task 2, `colacaoDe` também herda o maior `collation_count` visto em outro membro do grupo, exigido pelo teste do plano. Na Task 3, `e2e/filtro.spec.ts` foi atualizado para os campos e atalhos da faixa. Na Task 4, os testes cedem microtasks após `avisarLote()` para o relógio falso registrar a próxima espera antes do avanço seguinte. Na Task 5, o dono aprovou alvo configurável de 1 a 100 aprovados e teto independente de rolagens. O RED revelou e o plano corrigiu dois sinais antes ambíguos: `esgotado` exige que não haja sinal de página incompreensível; cards visíveis com store vazio aguardam três voltas e viram `incompreensivel`. A altura inicial é capturada antes da primeira rolagem. Na Task 7, o teste usa jsdom e Worker falso; o comando de órfãos com `grep` não é sintaticamente executável no PowerShell, então a mesma busca foi confirmada com `rg`, apontando ambos para `src/content/index.ts`. O comando provisório foi exposto no contexto isolado do content script para viabilizar a verificação manual antes da gaveta existir. A primeira verificação final sem CDP mediu 19 amostras ocultas, 0→22 rolagens e 0→152 analisados, sem bloqueio nem erro. Ela revelou falso `esgotado` após duas voltas vazias numa busca que voltou a crescer ao retomar; a Task 8 corrige essa descoberta antes de repetir o teste.
 
 **Goal:** Corrigir o laço do minerador para rolagem reativa e ligá-lo ao
 content script, de modo que uma mineração real rode do começo ao fim.
@@ -1839,6 +1839,77 @@ Considerações:
   o vão está registrado na seção 1 do spec
 - A interface fica de fora deste plano. Sem ela, a mineração é acionável
   por `iniciarMineracao` no console, o que basta para o teste manual
+```
+
+---
+
+## Task 8: Evitar falso fim durante uma pausa da Meta
+
+A verificação real sem CDP mostrou que duas rolagens sem lote e sem aumento de
+altura não significam necessariamente fim. A busca marcou `esgotado` com 76
+anúncios indexados; ao retomar seis segundos depois, voltou a crescer e chegou
+a 152. Uma busca genuinamente vazia continua distinguível porque nunca colocou
+nenhum anúncio no store.
+
+**Files:**
+- Modify: `src/core/miner.ts`
+- Test: `tests/miner.test.ts`
+
+- [x] **Step 1: Escrever o teste que falha**
+
+Acrescentar às condições de parada um caso com store já preenchido, cards na
+tela, altura estável e nenhum lote: duas voltas não encerram; a quinta encerra
+como `esgotado`. O caso já existente de busca vazia continua encerrando em
+duas voltas.
+
+- [x] **Step 2: Rodar e confirmar que falha**
+
+```bash
+npx.cmd vitest run tests/miner.test.ts
+```
+
+Esperado: FALHA porque o motor ainda encerra na segunda volta vazia mesmo com
+store preenchido.
+
+- [x] **Step 3: Implementar a margem distinta**
+
+Usar duas voltas somente quando `store.total() === 0` e não houver cards. Se o
+store já recebeu anúncios, exigir cinco voltas vazias consecutivas antes de
+declarar `esgotado`. O detector `incompreensivel` continua em três voltas com
+cards e store vazio.
+
+Cinco voltas são uma margem conservadora: com o ritmo medido, dão à Meta cerca
+de 35 segundos e algumas novas rolagens para sair de uma pausa transitória,
+sem remover o teto independente de 400 rolagens.
+
+- [x] **Step 4: Rodar e confirmar que passa**
+
+```bash
+npx.cmd vitest run tests/miner.test.ts
+```
+
+- [x] **Step 5: Rodar a verificação completa**
+
+```bash
+npm.cmd test
+npm.cmd run typecheck
+npm.cmd run verify:build
+npx.cmd playwright test
+```
+
+- [x] **Step 6: Commitar**
+
+```text
+🐛 fix(miner): evitar falso fim durante pausas da Meta
+
+O que foi feito:
+- Manter a busca ativa após duas voltas vazias quando o store já tem anúncios
+- Exigir cinco voltas vazias para encerrar uma busca que vinha produzindo
+- Preservar o encerramento rápido de uma busca realmente vazia
+
+Considerações:
+- O limiar foi corrigido a partir da verificação real sem CDP: a busca voltou
+  a crescer logo depois de ter sido declarada esgotada
 ```
 
 ---

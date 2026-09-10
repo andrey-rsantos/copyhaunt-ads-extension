@@ -378,7 +378,7 @@ describe('condições de parada', () => {
     expect(m.progresso().estado).toBe('incompreensivel')
   })
 
-  it('não declara incompreensível quando o store recebeu anúncios', async () => {
+  it('tolera quatro voltas vazias quando o store já recebeu anúncios', async () => {
     const { m, relogio, store } = montar({ cardsNaTela: () => 30 })
     store.adicionar([{
       id: '1',
@@ -391,13 +391,18 @@ describe('condições de parada', () => {
     }])
 
     void m.iniciar()
-    for (let i = 0; i < 3; i++) {
+    for (let i = 0; i < 4; i++) {
       await relogio.avancar(1000)
       await relogio.avancar(2000)
       await cederAoLaco()
     }
 
-    expect(m.progresso().estado).not.toBe('incompreensivel')
+    expect(m.progresso().estado).toBe('minerando')
+
+    await relogio.avancar(1000)
+    await relogio.avancar(2000)
+    await cederAoLaco()
+    expect(m.progresso().estado).toBe('esgotado')
   })
 
   it('interrompe no teto de segurança sem dizer que concluiu', async () => {

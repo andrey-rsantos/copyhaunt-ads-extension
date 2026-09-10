@@ -149,7 +149,8 @@ export class Minerador {
         break
       }
 
-      if (this.voltasVazias >= 2 && !paginaIncompreensivel) {
+      const limiteEsgotado = o.store.total() === 0 ? 2 : 5
+      if (this.voltasVazias >= limiteEsgotado && !paginaIncompreensivel) {
         this.estado = 'esgotado'
         o.aoProgredir?.(this.progresso())
         break
