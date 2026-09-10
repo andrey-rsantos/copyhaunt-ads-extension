@@ -6,9 +6,9 @@
 ## Progresso
 
 - **Estado:** em andamento
-- **Última tarefa concluída:** Task 6 — ritmo na config remota
-- **Próxima tarefa:** Task 7
-- **Notas de retomada:** Task 1 foi executada manualmente pelo dono do projeto e fica pulada conforme instrução da sessão. Na Task 2, `colacaoDe` também herda o maior `collation_count` visto em outro membro do grupo, exigido pelo teste do plano. Na Task 3, `e2e/filtro.spec.ts` foi atualizado para os campos e atalhos da faixa. Na Task 4, os testes cedem microtasks após `avisarLote()` para o relógio falso registrar a próxima espera antes do avanço seguinte. Na Task 5, o dono aprovou alvo configurável de 1 a 100 aprovados e teto independente de rolagens. O RED revelou e o plano corrigiu dois sinais antes ambíguos: `esgotado` exige que não haja sinal de página incompreensível; cards visíveis com store vazio aguardam três voltas e viram `incompreensivel`. A altura inicial é capturada antes da primeira rolagem.
+- **Última tarefa concluída:** Task 7 — motor ligado ao content script
+- **Próxima tarefa:** Verificação final
+- **Notas de retomada:** Task 1 foi executada manualmente pelo dono do projeto e fica pulada conforme instrução da sessão. Na Task 2, `colacaoDe` também herda o maior `collation_count` visto em outro membro do grupo, exigido pelo teste do plano. Na Task 3, `e2e/filtro.spec.ts` foi atualizado para os campos e atalhos da faixa. Na Task 4, os testes cedem microtasks após `avisarLote()` para o relógio falso registrar a próxima espera antes do avanço seguinte. Na Task 5, o dono aprovou alvo configurável de 1 a 100 aprovados e teto independente de rolagens. O RED revelou e o plano corrigiu dois sinais antes ambíguos: `esgotado` exige que não haja sinal de página incompreensível; cards visíveis com store vazio aguardam três voltas e viram `incompreensivel`. A altura inicial é capturada antes da primeira rolagem. Na Task 7, o teste usa jsdom e Worker falso; o comando de órfãos com `grep` não é sintaticamente executável no PowerShell, então a mesma busca foi confirmada com `rg`, apontando ambos para `src/content/index.ts`. O comando provisório foi exposto no contexto isolado do content script para viabilizar a verificação manual antes da gaveta existir.
 
 **Goal:** Corrigir o laço do minerador para rolagem reativa e ligá-lo ao
 content script, de modo que uma mineração real rode do começo ao fim.
@@ -1630,9 +1630,10 @@ seção 1 do spec.
 - Produces, de `src/content/index.ts`:
   `criarMinerador(store: AdStore, criterios: Criterios, limiteEncontrados: number, ritmo: { pisoMs: number; timeoutMs: number; jitter: number }): Minerador` — exportada para poder ser testada sem navegador;
   `iniciarMineracao({ criterios, limiteEncontrados })` — contrato provisório
-  para o console e contrato definitivo da futura gaveta.
+  para o console e contrato definitivo da futura gaveta, também exposto em
+  `globalThis` no contexto isolado do content script.
 
-- [ ] **Step 1: Escrever o teste que falha**
+- [x] **Step 1: Escrever o teste que falha**
 
 Criar `tests/content-mineracao.test.ts`:
 
@@ -1673,9 +1674,11 @@ describe('criarMinerador', () => {
 **Nota para quem executa:** o segundo teste é deliberadamente raso. Rolagem
 real, aba oculta e chegada de lote são comportamento de navegador, e vão para
 o teste manual da verificação final — não para o jsdom, onde passariam sem
-provar nada.
+provar nada. Na execução, ele foi substituído pela prova de que o limite chega
+ao construtor, e o arquivo usa jsdom com Worker falso para isolar a fiação sem
+iniciar relógio nem rolagem.
 
-- [ ] **Step 2: Rodar e confirmar que falha**
+- [x] **Step 2: Rodar e confirmar que falha**
 
 ```bash
 npx.cmd vitest run tests/content-mineracao.test.ts
@@ -1683,7 +1686,7 @@ npx.cmd vitest run tests/content-mineracao.test.ts
 
 Esperado: FALHA com `criarMinerador is not a function`.
 
-- [ ] **Step 3: Escrever a implementação**
+- [x] **Step 3: Escrever a implementação**
 
 Em `src/content/index.ts`, acrescentar aos imports:
 
@@ -1751,6 +1754,9 @@ export function iniciarMineracao(pedido: {
   void minerador.iniciar()
   return minerador
 }
+
+// Porta provisória para o teste manual no contexto do content script.
+Object.assign(globalThis, { iniciarMineracao })
 ```
 
 Acrescentar o import de `acharCards`, que já existe em `./anchor`:
@@ -1781,7 +1787,7 @@ chegar — é o que fecha o laço reativo:
   }
 ```
 
-- [ ] **Step 4: Rodar e confirmar que passa**
+- [x] **Step 4: Rodar e confirmar que passa**
 
 ```bash
 npx.cmd vitest run tests/content-mineracao.test.ts
@@ -1789,7 +1795,7 @@ npx.cmd vitest run tests/content-mineracao.test.ts
 
 Esperado: PASSA.
 
-- [ ] **Step 5: Verificar que o motor deixou de ser órfão**
+- [x] **Step 5: Verificar que o motor deixou de ser órfão**
 
 ```bash
 node -e "const{execSync}=require('child_process');for(const m of ['miner','clock']){const r=execSync(`grep -rl \"core/${m}'\" src || true`).toString().trim();console.log('core/'+m+' ->',r||'AINDA ÓRFÃO')}"
@@ -1800,7 +1806,7 @@ Esperado: os dois apontam para `src/content/index.ts`.
 **Se algum ainda disser `AINDA ÓRFÃO`, PARE e reporte.** O objetivo do plano
 inteiro é justamente esse.
 
-- [ ] **Step 6: Rodar a verificação completa**
+- [x] **Step 6: Rodar a verificação completa**
 
 ```bash
 npm.cmd test
@@ -1809,7 +1815,7 @@ npm.cmd run verify:build
 npx.cmd playwright test
 ```
 
-- [ ] **Step 7: Escrever a mensagem de commit**
+- [x] **Step 7: Escrever a mensagem de commit**
 
 Criar `.commit-msg` na raiz com:
 
@@ -1851,7 +1857,8 @@ git status --short
 extensão carregada:
 
 1. Abrir a Biblioteca com uma busca de nicho grande.
-2. No console: `iniciarMineracao({ criterios: { colacaoMinima: 5, diasMin: 7, diasMax: null, presencaMinima: 10 }, limiteEncontrados: 100 })`.
+2. No console, selecionando o contexto do content script da CopyHaunt:
+   `iniciarMineracao({ criterios: { colacaoMinima: 5, diasMin: 7, diasMax: null, presencaMinima: 10 }, limiteEncontrados: 100 })`.
 3. Conferir no console que os progressos aparecem e que os números sobem.
 4. **Trocar de aba por dois minutos** e voltar: os números continuaram subindo.
 5. Deixar rodar até o fim dos resultados e conferir que o estado vira

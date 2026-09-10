@@ -1,8 +1,10 @@
 import type { Criterios } from '../core/criteria'
+import { relogioDeWorker } from '../core/clock'
 import { isCopyHauntMessage } from '../core/messages'
+import { Minerador } from '../core/miner'
 import { AdStore } from '../core/store'
 import type { Captura } from '../interceptor/xhr-patch'
-import { definirPadraoAncora } from './anchor'
+import { acharCards, definirPadraoAncora } from './anchor'
 import { definirDocIdAnunciante } from './instagram'
 import { observarGrade, type Observacao } from './observer'
 import { pintarGrade } from './overlay'
@@ -26,6 +28,57 @@ const SEM_CRITERIOS: Criterios = {
   diasMax: null,
   presencaMinima: null,
 }
+
+/** O ritmo de fábrica. A config remota pode substituí-lo. */
+let ritmo = { pisoMs: 2500, timeoutMs: 4500, jitter: 0.4 }
+
+let minerador: Minerador | null = null
+
+/** Monta o motor com os efeitos reais do navegador ligados. */
+export function criarMinerador(
+  storeAtual: AdStore,
+  criterios: Criterios,
+  limiteEncontrados: number,
+  ritmoAtual: { pisoMs: number; timeoutMs: number; jitter: number },
+): Minerador {
+  return new Minerador({
+    store: storeAtual,
+    criterios,
+    relogio: relogioDeWorker(),
+    rolar: () => window.scrollBy(0, window.innerHeight * 0.9),
+    pisoMs: ritmoAtual.pisoMs,
+    timeoutMs: ritmoAtual.timeoutMs,
+    jitter: ritmoAtual.jitter,
+    maxRolagens: 400,
+    limiteEncontrados,
+    alturaDaPagina: () => document.documentElement.scrollHeight,
+    cardsNaTela: () => acharCards(document.body).size,
+    aoProgredir: (p) => {
+      console.info(
+        `[CopyHaunt] ${p.estado}: ${p.encontrados} de ${limiteEncontrados} encontrados; ${p.analisados} analisados em ${p.rolagens} rolagens`,
+      )
+    },
+  })
+}
+
+/** Inicia ou retoma a única mineração desta sessão. */
+export function iniciarMineracao(pedido: {
+  criterios: Criterios
+  limiteEncontrados: number
+}): Minerador {
+  minerador ??= criarMinerador(
+    store,
+    pedido.criterios,
+    pedido.limiteEncontrados,
+    ritmo,
+  )
+  void minerador.iniciar()
+  return minerador
+}
+
+// Porta provisória para o teste manual no contexto do content script. A
+// futura gaveta chama a mesma função e elimina a necessidade do console.
+Object.assign(globalThis, { iniciarMineracao })
 
 let observacao: Observacao | null = null
 
@@ -70,6 +123,7 @@ function aplicarConfig(): void {
     // Sem este campo, a consulta forjada nem sai. É o interruptor remoto do
     // recurso: apagar o campo do arquivo hospedado o desliga em minutos.
     definirDocIdAnunciante(config.advertiserDocId)
+    if (config.mining) ritmo = config.mining
   })
 }
 
@@ -139,6 +193,7 @@ window.addEventListener('message', (event) => {
     const resultado = processarCaptura(event.data.payload as Captura, store)
     if (resultado.novos > 0) {
       console.info(`[CopyHaunt] indexados: ${resultado.total}`)
+      minerador?.avisarLote()
       repintar()
     }
   }
