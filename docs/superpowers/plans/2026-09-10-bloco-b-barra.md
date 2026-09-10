@@ -5,10 +5,10 @@
 
 ## Progresso
 
-- **Estado:** não iniciado
-- **Última tarefa concluída:** —
-- **Próxima tarefa:** Task 1
-- **Notas de retomada:** —
+- **Estado:** em andamento
+- **Última tarefa concluída:** Task 1 — achar a barra e a fila da busca
+- **Próxima tarefa:** Task 2
+- **Notas de retomada:** A Task 1 foi validada contra a Meta real antes de ser executada, e a primeira versão da regra falhou lá: subir procurando o primeiro flex-row devolve um wrapper interno do campo de busca, com 20 px de altura. O plano e o spec da âncora foram corrigidos antes do despacho, e o teste de regressão que trava isso está em `tests/content/barra.test.ts`. Também caiu a afirmação de que a barra teria duas formas por largura: entre 762 e 1602 px ela foi sempre `row`, e a forma de coluna era estado transitório de carregamento. O suporte a `coluna` ficou no código por ser barato. Suíte: 363 testes, 37 arquivos.
 
 **Goal:** Plantar na barra de filtros da Meta os três enxertos do spec — o `?`,
 o calendário e o Minerar — de modo que uma mineração real comece por um botão,
@@ -121,7 +121,7 @@ tarefa errar, todas as outras plantam no lugar errado.
   - `type FormaDaBarra = 'linha' | 'coluna'`
   - `formaDaBarra(doc: Document): FormaDaBarra | null`
 
-- [ ] **Step 1: Escrever os testes que falham**
+- [x] **Step 1: Escrever os testes que falham**
 
 Criar `tests/content/barra.test.ts`:
 
@@ -238,13 +238,13 @@ describe('acharLinhaDaBusca', () => {
 })
 ```
 
-- [ ] **Step 2: Rodar e confirmar que falham**
+- [x] **Step 2: Rodar e confirmar que falham**
 
 Run: `npx.cmd vitest run tests/content/barra.test.ts`
 
 Expected: FAIL com `Failed to resolve import "../../src/content/barra"`.
 
-- [ ] **Step 3: Escrever a implementação**
+- [x] **Step 3: Escrever a implementação**
 
 Criar `src/content/barra.ts`:
 
@@ -322,13 +322,13 @@ export function acharLinhaDaBusca(doc: Document): HTMLElement | null {
 }
 ```
 
-- [ ] **Step 4: Rodar e confirmar que passam**
+- [x] **Step 4: Rodar e confirmar que passam**
 
 Run: `npx.cmd vitest run tests/content/barra.test.ts`
 
 Expected: PASS, 10 testes.
 
-- [ ] **Step 5: Rodar a suíte e o typecheck**
+- [x] **Step 5: Rodar a suíte e o typecheck**
 
 ```
 npm.cmd test
@@ -337,7 +337,7 @@ npm.cmd run typecheck
 
 Expected: tudo passa, nada quebrou.
 
-- [ ] **Step 6: Escrever a mensagem de commit**
+- [x] **Step 6: Escrever a mensagem de commit**
 
 Criar `.commit-msg` na raiz com:
 
