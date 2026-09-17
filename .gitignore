@@ -23,3 +23,5 @@
 
 # Ideias e lembretes
 RASC.txt
+# worktrees locais
+.worktrees/
