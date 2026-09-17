@@ -2,16 +2,17 @@
 
 ## Progresso
 
-- **Estado:** em andamento — verificação automatizada concluída; falta só a validação manual (Task 4, Step 3)
-- **Última tarefa concluída:** Task 4 (Steps 1 e 2)
-- **Próxima tarefa:** Task 4, Step 3 (validação manual pelo dono) e Step 4 (fechar o plano)
+- **Estado:** concluído
+- **Última tarefa concluída:** Task 4
+- **Próxima tarefa:** —
 - **Notas de retomada:** todas de 2026-09-17, no branch `carregamento` (worktree `.worktrees/carregamento`, base `b20f1b7`).
   - **Task 1:** `npx.cmd vitest run tests/content/arranque.test.ts` → 3/3; `npm.cmd test -- --run tests/content` → 14 arquivos, 102 testes; `npm.cmd test` → 56 arquivos, 512 testes; `npm.cmd run typecheck` limpo.
   - **Task 2:** `npx.cmd vitest run tests/content/agendamento.test.ts` → 2/2; `npm.cmd test` → 57 arquivos, 514 testes; typecheck limpo; `observer.ts` não precisou mudar.
   - **Task 3:** RED provado com `src/content/index.ts` de `main` (host nunca anexado, timeout 10 s); GREEN `npx.cmd playwright test e2e/carregamento.spec.ts e2e/ssr.spec.ts` → 2/2 em duas rodadas. Métricas reais (ms desde o início da navegação): DOMContentLoaded 2740 / 2792; primeiro host anexado 1447 / 1588 (antes do DCL); primeira bandeja observável 4846 / 4799; 26 bandejas na primeira tela; lote do HTML 30. Desvios do plano: o fixture do E2E usa `input[type="search"]` + `[role="combobox"]` (o HTML do plano não ancoraria em `acharLinhaDaBusca`); os marcos são medidos por MutationObserver injetado via `addInitScript` (instante real, não intervalo de sondagem).
   - **Task 4 (Steps 1 e 2):** `npm.cmd test` → 57 arquivos, 514 testes (uma reexecução sob carga teve 2 timeouts de 5 s em `tests/content/index.test.ts`, não reproduzidos na terceira rodada — flakiness já documentada no próprio teste); typecheck limpo; `npm.cmd run verify:build` → "manifest gerado OK: world MAIN preservado, permissões mínimas"; `npm.cmd run e2e` → 16/17 (`acoes.spec.ts` passou; `e2e/pipeline.spec.ts` falhou por receber 1 indexação da Meta ao vivo e passou isolado em seguida com 40 → 49 → 58 — instabilidade de rede de um teste com esperas fixas pré-existentes; o caminho de indexação não foi tocado). `git diff --check` limpo; sem permissão, rede, Instagram ou espera fixa nova no diff.
   - **Revisão final do branch:** sem defeito de código. Onda de correção (`0e871c7`): testes de reentrância do agendador e de `parar()` antes do body; `ssr.spec.ts` ignora iframes e imprime `replantios do host` (medido: 1 — a Meta não removeu o host ao hidratar a barra nessa rodada); `try/finally` no E2E determinístico. Após a onda: `npm.cmd test` → 57 arquivos, 516 testes; typecheck limpo; os dois specs E2E → 2/2.
-  - **Pendências deixadas de propósito:** Step 3 da Task 4 (validação manual no Chrome com DevTools) requer o dono — observar em especial erro de hidratação no console da Meta, host sumindo/voltando na barra logo após o DCL e flicker de posição da barra durante a carga (`formaDaBarra` pode ler `coluna` antes do CSS). Comportamento novo não documentado no commit `5d5a690`: em aba em segundo plano o `requestAnimationFrame` não dispara, então a repintura espera a aba voltar (a mineração não depende da pintura). O log `pintados: N` conta cards conhecidos, não bandejas novas — pré-existente, agora aparece uma vez a mais por ciclo.
+  - **Task 4, Step 3 (validação na Biblioteca real, via roteiro Playwright descartável com a extensão carregada, PR #2):** host anexado com `readyState = loading` a 1316–1959 ms contra DOMContentLoaded a 2682–4283 ms (três rodadas); 1 inserção e 0 remoções do host até a página estabilizar (a Meta não o removeu ao hidratar a barra); posição do host idêntica ao anexar e no DCL (top 73 px, sem flicker); 26 bandejas na primeira tela; mineração com 2 lotes (indexações 40 → 49) atualizando estado, barra (89% → 100%), contadores e overlay (36 → 45 bandejas), encerrada em `concluido` com 45 aprovados; página de resultados com os 45 (SSR e lotes posteriores); 0 erros de hidratação e 0 erros/avisos ligados à extensão (só 403 e Permissions-Policy da própria Meta). O DevTools Performance não foi aberto: os marcos vieram de `performance.now()` no documento.
+  - **Observações que ficam:** Comportamento novo não documentado no commit `5d5a690`: em aba em segundo plano o `requestAnimationFrame` não dispara, então a repintura espera a aba voltar (a mineração não depende da pintura). O log `pintados: N` conta cards conhecidos, não bandejas novas — pré-existente, agora aparece uma vez a mais por ciclo.
 
 > **For agentic workers:** REQUIRED SUB-SKILL: use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (- [ ]) syntax for tracking.
 
@@ -518,7 +519,7 @@ Conferir especialmente:
 - SSR, resultados e ciclo de mineração continuam cobertos pelos testes
   existentes.
 
-- [ ] **Step 3: validação manual**
+- [x] **Step 3: validação manual**
 
 Com a extensão recarregada no Chrome:
 
@@ -531,7 +532,7 @@ Com a extensão recarregada no Chrome:
    lotes posteriores permanecem presentes.
 5. Verificar no console o diagnóstico antes/depois, sem erros de runtime.
 
-- [ ] **Step 4: fechar o plano**
+- [x] **Step 4: fechar o plano**
 
 Só depois de todas as verificações:
 
