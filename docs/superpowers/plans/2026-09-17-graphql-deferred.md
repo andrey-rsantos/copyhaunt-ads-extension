@@ -2,10 +2,10 @@
 
 ## Progresso
 
-- **Estado:** não iniciado
-- **Última tarefa concluída:** —
-- **Próxima tarefa:** Task 1
-- **Notas de retomada:** O corpo observado na Meta contém dois objetos JSON válidos separados por quebra de linha; o primeiro não tem anúncios e o segundo contém `search_results_connection`.
+- **Estado:** em andamento
+- **Última tarefa concluída:** Task 1 — parser JSON único/deferred
+- **Próxima tarefa:** Task 2
+- **Notas de retomada:** Parser criado em `src/core/json-stream.ts`; commit `ab8a9a5`; revisão da Task 1 aprovada após corrigir a instrução de checkpoint do executor.
 
 > **Para agentes:** SUBSKILL OBRIGATÓRIA: use `superpowers:subagent-driven-development` (recomendado) ou `superpowers:executing-plans` para executar este plano tarefa a tarefa. Os passos usam checkboxes (`- [ ]`) para acompanhamento.
 
@@ -51,7 +51,7 @@
 - Se o corpo completo não for um JSON único, deve separar por `\r?\n`, ignorar linhas vazias, interpretar cada linha individualmente e descartar linhas inválidas.
 - Nunca deve lançar exceção para entrada inválida.
 
-- [ ] **Step 1: Escrever os testes que falham**
+- [x] **Step 1: Escrever os testes que falham**
 
 Adicionar em `tests/json-stream.test.ts`:
 
@@ -96,7 +96,7 @@ describe('extrairObjetosJson', () => {
 })
 ```
 
-- [ ] **Step 2: Rodar o teste para confirmar o RED**
+- [x] **Step 2: Rodar o teste para confirmar o RED**
 
 Executar:
 
@@ -106,7 +106,7 @@ npm.cmd test -- tests/json-stream.test.ts
 
 Esperado: falha porque `src/core/json-stream.ts` e `extrairObjetosJson` ainda não existem.
 
-- [ ] **Step 3: Implementar o parser mínimo**
+- [x] **Step 3: Implementar o parser mínimo**
 
 Criar `src/core/json-stream.ts` com esta forma:
 
@@ -135,7 +135,7 @@ export function extrairObjetosJson(corpo: string): unknown[] {
 }
 ```
 
-- [ ] **Step 4: Rodar os testes do parser**
+- [x] **Step 4: Rodar os testes do parser**
 
 Executar:
 
@@ -145,11 +145,14 @@ npm.cmd test -- tests/json-stream.test.ts
 
 Esperado: 5 testes passando.
 
-- [ ] **Step 5: Fazer checkpoint**
+- [x] **Step 5: Fazer checkpoint**
+
+Como executor e reviewer são agentes distintos neste fluxo, o executor não deve
+criar o commit. Deve escrever a mensagem proposta em `.commit-msg-codex` e
+encerrar a tarefa; o reviewer/controller fará o checkpoint após a aprovação.
 
 ```powershell
-git add src/core/json-stream.ts tests/json-stream.test.ts
-git commit -m "✨ feat(core): interpretar respostas JSON deferred"
+Set-Content .commit-msg-codex "✨ feat(core): interpretar respostas JSON deferred"
 ```
 
 ## Task 2: Integrar parser ao roteador e ao pipeline
@@ -282,9 +285,12 @@ Esperado: suíte Vitest, typecheck, build/manifest e E2E sem regressão. Se o E2
 
 - [ ] **Step 7: Fazer checkpoint**
 
+Como executor e reviewer são agentes distintos neste fluxo, o executor não deve
+criar o commit. Deve escrever a mensagem proposta em `.commit-msg-codex` e
+encerrar a tarefa; o reviewer/controller fará o checkpoint após a aprovação.
+
 ```powershell
-git add src/core/router.ts src/content/pipeline.ts tests/router.test.ts tests/pipeline.test.ts
-git commit -m "🐛 fix(interceptor): indexar respostas GraphQL deferred"
+Set-Content .commit-msg-codex "🐛 fix(interceptor): indexar respostas GraphQL deferred"
 ```
 
 ## Validação manual após a implementação
