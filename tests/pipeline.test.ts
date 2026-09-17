@@ -22,6 +22,24 @@ describe('processarCaptura', () => {
     expect(store.total()).toBe(r.novos)
   })
 
+  it('indexa uma busca que chega no segundo bloco de uma resposta deferred', () => {
+    const store = new AdStore()
+    const lote = readFileSync(join(PASTA, 'payload-01.json'), 'utf8')
+    const corpo = [
+      '{"data":{"page":null},"extensions":{"is_final":false}}',
+      lote,
+    ].join('\n')
+
+    const r = processarCaptura(
+      { url: 'https://www.facebook.com/api/graphql/', corpo },
+      store,
+    )
+
+    expect(r.tipo).toBe('busca')
+    expect(r.novos).toBeGreaterThan(0)
+    expect(store.total()).toBe(r.novos)
+  })
+
   it('soma ao longo de várias capturas', () => {
     const store = new AdStore()
     const a = processarCaptura(captura('payload-01.json'), store)

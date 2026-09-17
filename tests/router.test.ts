@@ -61,6 +61,20 @@ describe('classificar', () => {
       }),
     ).toBe('busca')
   })
+
+  it('reconhece busca quando o marcador está no segundo objeto deferred', () => {
+    const corpo = [
+      '{"data":{"page":null},"extensions":{"is_final":false}}',
+      '{"label":"resultados","data":{"ad_library_main":{"search_results_connection":{"edges":[]}}}}',
+    ].join('\n')
+
+    expect(
+      classificar({
+        url: 'https://www.facebook.com/api/graphql/',
+        corpo,
+      }),
+    ).toBe('busca')
+  })
 })
 
 describe('classificar contra as fixtures reais', () => {

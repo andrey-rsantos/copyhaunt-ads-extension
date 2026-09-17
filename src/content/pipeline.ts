@@ -1,11 +1,9 @@
 import { normalizarBusca } from '../core/normalize'
+import { extrairObjetosJson } from '../core/json-stream'
 import { classificar, type TipoCaptura } from '../core/router'
 import type { AdStore } from '../core/store'
 import type { Captura } from '../interceptor/xhr-patch'
 import { extrairPayloadsSsr } from './ssr'
-
-/** A Meta prefixa respostas com isto para impedir sequestro de JSON. */
-const PREFIXO_ANTI_SEQUESTRO = /^\s*for\s*\(\s*;\s*;\s*\)\s*;/
 
 export interface ResultadoCaptura {
   tipo: TipoCaptura
@@ -72,14 +70,9 @@ export function processarCaptura(
   }
 
   const antes = store.total()
-  try {
-    const corpo = JSON.parse(
-      captura.corpo.replace(PREFIXO_ANTI_SEQUESTRO, ''),
-    ) as unknown
-    const { novos, total } = indexarBusca(corpo, store)
-    return { tipo, novos, total }
-  } catch {
-    // Uma resposta estranha não pode derrubar a sessão inteira.
-    return { tipo: 'ignorar', novos: 0, total: antes }
+  for (const payload of extrairObjetosJson(captura.corpo)) {
+    indexarBusca(payload, store)
   }
+  const total = store.total()
+  return { tipo, novos: total - antes, total }
 }
