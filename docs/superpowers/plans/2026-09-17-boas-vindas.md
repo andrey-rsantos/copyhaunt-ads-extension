@@ -2,10 +2,10 @@
 
 ## Progresso
 
-- **Estado:** não iniciado
-- **Última tarefa concluída:** —
-- **Próxima tarefa:** Task 1
-- **Notas de retomada:** layout aprovado em boas-vindas-preview.html; nenhum código da extensão foi alterado.
+- **Estado:** em andamento
+- **Última tarefa concluída:** Task 3, Step 1
+- **Próxima tarefa:** Task 3, Step 2
+- **Notas de retomada:** Implementação e verificação automatizada concluídas; falta validar manualmente instalação nova/reload antes de remover o preview da raiz. Suíte completa: 513 testes, typecheck, build/manifest e 17 E2E passaram.
 
 > **For agentic workers:** REQUIRED SUB-SKILL: use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (- [ ]) syntax for tracking.
 
@@ -57,7 +57,7 @@
 - O link principal deve ter href https://www.facebook.com/ads/library/ e
   target="_blank".
 
-- [ ] **Step 1: escrever o teste E2E da página interna**
+- [x] **Step 1: escrever o teste E2E da página interna**
 
 Criar e2e/boas-vindas.spec.ts:
 
@@ -94,7 +94,7 @@ test('exibe a página de boas-vindas construída pela extensão', async ({
 O teste deverá usar o build existente e falhar inicialmente porque a rota
 src/boas-vindas/index.html ainda não foi gerada.
 
-- [ ] **Step 2: executar o E2E em RED**
+- [x] **Step 2: executar o E2E em RED**
 
 Executar:
 
@@ -105,7 +105,7 @@ npx.cmd playwright test e2e/boas-vindas.spec.ts
 Esperado: falha ao navegar ou ao encontrar o heading, pois a nova entrada
 ainda não existe no dist carregado pelo fixture.
 
-- [ ] **Step 3: criar o documento HTML da extensão**
+- [x] **Step 3: criar o documento HTML da extensão**
 
 Criar src/boas-vindas/index.html com a estrutura semântica:
 
@@ -158,7 +158,7 @@ Criar src/boas-vindas/index.html com a estrutura semântica:
 
 Manter exatamente os textos e o contrato dos atributos usados pelo E2E.
 
-- [ ] **Step 4: extrair o CSS do preview aprovado**
+- [x] **Step 4: extrair o CSS do preview aprovado**
 
 Copiar o conteúdo do bloco style de boas-vindas-preview.html para
 src/boas-vindas/boas-vindas.css, preservando:
@@ -175,7 +175,7 @@ src/boas-vindas/boas-vindas.css, preservando:
 Remover o style inline de src/boas-vindas/index.html: o HTML deverá depender
 somente do arquivo CSS externo.
 
-- [ ] **Step 5: adicionar a entrada do Vite**
+- [x] **Step 5: adicionar a entrada do Vite**
 
 Em vite.config.ts, preservar as entradas existentes e adicionar:
 
@@ -189,7 +189,7 @@ input: {
 
 Não alterar os plugins, o manifest ou as entradas existentes.
 
-- [ ] **Step 6: construir e executar o E2E em GREEN**
+- [x] **Step 6: construir e executar o E2E em GREEN**
 
 Executar:
 
@@ -205,7 +205,7 @@ Esperado:
 - heading, selo, logo e CTA passam;
 - verify:build não acusa permissão ou manifest inválido.
 
-- [ ] **Step 7: checkpoint**
+- [x] **Step 7: checkpoint**
 
 Atualizar o bloco Progresso com Task 1 concluída e Task 2 como próxima tarefa.
 Registrar as saídas dos comandos e criar o commit:
@@ -232,7 +232,7 @@ git commit -m "✨ feat(ui): adicionar página de boas-vindas"
   para reason === 'install'.
 - Não altera abrirResultados nem intermediarInstagram.
 
-- [ ] **Step 1: preparar o mock e escrever os testes RED**
+- [x] **Step 1: preparar o mock e escrever os testes RED**
 
 Em tests/background.test.ts, substituir o mock simples de onInstalled por um
 registro de listeners:
@@ -285,7 +285,7 @@ it.each(['update', 'chrome_update', 'shared_module_update'])(
 Antes da implementação, o teste de install deverá falhar porque o listener
 atual apenas registra o log e não abre a página.
 
-- [ ] **Step 2: executar os testes RED**
+- [x] **Step 2: executar os testes RED**
 
 Executar:
 
@@ -296,7 +296,7 @@ npx.cmd vitest run tests/background.test.ts
 Esperado: os testes novos de install falham; os testes existentes de action,
 resultados e Instagram permanecem como referência de regressão.
 
-- [ ] **Step 3: implementar a abertura condicional**
+- [x] **Step 3: implementar a abertura condicional**
 
 Em src/background/index.ts, substituir o listener atual por uma implementação
 equivalente a:
@@ -321,7 +321,7 @@ chrome.runtime.onInstalled.addListener(({ reason }) => {
 Manter abrirResultados, o listener de action, o listener de mensagens e toda a
 ponte do Instagram sem mudança de comportamento.
 
-- [ ] **Step 4: executar GREEN e as regressões do service worker**
+- [x] **Step 4: executar GREEN e as regressões do service worker**
 
 Executar:
 
@@ -335,7 +335,7 @@ Esperado: todos os testes do service worker passam, as três razões que não
 representam instalação não abrem aba, o manifest continua com as permissões
 atuais e o TypeScript não emite erros.
 
-- [ ] **Step 5: checkpoint**
+- [x] **Step 5: checkpoint**
 
 Atualizar o bloco Progresso com Task 2 concluída e Task 3 como próxima tarefa.
 Registrar as saídas e criar o commit:
@@ -360,7 +360,7 @@ git commit -m "✨ feat(background): abrir onboarding após instalação"
 - A instalação nova deve abrir a página uma vez.
 - Atualizações não devem abrir a página.
 
-- [ ] **Step 1: executar a suíte E2E relacionada**
+- [x] **Step 1: executar a suíte E2E relacionada**
 
 Executar:
 

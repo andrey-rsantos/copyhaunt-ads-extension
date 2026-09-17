@@ -6,8 +6,19 @@ import {
 } from '../core/instagram-ponte'
 import { obterConfig } from './config-remota'
 
-chrome.runtime.onInstalled.addListener(() => {
+const CAMINHO_BOAS_VINDAS = 'src/boas-vindas/index.html'
+
+function abrirBoasVindas(): void {
+  void chrome.tabs.create({
+    url: chrome.runtime.getURL(CAMINHO_BOAS_VINDAS),
+    active: true,
+  })
+}
+
+chrome.runtime.onInstalled.addListener(({ reason }) => {
   console.info('[CopyHaunt] service worker instalado')
+  if (reason !== 'install') return
+  abrirBoasVindas()
 })
 
 function abrirResultados(): void {

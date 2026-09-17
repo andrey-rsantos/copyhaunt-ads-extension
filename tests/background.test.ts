@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+﻿import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 const onClicked = vi.hoisted(() => {
   const listeners: Array<(tab: chrome.tabs.Tab) => void> = []
@@ -40,13 +40,22 @@ const onMessage = vi.hoisted(() => {
     ),
   }
 })
+const onInstalled = vi.hoisted(() => {
+  const listeners: Array<(details: { reason: string }) => void> = []
+  return {
+    listeners,
+    addListener: vi.fn((listener: (details: { reason: string }) => void) => {
+      listeners.push(listener)
+    }),
+  }
+})
 
 vi.hoisted(() => {
   vi.stubGlobal('chrome', {
     runtime: {
-      onInstalled: { addListener: vi.fn() },
+      onInstalled,
       onMessage,
-      getURL: vi.fn(() => 'chrome-extension://id/src/resultados/index.html'),
+      getURL: vi.fn((path: string) => 'chrome-extension://id/' + path),
     },
     action: { onClicked },
     tabs: { create: criarAba, get: obterAba, sendMessage: enviarParaAba, onUpdated },
@@ -197,4 +206,26 @@ describe('service worker', () => {
       motivo: 'conteudo-indisponivel',
     }))
   })
+
+  it('abre onboarding ao instalar pela primeira vez', async () => {
+    await import('../src/background/index')
+
+    onInstalled.listeners[0]({ reason: 'install' })
+
+    expect(criarAba).toHaveBeenCalledWith({
+      url: 'chrome-extension://id/src/boas-vindas/index.html',
+      active: true,
+    })
+  })
+
+  it.each(['update', 'chrome_update', 'shared_module_update'])(
+    'não abre onboarding em %s',
+    async reason => {
+      await import('../src/background/index')
+
+      onInstalled.listeners[0]({ reason })
+
+      expect(criarAba).not.toHaveBeenCalled()
+    },
+  )
 })

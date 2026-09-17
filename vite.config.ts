@@ -11,6 +11,7 @@ export default defineConfig({
       input: {
         panel: 'src/panel/index.html',
         resultados: 'src/resultados/index.html',
+        boasVindas: 'src/boas-vindas/index.html',
       },
     },
   },
