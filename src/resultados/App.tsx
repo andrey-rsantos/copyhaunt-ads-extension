@@ -54,7 +54,12 @@ export function App({ storage, agora }: AppProps): ReactElement {
         {resultado && (
           <div className="resultado-resumo">
             <strong>{resultado.anuncios.length} aprovados</strong>
-            <span>{resultado.origem}</span>
+            <span>
+              {descreverOrigem(resultado.origem)}{' '}
+              <a href={resultado.origem} target="_blank" rel="noreferrer">
+                abrir busca
+              </a>
+            </span>
             <time dateTime={resultado.salvoEm.toISOString()}>
               Salvo em {formatarData(resultado.salvoEm)}
             </time>
@@ -155,4 +160,14 @@ function formatarData(data: Date): string {
     dateStyle: 'medium',
     timeStyle: 'short',
   }).format(data)
+}
+
+/** A URL da Biblioteca é longa demais para o cabeçalho; o termo pesquisado basta. */
+function descreverOrigem(origem: string): string {
+  try {
+    const termo = new URL(origem).searchParams.get('q')
+    return termo ? `Busca por “${termo}”` : 'Busca na Biblioteca'
+  } catch {
+    return 'Busca na Biblioteca'
+  }
 }

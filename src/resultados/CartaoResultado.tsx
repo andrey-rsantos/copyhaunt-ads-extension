@@ -1,7 +1,7 @@
 import { useState, type ReactElement } from 'react'
 import { montarCopias } from '../core/copy'
 import { baixarCriativos } from '../content/download'
-import { diasAtivos } from '../core/display'
+import { diasAtivos, faixaBadge } from '../core/display'
 import type { Ad } from '../core/types'
 import { LinksMenu } from './LinksMenu'
 
@@ -55,6 +55,9 @@ export function CartaoResultado({
         ) : (
           <span>Sem preview</span>
         )}
+        <div className="resultado-badge" data-faixa={faixaBadge(dias)}>
+          {dias} DIAS
+        </div>
       </div>
       <div className="resultado-conteudo">
         <div className="resultado-anunciante">
@@ -62,7 +65,6 @@ export function CartaoResultado({
           <strong>{ad.anunciante.pageName}</strong>
         </div>
         <div className="resultado-metricas">
-          <span>{dias} dias ativos</span>
           <span>{colacao} criativos repetidos</span>
           <span>{presenca} anúncios do anunciante</span>
         </div>

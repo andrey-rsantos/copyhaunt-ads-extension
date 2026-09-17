@@ -183,4 +183,18 @@ describe('página de resultados', () => {
     expect(instagram.disabled).toBe(true)
     expect(instagram.textContent).toContain('Abrir na Biblioteca')
   })
+
+  it('mostra o termo da busca no cabeçalho e os dias como badge da imagem', async () => {
+    renderizarComStorage(resultadoComTresAnuncios())
+    await vi.waitFor(() => expect(document.querySelectorAll('[data-testid="resultado-card"]')).toHaveLength(3))
+
+    const resumo = document.querySelector('.resultado-resumo')!
+    expect(resumo.textContent).toContain('receitas')
+    expect(resumo.textContent).not.toContain('https://www.facebook.com')
+    expect(resumo.querySelector('a')?.getAttribute('href')).toBe('https://www.facebook.com/ads/library/?q=receitas')
+
+    const badge = document.querySelector('[data-ad-id="criativo-mais-repetido"] .resultado-preview .resultado-badge')!
+    expect(badge.textContent).toBe('7 DIAS')
+    expect(badge.getAttribute('data-faixa')).toBe('provado')
+  })
 })
