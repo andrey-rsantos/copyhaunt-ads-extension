@@ -404,9 +404,9 @@ Usar os tokens da IDV: `#08070D`, `#111019`, `#7C3AED`, `#A855F7`, `#C4A7FF`, `#
 
 No topo do teste, definir `renderizarComStorage(resultado)`, `resultadoComTresAnuncios()`, `selecionar(rotulo)`, `idsDosCards()` e `clicar(seletor)`; `renderizarComStorage` deve injetar a dependência de storage da `App` em vez de substituir módulos com mock global.
 
-- [ ] **Step 4: Implementar ações do card e menu Links**
+- [ ] **Step 4: Implementar ações do card e menu Links colapsável**
 
-`LinksMenu` deve chamar `montarDestinos(ad)` e conservar a ordem e os rótulos retornados. Cada item com `url` vira link externo com `target="_blank"` e `rel="noreferrer"`; item sem URL fica disabled. Instagram desconhecido mostra `Abrir na Biblioteca` como motivo e não chama `buscarInstagram`.
+`LinksMenu` deve ser aberto/fechado pelo botão `data-acao="links"`, chamar `montarDestinos(ad)` e conservar a ordem e os rótulos retornados. Cada item com `url` vira link externo com `target="_blank"` e `rel="noreferrer"`; item sem URL fica disabled. Instagram desconhecido mostra `Abrir na Biblioteca` como motivo e não chama `buscarInstagram`. Só um menu pode ficar aberto por vez; abrir outro fecha o anterior e clicar fora fecha o menu atual.
 
 O botão `Copiar` abre os cinco itens de `montarCopias(ad)` e usa `navigator.clipboard.writeText` quando houver valor. O botão `Baixar` chama `baixarCriativos(ad, { buscar: fetch, salvar })`; `salvar` usa âncora temporária e revoga o object URL no próximo tique, como o tray atual.
 
@@ -548,7 +548,7 @@ O plano só está concluído quando:
 - os aprovados finais são persistidos após o pós-filtro;
 - a página abre pelo cartão e pelo ícone;
 - os cards aparecem com as três ordenações;
-- o botão `Links` oferece os seis destinos na mesma ordem do gerenciador;
+- o botão colapsável `Links` oferece os seis destinos na mesma ordem do gerenciador e fecha menus concorrentes;
 - Instagram desconhecido fica sem requisição na página de resultados;
 - `npm.cmd test`, `npm.cmd run typecheck`, `npm.cmd run verify:build` e `npx.cmd playwright test` passam;
 - o bloco Progresso está atualizado e o checkpoint está commitado pelo reviewer.

@@ -115,7 +115,7 @@ O layout usa os tokens existentes em `src/styles/tokens.css` e segue o IDV:
 
 Cada card mostra o primeiro criativo disponível, nome do anunciante, dias
 ativos, colação, presença do anunciante na busca, texto principal/título e
-plataformas. A ação `Links` abre o mesmo conjunto de destinos do gerenciador:
+plataformas. A ação colapsável `Links` abre e fecha o mesmo conjunto de destinos do gerenciador:
 
 - Site do anúncio;
 - Perfil do anunciante;
@@ -129,6 +129,9 @@ Instagram segue a mesma regra da tela: se já houver URL conhecida, abre o
 perfil; caso contrário, permanece desabilitado e informa que a busca deve ser
 feita na Biblioteca. A cópia reutiliza `montarCopias`; o download usa o mesmo
 `baixarCriativos` com um adaptador de salvamento da página.
+
+Só um menu de links fica aberto por vez; abrir outro fecha o anterior, e um
+clique fora fecha o menu atual.
 
 ### 4.4 Abertura da página
 
