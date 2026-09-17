@@ -28,8 +28,7 @@ Entrega:
 - renderizar cards com preview, anunciante, texto, tempo ativo e plataformas;
 - ordenar por maior tempo ativo, mais criativos repetidos e mais anúncios do
   anunciante;
-- reutilizar links, cópia e download já existentes quando o dado estiver
-  disponível.
+- reutilizar o menu de links, cópia e download já existentes na bandeja.
 
 Fora desta entrega:
 
@@ -47,7 +46,9 @@ da extensão e não possui esse contexto.
 
 Na tela de resultados:
 
-- um Instagram já conhecido é exibido como link;
+- um Instagram já conhecido é exibido como link. Quando o pós-filtro de
+  Instagram tiver encontrado o perfil, essa URL é preservada no anúncio antes
+  de o resultado ser salvo;
 - um Instagram desconhecido não dispara consulta automática nem apresenta um
   botão que fabrique uma requisição fora da Biblioteca;
 - a ação de Instagram continua disponível na bandeja da Biblioteca, onde a
@@ -114,9 +115,20 @@ O layout usa os tokens existentes em `src/styles/tokens.css` e segue o IDV:
 
 Cada card mostra o primeiro criativo disponível, nome do anunciante, dias
 ativos, colação, presença do anunciante na busca, texto principal/título e
-plataformas. Os controles reutilizam as funções puras existentes para links e
-cópia; o download usa o mesmo `baixarCriativos` com um adaptador de salvamento
-da página.
+plataformas. A ação `Links` abre o mesmo conjunto de destinos do gerenciador:
+
+- Site do anúncio;
+- Perfil do anunciante;
+- Instagram do anunciante;
+- Buscar anúncios deste site;
+- Buscar anúncios deste anunciante;
+- URL do anúncio na Biblioteca.
+
+O menu usa `montarDestinos` como fonte única para URLs e rótulos. O item de
+Instagram segue a mesma regra da tela: se já houver URL conhecida, abre o
+perfil; caso contrário, permanece desabilitado e informa que a busca deve ser
+feita na Biblioteca. A cópia reutiliza `montarCopias`; o download usa o mesmo
+`baixarCriativos` com um adaptador de salvamento da página.
 
 ### 4.4 Abertura da página
 
