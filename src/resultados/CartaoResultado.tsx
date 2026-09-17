@@ -1,5 +1,5 @@
-import { useState, type ReactElement } from 'react'
-import { montarCopias } from '../core/copy'
+import { useEffect, useRef, useState, type ReactElement } from 'react'
+import { montarCopias, type ItemCopia } from '../core/copy'
 import { baixarCriativos } from '../content/download'
 import { diasAtivos, faixaBadge } from '../core/display'
 import type { Ad } from '../core/types'
@@ -23,9 +23,30 @@ export function CartaoResultado({
   aoAlternarLinks,
 }: CartaoResultadoProps): ReactElement {
   const [copiasAbertas, setCopiasAbertas] = useState(false)
+  const [copiaConfirmada, setCopiaConfirmada] = useState<string | null>(null)
   const [baixando, setBaixando] = useState(false)
+  const timerCopia = useRef<ReturnType<typeof setTimeout> | null>(null)
   const dias = diasAtivos(ad.iniciouEm, agora)
   const copias = montarCopias(ad)
+
+  useEffect(() => {
+    return () => {
+      if (timerCopia.current) clearTimeout(timerCopia.current)
+    }
+  }, [])
+
+  const copiar = async (item: ItemCopia): Promise<void> => {
+    if (!item.valor || !navigator.clipboard) return
+
+    try {
+      await navigator.clipboard.writeText(item.valor)
+      setCopiaConfirmada(item.chave)
+      if (timerCopia.current) clearTimeout(timerCopia.current)
+      timerCopia.current = setTimeout(() => setCopiaConfirmada(null), 1600)
+    } catch {
+      setCopiaConfirmada(null)
+    }
+  }
 
   const baixar = async (): Promise<void> => {
     setBaixando(true)
@@ -95,17 +116,24 @@ export function CartaoResultado({
                     key={item.chave}
                     type="button"
                     data-copy-chave={item.chave}
+                    data-estado={copiaConfirmada === item.chave ? 'copiado' : undefined}
                     disabled={!item.valor}
-                    onClick={() => {
-                      if (item.valor && navigator.clipboard) {
-                        void navigator.clipboard.writeText(item.valor)
-                      }
-                    }}
+                    onClick={() => void copiar(item)}
                   >
-                    {item.rotulo}
+                    {copiaConfirmada === item.chave ? '✓ Copiado' : item.rotulo}
                   </button>
                 ))}
               </div>
+            )}
+            {copiaConfirmada && (
+              <span
+                className="copia-feedback"
+                data-testid="copia-feedback"
+                role="status"
+                aria-live="polite"
+              >
+                Copiado
+              </span>
             )}
           </div>
           <button type="button" data-acao="baixar" onClick={() => void baixar()} disabled={baixando}>

@@ -42,6 +42,11 @@ button, select { font: inherit; }
 .links-menu, .copiar-menu { position: relative; }
 .links-list, .copiar-lista { position: absolute; z-index: 4; bottom: calc(100% + 8px); left: 0; min-width: 238px; display: grid; gap: 3px; padding: 7px; border: 1px solid rgba(196, 167, 255, .2); border-radius: 10px; background: #1A1622; box-shadow: 0 15px 35px rgba(0,0,0,.4); }
 .links-list a, .links-list button, .copiar-lista button { display: block; width: 100%; border: 0; border-radius: 7px; padding: 9px 10px; color: #F8F7FB; background: transparent; text-align: left; text-decoration: none; font-size: 12px; cursor: pointer; }
+.copiar-lista button[data-estado="copiado"] { background: rgba(168, 85, 247, .22); color: #FFFFFF; animation: copia-confirmada 220ms ease-out; }
+.copia-feedback { position: absolute; left: 0; bottom: calc(100% + 8px); transform: translateY(-30px); padding: 5px 8px; border-radius: 999px; background: #A855F7; color: #FFFFFF; font-size: 11px; font-weight: 700; pointer-events: none; animation: copia-feedback 1600ms ease-out both; }
+@keyframes copia-confirmada { from { transform: scale(.96); } to { transform: scale(1); } }
+@keyframes copia-feedback { 0% { opacity: 0; transform: translateY(-20px); } 12% { opacity: 1; transform: translateY(-30px); } 78% { opacity: 1; transform: translateY(-30px); } 100% { opacity: 0; transform: translateY(-38px); } }
+@media (prefers-reduced-motion: reduce) { .copiar-lista button[data-estado="copiado"], .copia-feedback { animation: none; } }
 .links-list small { display: block; margin-top: 3px; color: #B8B5C6; font-size: 10px; }
 .resultado-vazio { max-width: 620px; margin: 12vh auto; padding: 48px 28px; text-align: center; border: 1px solid rgba(196, 167, 255, .15); border-radius: 14px; background: #111019; }
 .vazio-glifo { color: #A855F7; font-size: 42px; }

@@ -13,7 +13,7 @@
 ## Progresso
 
 - **Estado:** concluído
-- **Última tarefa concluída:** Task 8 — abrir resultados pelo service worker (correção pós-revisão)
+- **Última tarefa concluída:** Task 9 — confirmar cópia na tela de resultados (refino pós-teste manual)
 - **Próxima tarefa:** —
 - **Notas de retomada:** Task 1 implementada com codec versionado, hidratação defensiva e ordenação estável sobre `AdStore`. Task 2 usa `chrome.storage.local` apenas no adaptador e registra falhas de leitura/gravação. Task 3 concentrou a guarda de estado, pós-filtro, persistência e liberação em `finalizarResultado` para manter a ordem testável. Task 4 registrou a entrada, ação e listener. Task 5 expandiu o include do Vitest para descobrir testes `.tsx` e usa `ReactElement` por compatibilidade com React 19. Task 6 adicionou 2 testes E2E; o RED previsto não ocorreu porque a implementação da jornada já estava verde após a Task 5. Task 7 (2026-09-17): `npm test` 52 arquivos / 463 testes, typecheck limpo, `verify:build` OK, Playwright 14/14. Na primeira rodada do Codex o `pipeline.spec.ts` falhou por instabilidade da Meta ao vivo (1 indexação em vez de 2); na rodada seguinte passou sem alteração de código. Ajuste na revisão: `dispararMineracao` volta a sair cedo quando a mineração termina pausada, em vez de logar "0 aprovados finais". Nenhum `fetch` de Instagram em `src/resultados/`; o único `fetch` ali é o de `baixarCriativos`. Task 8 (2026-09-17): teste manual revelou que `window.open` do content script é bloqueado; abertura passou a ser exclusiva do service worker via mensagem `abrir-resultados`.
 
@@ -567,6 +567,34 @@ Mensagem:
 
 ```text
 🐛 fix(content): abrir resultados pelo service worker
+```
+
+---
+
+### Task 9: Refino pós-teste manual — confirmar cópia na tela de resultados
+
+**Descoberta no teste manual (2026-09-17):** o clipboard recebia o conteúdo
+corretamente, mas o menu Copiar não oferecia confirmação visual. O usuário só
+conseguia ter certeza colando em outro lugar.
+
+**Decisão:** depois que `navigator.clipboard.writeText` resolver, o item
+selecionado mostra `✓ Copiado`, recebe uma animação curta e expõe o estado por
+`aria-live`. O menu permanece aberto durante o feedback e a confirmação some
+sozinha; falha no clipboard não finge sucesso.
+
+**Arquivos:**
+
+- Modificar: `src/resultados/CartaoResultado.tsx`, `src/resultados/resultados.css`
+- Testar: `tests/resultados-ui.test.tsx`
+
+- [x] **Step 1: Escrever o teste que falha** — exigir confirmação visual, estado `data-estado="copiado"` e região de status após a Promise do clipboard resolver. RED observado: 1 falha.
+- [x] **Step 2: Implementar** — adicionar estado temporário por item, confirmação acessível, limpeza segura do timer e animação com respeito a `prefers-reduced-motion`.
+- [x] **Step 3: Verificação** — teste específico 7/7; `npm.cmd test` 52 arquivos / 467 testes; `npm.cmd run typecheck` limpo; `npm.cmd run verify:build` OK; Playwright 15/15.
+
+Mensagem:
+
+```text
+🐛 fix(ui): confirmar cópia na tela de resultados
 ```
 
 ---

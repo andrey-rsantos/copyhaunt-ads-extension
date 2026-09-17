@@ -197,4 +197,42 @@ describe('página de resultados', () => {
     expect(badge.textContent).toBe('7 DIAS')
     expect(badge.getAttribute('data-faixa')).toBe('provado')
   })
+
+  it('confirma visualmente quando uma cópia termina', async () => {
+    const escrever = vi.fn(async () => {})
+    const descritorOriginal = Object.getOwnPropertyDescriptor(navigator, 'clipboard')
+    Object.defineProperty(navigator, 'clipboard', {
+      configurable: true,
+      value: { writeText: escrever },
+    })
+
+    try {
+      renderizarComStorage(resultadoComTresAnuncios())
+      await aguardarCards()
+
+      clicar('[data-acao="copiar"]')
+      const item = document.querySelector<HTMLButtonElement>(
+        '[data-copy-chave="texto"]',
+      )!
+      await act(async () => {
+        item.click()
+        await Promise.resolve()
+      })
+
+      await vi.waitFor(() => {
+        expect(escrever).toHaveBeenCalledWith('Texto principal do anúncio')
+        expect(item.textContent).toContain('Copiado')
+        expect(item.dataset.estado).toBe('copiado')
+        expect(document.querySelector('[data-testid="copia-feedback"]')?.textContent).toBe(
+          'Copiado',
+        )
+      })
+    } finally {
+      if (descritorOriginal) {
+        Object.defineProperty(navigator, 'clipboard', descritorOriginal)
+      } else {
+        delete (navigator as { clipboard?: Clipboard }).clipboard
+      }
+    }
+  })
 })
