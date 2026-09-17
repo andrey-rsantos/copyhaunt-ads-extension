@@ -7,6 +7,8 @@ import type { Captura } from '../interceptor/xhr-patch'
 import { lerFaixaDaUrl, montarUrlFiltro, rotuloDaFaixa } from '../core/dateFilter'
 import { precisaOrdenar, urlOrdenada } from '../core/ordenacao'
 import { acharCards, definirPadraoAncora } from './anchor'
+import { criarAgendadorRepintura } from './agendamento'
+import { iniciarQuandoHouverBody } from './arranque'
 import { plantarEnxertos, type Enxerto, type Plantio } from './enxertos'
 import { abrirGaveta, alternarGaveta, fecharGaveta } from './gaveta'
 import { escreverNaBusca, montarExemplos } from './gaveta-exemplos'
@@ -152,8 +154,22 @@ function repintar(): void {
  */
 function garantirObservador(): void {
   if (observacao) return
-  observacao = observarGrade(document.body, repintar, 300)
+  observacao = observarGrade(document.body, agendarRepintura, 300)
 }
+
+/**
+ * Ponto único de repintura: captura, observador da grade, SSR e a primeira
+ * pintura da interface pedem por aqui, nunca chamando `repintar()` direto.
+ * Assim várias solicitações seguidas — comuns quando a Meta troca dezenas de
+ * nós de uma vez — viram uma repintura só, no próximo frame.
+ */
+const agendarRepintura = criarAgendadorRepintura(repintar, (callback) => {
+  if (typeof window.requestAnimationFrame === 'function') {
+    window.requestAnimationFrame(callback)
+  } else {
+    window.setTimeout(callback, 0)
+  }
+})
 
 /**
  * Pede a config ao service worker e aplica o que dela depende.
@@ -228,7 +244,7 @@ window.addEventListener('message', (event) => {
     if (resultado.novos > 0) {
       console.info(`[CopyHaunt] indexados: ${resultado.total}`)
       motorAtual?.avisarLote()
-      repintar()
+      agendarRepintura()
     }
   }
 })
@@ -414,21 +430,30 @@ window.postMessage(createMessage('content-ready', {}), location.origin)
 
 /**
  * O content script roda em `document_start`, quando `document.body` ainda não
- * existe — observar ali daria em nada. E os payloads chegam antes de a Meta
- * renderizar os cards, então a primeira pintura também precisa esperar.
+ * existe. A interface (enxertos, observador, primeira repintura) não depende
+ * do HTML da Meta — só do body existir — e sobe assim que ele nascer, sem
+ * esperar `DOMContentLoaded`. Já o lote embutido no SSR só existe quando a
+ * página termina de carregar, então essa leitura continua condicionada ao
+ * evento.
  */
-function iniciar(): void {
+function iniciarInterface(): void {
   configPronta = aplicarConfig()
   plantio = plantarEnxertos(document, montarEnxertos())
-  lerLoteInicial()
   garantirObservador()
-  repintar()
+  agendarRepintura()
 }
 
+function iniciarSsr(): void {
+  lerLoteInicial()
+  agendarRepintura()
+}
+
+iniciarQuandoHouverBody(document, iniciarInterface)
+
 if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', iniciar, { once: true })
+  document.addEventListener('DOMContentLoaded', iniciarSsr, { once: true })
 } else {
-  iniciar()
+  iniciarSsr()
 }
 
 console.info('[CopyHaunt] content script ativo')

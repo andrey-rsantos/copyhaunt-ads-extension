@@ -2,10 +2,17 @@
 
 ## Progresso
 
-- **Estado:** não iniciado
-- **Última tarefa concluída:** —
-- **Próxima tarefa:** Task 1
-- **Notas de retomada:** investigação concluída; o plano separa bootstrap antecipado, processamento SSR e coalescimento de repinturas.
+- **Estado:** concluído
+- **Última tarefa concluída:** Task 4
+- **Próxima tarefa:** —
+- **Notas de retomada:** todas de 2026-09-17, no branch `carregamento` (worktree `.worktrees/carregamento`, base `b20f1b7`).
+  - **Task 1:** `npx.cmd vitest run tests/content/arranque.test.ts` → 3/3; `npm.cmd test -- --run tests/content` → 14 arquivos, 102 testes; `npm.cmd test` → 56 arquivos, 512 testes; `npm.cmd run typecheck` limpo.
+  - **Task 2:** `npx.cmd vitest run tests/content/agendamento.test.ts` → 2/2; `npm.cmd test` → 57 arquivos, 514 testes; typecheck limpo; `observer.ts` não precisou mudar.
+  - **Task 3:** RED provado com `src/content/index.ts` de `main` (host nunca anexado, timeout 10 s); GREEN `npx.cmd playwright test e2e/carregamento.spec.ts e2e/ssr.spec.ts` → 2/2 em duas rodadas. Métricas reais (ms desde o início da navegação): DOMContentLoaded 2740 / 2792; primeiro host anexado 1447 / 1588 (antes do DCL); primeira bandeja observável 4846 / 4799; 26 bandejas na primeira tela; lote do HTML 30. Desvios do plano: o fixture do E2E usa `input[type="search"]` + `[role="combobox"]` (o HTML do plano não ancoraria em `acharLinhaDaBusca`); os marcos são medidos por MutationObserver injetado via `addInitScript` (instante real, não intervalo de sondagem).
+  - **Task 4 (Steps 1 e 2):** `npm.cmd test` → 57 arquivos, 514 testes (uma reexecução sob carga teve 2 timeouts de 5 s em `tests/content/index.test.ts`, não reproduzidos na terceira rodada — flakiness já documentada no próprio teste); typecheck limpo; `npm.cmd run verify:build` → "manifest gerado OK: world MAIN preservado, permissões mínimas"; `npm.cmd run e2e` → 16/17 (`acoes.spec.ts` passou; `e2e/pipeline.spec.ts` falhou por receber 1 indexação da Meta ao vivo e passou isolado em seguida com 40 → 49 → 58 — instabilidade de rede de um teste com esperas fixas pré-existentes; o caminho de indexação não foi tocado). `git diff --check` limpo; sem permissão, rede, Instagram ou espera fixa nova no diff.
+  - **Revisão final do branch:** sem defeito de código. Onda de correção (`0e871c7`): testes de reentrância do agendador e de `parar()` antes do body; `ssr.spec.ts` ignora iframes e imprime `replantios do host` (medido: 1 — a Meta não removeu o host ao hidratar a barra nessa rodada); `try/finally` no E2E determinístico. Após a onda: `npm.cmd test` → 57 arquivos, 516 testes; typecheck limpo; os dois specs E2E → 2/2.
+  - **Task 4, Step 3 (validação na Biblioteca real, via roteiro Playwright descartável com a extensão carregada, PR #2):** host anexado com `readyState = loading` a 1316–1959 ms contra DOMContentLoaded a 2682–4283 ms (três rodadas); 1 inserção e 0 remoções do host até a página estabilizar (a Meta não o removeu ao hidratar a barra); posição do host idêntica ao anexar e no DCL (top 73 px, sem flicker); 26 bandejas na primeira tela; mineração com 2 lotes (indexações 40 → 49) atualizando estado, barra (89% → 100%), contadores e overlay (36 → 45 bandejas), encerrada em `concluido` com 45 aprovados; página de resultados com os 45 (SSR e lotes posteriores); 0 erros de hidratação e 0 erros/avisos ligados à extensão (só 403 e Permissions-Policy da própria Meta). O DevTools Performance não foi aberto: os marcos vieram de `performance.now()` no documento.
+  - **Observações que ficam:** Comportamento novo não documentado no commit `5d5a690`: em aba em segundo plano o `requestAnimationFrame` não dispara, então a repintura espera a aba voltar (a mineração não depende da pintura). O log `pintados: N` conta cards conhecidos, não bandejas novas — pré-existente, agora aparece uma vez a mais por ciclo.
 
 > **For agentic workers:** REQUIRED SUB-SKILL: use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (- [ ]) syntax for tracking.
 
@@ -53,7 +60,7 @@ Arquivos:
 - Criar tests/content/arranque.test.ts.
 - Alterar src/content/index.ts.
 
-- [ ] **Step 1: escrever os testes que falham**
+- [x] **Step 1: escrever os testes que falham**
 
 Criar tests/content/arranque.test.ts com os contratos:
 
@@ -117,7 +124,7 @@ export function iniciarQuandoHouverBody(
 ): ControleArranque
 ~~~
 
-- [ ] **Step 2: executar a unidade em RED**
+- [x] **Step 2: executar a unidade em RED**
 
 Executar:
 
@@ -128,7 +135,7 @@ npx.cmd vitest run tests/content/arranque.test.ts
 Resultado esperado antes da implementação: falha porque src/content/arranque.ts
 e iniciarQuandoHouverBody ainda não existem.
 
-- [ ] **Step 3: implementar o helper mínimo**
+- [x] **Step 3: implementar o helper mínimo**
 
 Implementar src/content/arranque.ts com estas regras:
 
@@ -140,7 +147,7 @@ Implementar src/content/arranque.ts com estas regras:
   chamada posterior.
 - Não usar setTimeout, DOMContentLoaded ou atraso arbitrário.
 
-- [ ] **Step 4: integrar o bootstrap em src/content/index.ts**
+- [x] **Step 4: integrar o bootstrap em src/content/index.ts**
 
 Extrair as responsabilidades atuais para funções nomeadas:
 
@@ -174,7 +181,7 @@ Manter o listener de raw-capture, o registro do interceptor e o restante da
 configuração no mesmo nível de módulo. iniciarSsr deverá continuar sendo
 executado uma única vez.
 
-- [ ] **Step 5: executar a unidade em GREEN e as regressões de conteúdo**
+- [x] **Step 5: executar a unidade em GREEN e as regressões de conteúdo**
 
 Executar:
 
@@ -185,7 +192,7 @@ npm.cmd test -- --run tests/content
 
 Esperado: os testes do helper e os testes existentes de conteúdo passam.
 
-- [ ] **Step 6: checkpoint**
+- [x] **Step 6: checkpoint**
 
 Atualizar este plano:
 
@@ -213,7 +220,7 @@ Arquivos:
 - Alterar a integração de src/content/observer.ts somente se o callback
   precisar receber a função agendada em vez de repintar diretamente.
 
-- [ ] **Step 1: escrever os testes que falham**
+- [x] **Step 1: escrever os testes que falham**
 
 Criar tests/content/agendamento.test.ts com scheduler controlado:
 
@@ -268,7 +275,7 @@ export function criarAgendadorRepintura(
 ): () => void
 ~~~
 
-- [ ] **Step 2: executar a unidade em RED**
+- [x] **Step 2: executar a unidade em RED**
 
 Executar:
 
@@ -279,7 +286,7 @@ npx.cmd vitest run tests/content/agendamento.test.ts
 Resultado esperado antes da implementação: falha porque o módulo e a função
 ainda não existem.
 
-- [ ] **Step 3: implementar o agendador puro**
+- [x] **Step 3: implementar o agendador puro**
 
 Implementar o estado mínimo:
 
@@ -300,7 +307,7 @@ O callback deverá liberar pendente antes de executar repintar, permitindo que
 uma solicitação gerada durante a pintura seja agendada para o próximo frame. O
 módulo não deverá acessar window, document ou timers.
 
-- [ ] **Step 4: conectar todas as origens ao mesmo agendador**
+- [x] **Step 4: conectar todas as origens ao mesmo agendador**
 
 Em src/content/index.ts, criar o adaptador de produção:
 
@@ -328,7 +335,7 @@ O observador deverá continuar observando a mesma raiz e usando os mesmos
 limites de segurança; apenas o callback recebido deverá ser agendarRepintura.
 Não remover a repintura após SSR.
 
-- [ ] **Step 5: executar GREEN e conferir comportamento**
+- [x] **Step 5: executar GREEN e conferir comportamento**
 
 Executar:
 
@@ -341,7 +348,7 @@ npm.cmd run typecheck
 Esperado: o agendador passa, os testes de conteúdo passam e o TypeScript não
 emite erros.
 
-- [ ] **Step 6: checkpoint**
+- [x] **Step 6: checkpoint**
 
 Marcar os Steps 1 a 5 como [x], atualizar o bloco Progresso para indicar Task 3
 como próxima tarefa e registrar as saídas.
@@ -363,7 +370,7 @@ Arquivos:
 - Alterar e2e/ssr.spec.ts para registrar métricas, sem limiar rígido
   dependente da rede.
 
-- [ ] **Step 1: escrever o teste E2E que falha no bootstrap antigo**
+- [x] **Step 1: escrever o teste E2E que falha no bootstrap antigo**
 
 Criar um cenário local no domínio permitido pela extensão. A página deverá
 ter um body e uma barra mínima antes de um script parser-blocking:
@@ -414,7 +421,7 @@ Se o seletor real do host for diferente, usar o atributo já emitido pelo
 componente e manter o contrato explícito no teste; não trocar por uma espera
 de tempo.
 
-- [ ] **Step 2: executar o E2E em RED**
+- [x] **Step 2: executar o E2E em RED**
 
 Executar:
 
@@ -425,14 +432,14 @@ npx.cmd playwright test e2e/carregamento.spec.ts
 Resultado esperado antes das Tasks 1 e 2: falha ou expiração do auto-wait,
 porque o bootstrap antigo só monta a interface depois de DOMContentLoaded.
 
-- [ ] **Step 3: executar GREEN e ajustar apenas o contrato necessário**
+- [x] **Step 3: executar GREEN e ajustar apenas o contrato necessário**
 
 Após as Tasks 1 e 2, executar novamente o mesmo comando. O host deverá ser
 anexado enquanto document.readyState ainda é loading. Se o teste falhar por
 causa do fixture ou da rota, corrigir o cenário mantendo a mesma propriedade:
 o script parser-blocking continua aberto até depois de o host ser detectado.
 
-- [ ] **Step 4: preservar o diagnóstico da Biblioteca real**
+- [x] **Step 4: preservar o diagnóstico da Biblioteca real**
 
 Em e2e/ssr.spec.ts, registrar com performance.now():
 
@@ -446,7 +453,7 @@ Usar locators e expect.poll/auto-waiting para detectar os marcos. Não usar
 waitForTimeout e não falhar o teste por um limite absoluto de segundos da Meta.
 Os valores deverão aparecer no output para comparação antes/depois.
 
-- [ ] **Step 5: executar os testes E2E relacionados**
+- [x] **Step 5: executar os testes E2E relacionados**
 
 Executar:
 
@@ -459,7 +466,7 @@ validação SSR existente. Se o teste conhecido de e2e/acoes.spec.ts for
 executado pela suíte completa e falhar apenas pela navegação instável,
 reexecutá-lo isoladamente antes de classificar a alteração como regressão.
 
-- [ ] **Step 6: checkpoint**
+- [x] **Step 6: checkpoint**
 
 Marcar os Steps 1 a 5 como [x], atualizar Progresso para Task 4 como próxima
 tarefa e registrar os tempos observados no diagnóstico.
@@ -480,7 +487,7 @@ Arquivos:
 - Atualizar somente o bloco Progresso e as notas de retomada em
   docs/superpowers/plans/2026-09-17-carregamento.md.
 
-- [ ] **Step 1: rodar a verificação completa**
+- [x] **Step 1: rodar a verificação completa**
 
 Executar, nesta ordem:
 
@@ -493,7 +500,7 @@ npm.cmd run e2e
 
 Não executar npm.cmd run gravar:fixtures.
 
-- [ ] **Step 2: revisar o diff e a política do build**
+- [x] **Step 2: revisar o diff e a política do build**
 
 Executar:
 
@@ -512,7 +519,7 @@ Conferir especialmente:
 - SSR, resultados e ciclo de mineração continuam cobertos pelos testes
   existentes.
 
-- [ ] **Step 3: validação manual**
+- [x] **Step 3: validação manual**
 
 Com a extensão recarregada no Chrome:
 
@@ -525,7 +532,7 @@ Com a extensão recarregada no Chrome:
    lotes posteriores permanecem presentes.
 5. Verificar no console o diagnóstico antes/depois, sem erros de runtime.
 
-- [ ] **Step 4: fechar o plano**
+- [x] **Step 4: fechar o plano**
 
 Só depois de todas as verificações:
 
