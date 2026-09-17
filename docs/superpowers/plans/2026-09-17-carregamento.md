@@ -2,10 +2,10 @@
 
 ## Progresso
 
-- **Estado:** em andamento
-- **Última tarefa concluída:** Task 3
-- **Próxima tarefa:** Task 4
-- **Notas de retomada:** Task 3 verificada em 2026-09-17: RED provado com `src/content/index.ts` de `main` (host nunca anexado, timeout 10 s); GREEN `npx.cmd playwright test e2e/carregamento.spec.ts e2e/ssr.spec.ts` → 2/2 em duas rodadas. Métricas reais (ms desde o início da navegação): DOMContentLoaded 2740 / 2792; primeiro host anexado 1447 / 1588 (antes do DCL); primeira bandeja observável 4846 / 4799; 26 bandejas na primeira tela; lote do HTML 30. O fixture do E2E usa `input[type="search"]` + `[role="combobox"]` (o HTML do plano não ancoraria); os marcos são medidos por MutationObserver injetado via `addInitScript` (mede o instante real, não o intervalo de sondagem). Task 2 verificada em 2026-09-17: `npx.cmd vitest run tests/content/agendamento.test.ts` → 2/2; `npm.cmd test` → 57 arquivos, 514 testes; `npm.cmd run typecheck` limpo; observer.ts não precisou mudar. Task 1 verificada em 2026-09-17: `npx.cmd vitest run tests/content/arranque.test.ts` → 3/3; `npm.cmd test -- --run tests/content` → 14 arquivos, 102 testes; `npm.cmd test` → 56 arquivos, 512 testes; `npm.cmd run typecheck` limpo. Decisões: o fixture E2E da Task 3 precisará de `input[type="search"]` com ancestral contendo `[role="combobox"]` (é o que `acharLinhaDaBusca` exige; o HTML do plano não ancoraria); o RED da Task 3 será provado revertendo `src/content/index.ts` temporariamente para a versão de `main`.
+- **Estado:** em andamento — verificação automatizada concluída; falta só a validação manual (Task 4, Step 3)
+- **Última tarefa concluída:** Task 4 (Steps 1 e 2)
+- **Próxima tarefa:** Task 4, Step 3 (validação manual pelo dono) e Step 4 (fechar o plano)
+- **Notas de retomada:** Task 4 em 2026-09-17: `npm.cmd test` → 57 arquivos, 514 testes (uma reexecução sob carga teve 2 timeouts de 5 s em `tests/content/index.test.ts`, não reproduzidos na terceira rodada — flakiness já documentada no próprio teste); `npm.cmd run typecheck` limpo; `npm.cmd run verify:build` → "manifest gerado OK: world MAIN preservado, permissões mínimas"; `npm.cmd run e2e` → 16/17 (acoes.spec.ts passou; `e2e/pipeline.spec.ts` falhou por receber 1 indexação da Meta ao vivo e passou isolado em seguida com 40 → 49 → 58 — instabilidade de rede do teste, que usa esperas fixas pré-existentes; o caminho de indexação não foi tocado). `git diff --check` limpo; sem permissão, rede, Instagram ou espera fixa nova no diff. Step 3 (validação manual no Chrome com DevTools) pendente: requer o dono. Task 3 verificada em 2026-09-17: RED provado com `src/content/index.ts` de `main` (host nunca anexado, timeout 10 s); GREEN `npx.cmd playwright test e2e/carregamento.spec.ts e2e/ssr.spec.ts` → 2/2 em duas rodadas. Métricas reais (ms desde o início da navegação): DOMContentLoaded 2740 / 2792; primeiro host anexado 1447 / 1588 (antes do DCL); primeira bandeja observável 4846 / 4799; 26 bandejas na primeira tela; lote do HTML 30. O fixture do E2E usa `input[type="search"]` + `[role="combobox"]` (o HTML do plano não ancoraria); os marcos são medidos por MutationObserver injetado via `addInitScript` (mede o instante real, não o intervalo de sondagem). Task 2 verificada em 2026-09-17: `npx.cmd vitest run tests/content/agendamento.test.ts` → 2/2; `npm.cmd test` → 57 arquivos, 514 testes; `npm.cmd run typecheck` limpo; observer.ts não precisou mudar. Task 1 verificada em 2026-09-17: `npx.cmd vitest run tests/content/arranque.test.ts` → 3/3; `npm.cmd test -- --run tests/content` → 14 arquivos, 102 testes; `npm.cmd test` → 56 arquivos, 512 testes; `npm.cmd run typecheck` limpo. Decisões: o fixture E2E da Task 3 precisará de `input[type="search"]` com ancestral contendo `[role="combobox"]` (é o que `acharLinhaDaBusca` exige; o HTML do plano não ancoraria); o RED da Task 3 será provado revertendo `src/content/index.ts` temporariamente para a versão de `main`.
 
 > **For agentic workers:** REQUIRED SUB-SKILL: use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (- [ ]) syntax for tracking.
 
@@ -480,7 +480,7 @@ Arquivos:
 - Atualizar somente o bloco Progresso e as notas de retomada em
   docs/superpowers/plans/2026-09-17-carregamento.md.
 
-- [ ] **Step 1: rodar a verificação completa**
+- [x] **Step 1: rodar a verificação completa**
 
 Executar, nesta ordem:
 
@@ -493,7 +493,7 @@ npm.cmd run e2e
 
 Não executar npm.cmd run gravar:fixtures.
 
-- [ ] **Step 2: revisar o diff e a política do build**
+- [x] **Step 2: revisar o diff e a política do build**
 
 Executar:
 
