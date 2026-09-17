@@ -36,4 +36,27 @@ describe('criarAgendadorRepintura', () => {
     callbacks[1]()
     expect(repintar).toHaveBeenCalledTimes(2)
   })
+
+  it('agenda o próximo frame quando a própria repintura solicita de novo', () => {
+    const callbacks: Array<() => void> = []
+    let agendar: () => void = () => {}
+    let chamadas = 0
+    const repintar = vi.fn(() => {
+      chamadas++
+      if (chamadas === 1) agendar()
+    })
+    agendar = criarAgendadorRepintura(repintar, callback => {
+      callbacks.push(callback)
+    })
+
+    agendar()
+    expect(callbacks).toHaveLength(1)
+
+    callbacks[0]()
+    expect(callbacks).toHaveLength(2)
+    expect(repintar).toHaveBeenCalledTimes(1)
+
+    callbacks[1]()
+    expect(repintar).toHaveBeenCalledTimes(2)
+  })
 })

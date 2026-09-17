@@ -47,9 +47,12 @@ test('monta a interface antes de DOMContentLoaded', async ({ context }) => {
     waitUntil: 'commit',
   })
 
-  await expect(page.locator('#copyhaunt-enxertos')).toBeAttached({ timeout: 10_000 })
-  expect(await page.evaluate(() => document.readyState)).toBe('loading')
+  try {
+    await expect(page.locator('#copyhaunt-enxertos')).toBeAttached({ timeout: 10_000 })
+    expect(await page.evaluate(() => document.readyState)).toBe('loading')
+  } finally {
+    liberarScript()
+  }
 
-  liberarScript()
   await page.waitForLoadState('domcontentloaded')
 })

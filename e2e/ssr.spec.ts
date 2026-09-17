@@ -29,8 +29,16 @@ test('os cards do topo já nascem com bandeja', async ({ context }) => {
   await page.setViewportSize({ width: 1440, height: 900 })
 
   await page.addInitScript(() => {
+    // O script roda em todo frame (a Meta embute iframes na busca). Um
+    // observer de iframe nunca vê o host — ele só existe no documento
+    // principal — e por isso nunca desconecta e nunca conta replantio real;
+    // sem este corte, os replantios de todo iframe se somariam ao do topo.
+    if (window !== window.top) return
+
     const marcos: Record<string, number> = {}
     ;(window as unknown as { __copyhauntMarcos: Record<string, number> }).__copyhauntMarcos = marcos
+    let replantios = 0
+    ;(window as unknown as { __copyhauntReplantios: number }).__copyhauntReplantios = 0
 
     const conferir = (): void => {
       if (marcos.host === undefined && document.getElementById('copyhaunt-enxertos')) {
@@ -42,8 +50,26 @@ test('os cards do topo já nascem com bandeja', async ({ context }) => {
       ) {
         marcos.bandeja = performance.now()
       }
-      if (marcos.host !== undefined && marcos.bandeja !== undefined) {
-        observador.disconnect()
+    }
+
+    // Conta quantas vezes o host entra no DOM: um lote de mutações em que
+    // algum `addedNodes` é ou contém `#copyhaunt-enxertos`. Olhar os nós
+    // inseridos neste lote, em vez de `querySelector` no documento inteiro,
+    // é o que distingue "o host continua lá" de "o host foi removido e
+    // replantado" — a segunda também deixaria o `querySelector` positivo.
+    const contarReplante = (registros: MutationRecord[]): void => {
+      const entrou = registros.some(registro =>
+        Array.from(registro.addedNodes).some(
+          no =>
+            no instanceof Element &&
+            (no.id === 'copyhaunt-enxertos' ||
+              no.querySelector?.('#copyhaunt-enxertos') != null),
+        ),
+      )
+      if (entrou) {
+        replantios++
+        ;(window as unknown as { __copyhauntReplantios: number }).__copyhauntReplantios =
+          replantios
       }
     }
 
@@ -52,7 +78,14 @@ test('os cards do topo já nascem com bandeja', async ({ context }) => {
     // existir, e `observe(null)` lança `TypeError` que aborta o script inteiro
     // antes mesmo da checagem síncrona abaixo. `document` em si já é um `Node`
     // válido desde sempre.
-    const observador = new MutationObserver(conferir)
+    //
+    // O observer fica vivo até o fim do teste (nunca desconecta): o marco de
+    // host/bandeja só precisa do primeiro acerto, mas o contador de
+    // replantios precisa continuar vendo o resto da sessão.
+    const observador = new MutationObserver(registros => {
+      contarReplante(registros)
+      conferir()
+    })
     observador.observe(document, { childList: true, subtree: true })
 
     // O content script da extensão roda em `document_start`, igual a este
@@ -88,7 +121,7 @@ test('os cards do topo já nascem com bandeja', async ({ context }) => {
   // `performance.now()` e `domContentLoadedEventEnd` continuam no mesmo
   // referencial do documento final, então ler mais tarde não distorce os
   // números.
-  const [dcl, marcos] = await Promise.all([
+  const [dcl, marcos, replantios] = await Promise.all([
     page.evaluate(() => {
       const nav = performance.getEntriesByType(
         'navigation',
@@ -100,12 +133,18 @@ test('os cards do topo já nascem com bandeja', async ({ context }) => {
         (window as unknown as { __copyhauntMarcos: Record<string, number> })
           .__copyhauntMarcos,
     ),
+    page.evaluate(
+      () =>
+        (window as unknown as { __copyhauntReplantios: number })
+          .__copyhauntReplantios,
+    ),
   ])
 
   console.log('  DOMContentLoaded:', dcl, 'ms desde o início da navegação')
   console.log('  primeiro host anexado:', marcos.host, 'ms')
   console.log('  primeira bandeja observável:', marcos.bandeja, 'ms')
   console.log('  bandejas na primeira tela:', bandejas)
+  console.log('  replantios do host:', replantios)
   for (const l of linhas.filter((l) => l.includes('lote do HTML'))) {
     console.log('  ' + l)
   }
