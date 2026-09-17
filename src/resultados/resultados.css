@@ -18,6 +18,7 @@ button, select { font: inherit; }
 .resultado-resumo { display: grid; gap: 5px; text-align: right; color: #B8B5C6; font-size: 12px; max-width: 52%; }
 .resultado-resumo a { color: #C4A7FF; }
 .resultado-resumo strong { color: #C4A7FF; font: 700 22px var(--font-display); }
+.resultado-resumo .resultado-estado { color: #F8F7FB; font: 600 13px var(--font-display); letter-spacing: .04em; text-transform: uppercase; }
 .resultados-controles { max-width: 1440px; margin: 0 auto 18px; display: flex; align-items: center; justify-content: space-between; gap: 12px; color: #B8B5C6; font-size: 13px; }
 .resultados-controles select { border: 1px solid #3B1D73; border-radius: 9px; color: #F8F7FB; background: #111019; padding: 10px 14px; min-width: 230px; }
 .resultados-grade { max-width: 1440px; margin: 0 auto; display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 18px; }

@@ -12,10 +12,21 @@
 
 ## Progresso
 
-- **Estado:** não iniciado
-- **Última tarefa concluída:** —
-- **Próxima tarefa:** Task 1
-- **Notas de retomada:** A tela de resultados já está implementada e o snapshot usa a chave `copyhaunt:resultado:v1`. Não reabrir o plano anterior de resultados; esta evolução tem checkpoints próprios.
+- **Estado:** em andamento — implementação concluída, falta a conferência manual (Task 7, Step 2) e o commit do reviewer
+- **Última tarefa concluída:** Task 7 (Steps 1, 3 e 4)
+- **Próxima tarefa:** Task 7, Step 2 — conferência manual na Biblioteca
+- **Notas de retomada:**
+  - Verificação em 2026-09-17: `npm.cmd test` 509/509 (55 arquivos); `typecheck` limpo; `verify:build` "manifest gerado OK"; Playwright 15/16 na suíte completa por flakiness de navegação em `acoes.spec.ts`, repetido isoladamente com 1/1.
+  - `parar()` e `interromper()` soltam a espera pelo lote (o laço acorda na hora, sem esperar o timeout) e `parar()` emite `aoProgredir` para o cartão virar `Retomar`. `iniciar()` não emite: ao retomar, `index.ts` atualiza o cartão por conta própria.
+  - `analisados` conta só a sessão atual; a fronteira de IDs herdada não entra.
+  - `criarControleMineracao` chama `salvarResultadoParcial` por dentro (guarda de estado e `false` em falha reaproveitados); `index.ts` passa `salvarResultado` do storage direto, sem adaptador.
+  - `acompanharLaco` religa a finalização a cada `iniciar()`, inclusive ao retomar — antes, uma mineração retomada nunca finalizava.
+  - Revisão pós-implementação: a primeira sessão agora passa `[]` como fronteira; somente uma sessão posterior terminal herda os IDs atuais do store. Regressão coberta em `tests/content-mineracao.test.ts`.
+  - `mostrarProgresso` substitui `[data-chave="minerar"]` ou o cartão anterior; o replantio dos enxertos pela Meta continua recriando o botão Minerar, sem o cartão (comportamento anterior, fora do escopo).
+  - A tela de resultados já está implementada e o snapshot usa a chave `copyhaunt:resultado:v1`. Não reabrir o plano anterior de resultados; esta evolução tem checkpoints próprios.
+
+  - Ajuste de UX aprovado: `Minerar novamente` reabre a gaveta com os filtros da sessão anterior preenchidos; a nova sessão só começa após clicar novamente em `Iniciar mineração`.
+  - Decisão de produto após validação manual: remover o filtro de Instagram da mineração; resultados finais devem ser liberados imediatamente, e a busca fica somente na tela de resultados.
 
 ## Restrições globais
 
@@ -26,7 +37,7 @@
 - Teste antes da implementação: cada comportamento novo precisa de RED observado antes do GREEN.
 - Nenhuma espera fixa em testes; usar `vi.waitFor`, `expect.poll`, auto-waiting do Playwright ou eventos reais.
 - O resultado é substituído pelo snapshot mais recente; não criar histórico.
-- Pausa e interrupção salvam aprovados parciais sem executar o pós-filtro de Instagram.
+- Pausa, interrupção e conclusão não executam filtro de Instagram; a busca ocorre somente na tela de resultados.
 
 ---
 
@@ -42,7 +53,7 @@
 - Consome: `AdStore`, `Criterios`, `Relogio` e o loop reativo atual.
 - Produz: `EstadoMineracao` com `'interrompida'`, `Minerador.interromper()` e a opção `idsAvaliadosInicialmente?: Iterable<string>`.
 
-- [ ] **Step 1: Escrever os testes que falham**
+- [x] **Step 1: Escrever os testes que falham**
 
 Adicionar ao conjunto `describe('Minerador')`:
 
@@ -95,7 +106,7 @@ it('começa uma sessão ignorando IDs já processados', async () => {
 
 Alterar o helper `montar` para aceitar `Partial<OpcoesMineracao>` já cobre a nova opção sem criar um segundo construtor de teste.
 
-- [ ] **Step 2: Rodar os testes e confirmar o RED**
+- [x] **Step 2: Rodar os testes e confirmar o RED**
 
 Rodar:
 
@@ -105,7 +116,7 @@ npx.cmd vitest run tests/miner.test.ts
 
 Esperado: falha por `interromper`/`interrompida` ausentes e pelo ID inicial ainda ser avaliado.
 
-- [ ] **Step 3: Implementar o contrato mínimo**
+- [x] **Step 3: Implementar o contrato mínimo**
 
 Em `src/core/miner.ts`:
 
@@ -129,7 +140,7 @@ interromper(): void {
 
 Não resetar `avaliados`, `aprovados` ou `rolagens` ao chamar `iniciar()` depois de uma pausa: retomar continua sendo a mesma sessão.
 
-- [ ] **Step 4: Rodar os testes e confirmar o GREEN**
+- [x] **Step 4: Rodar os testes e confirmar o GREEN**
 
 Rodar:
 
@@ -139,7 +150,7 @@ npx.cmd vitest run tests/miner.test.ts
 
 Esperado: todos os testes existentes e os três novos passam.
 
-- [ ] **Step 5: Atualizar estado e checkpoint**
+- [x] **Step 5: Atualizar estado e checkpoint**
 
 Atualizar o bloco `Progresso` para Task 1 e registrar:
 
@@ -163,7 +174,7 @@ Se executor e reviewer forem agentes distintos, escrever essa mensagem em `.comm
 - Consome: `EstadoMineracao` e o codec versionado existente.
 - Produz: `rotuloDoResultado(estado: EstadoMineracao): string` e hidratação de snapshots `interrompida`.
 
-- [ ] **Step 1: Escrever os testes que falham**
+- [x] **Step 1: Escrever os testes que falham**
 
 Adicionar:
 
@@ -188,7 +199,7 @@ it('traduz estados do snapshot para o cabeçalho', () => {
 
 O helper `resultadoDeTeste` deve aceitar `Partial<ResultadoLocal>` e partir de um resultado válido já usado no arquivo.
 
-- [ ] **Step 2: Rodar e confirmar o RED**
+- [x] **Step 2: Rodar e confirmar o RED**
 
 Rodar:
 
@@ -198,7 +209,7 @@ npx.cmd vitest run tests/resultados.test.ts
 
 Esperado: falha porque o conjunto de estados rejeita `interrompida` e o rótulo ainda não existe.
 
-- [ ] **Step 3: Implementar**
+- [x] **Step 3: Implementar**
 
 Incluir `'interrompida'` no `ESTADOS` e exportar:
 
@@ -216,7 +227,7 @@ export function rotuloDoResultado(estado: EstadoMineracao): string {
 
 O codec não deve alterar a versão nem aceitar estados desconhecidos.
 
-- [ ] **Step 4: Rodar e confirmar o GREEN**
+- [x] **Step 4: Rodar e confirmar o GREEN**
 
 Rodar:
 
@@ -227,7 +238,7 @@ npm.cmd run typecheck
 
 Esperado: testes verdes e tipagem sem erros.
 
-- [ ] **Step 5: Atualizar estado e checkpoint**
+- [x] **Step 5: Atualizar estado e checkpoint**
 
 Atualizar o bloco `Progresso` e preparar:
 
@@ -263,7 +274,7 @@ export function salvarResultadoParcial(
 ): Promise<boolean>
 ```
 
-- [ ] **Step 1: Escrever os testes que falham**
+- [x] **Step 1: Escrever os testes que falham**
 
 Adicionar:
 
@@ -326,7 +337,7 @@ it('finalização normal continua bloqueada para estados parciais', async () => 
 })
 ```
 
-- [ ] **Step 2: Rodar e confirmar o RED**
+- [x] **Step 2: Rodar e confirmar o RED**
 
 Rodar:
 
@@ -336,7 +347,7 @@ npx.cmd vitest run tests/content/resultados.test.ts
 
 Esperado: falha porque `salvarResultadoParcial` não existe e `finalizarResultado` ainda não conhece `interrompida`.
 
-- [ ] **Step 3: Implementar**
+- [x] **Step 3: Implementar**
 
 Criar `salvarResultadoParcial` com a guarda explícita:
 
@@ -349,7 +360,7 @@ const estadosParciais = new Set<Progresso['estado']>([
 
 Quando a guarda passar, chamar `deps.salvar ?? salvarResultado` com `salvoEm` vindo de `deps.agora?.() ?? new Date()`, retornar `true` após o `await` e retornar `false` se a gravação rejeitar. Não chamar `filtrar`, `liberar` ou qualquer consulta de Instagram. Atualizar a guarda de `finalizarResultado` para retornar `null` nos dois estados parciais.
 
-- [ ] **Step 4: Rodar e confirmar o GREEN**
+- [x] **Step 4: Rodar e confirmar o GREEN**
 
 Rodar:
 
@@ -360,7 +371,7 @@ npm.cmd run typecheck
 
 Esperado: testes verdes e sem erro de tipagem.
 
-- [ ] **Step 5: Atualizar estado e checkpoint**
+- [x] **Step 5: Atualizar estado e checkpoint**
 
 Registrar:
 
@@ -398,7 +409,7 @@ export function montarProgresso(
 
 Manter `liberarResultados(cartao)` como operação que revela e habilita o botão de resultados.
 
-- [ ] **Step 1: Escrever os testes que falham**
+- [x] **Step 1: Escrever os testes que falham**
 
 Adicionar:
 
@@ -455,7 +466,7 @@ it('dispara parar e repetir pelos callbacks corretos', () => {
 
 Atualizar os testes existentes que chamam `montarProgresso(document, vi.fn())` para usar `AcoesProgresso`.
 
-- [ ] **Step 2: Rodar e confirmar o RED**
+- [x] **Step 2: Rodar e confirmar o RED**
 
 Rodar:
 
@@ -465,7 +476,7 @@ npx.cmd vitest run tests/content/progresso.test.ts
 
 Esperado: falha porque a assinatura e os botões novos ainda não existem.
 
-- [ ] **Step 3: Implementar**
+- [x] **Step 3: Implementar**
 
 Criar os botões `data-acao="parar"` com texto `Parar mineração` e `data-acao="repetir"` com texto `Minerar novamente`, inicialmente escondidos. O botão de resultados continua inicialmente escondido e desabilitado.
 
@@ -478,7 +489,7 @@ Em `atualizarProgresso`:
 
 Os listeners devem impedir propagação e chamar somente o callback correspondente. `liberarResultados` passa a remover `disabled` sem mudar a visibilidade definida pelo estado.
 
-- [ ] **Step 4: Rodar e confirmar o GREEN**
+- [x] **Step 4: Rodar e confirmar o GREEN**
 
 Rodar:
 
@@ -489,7 +500,7 @@ npm.cmd run typecheck
 
 Esperado: todos os testes do cartão passam.
 
-- [ ] **Step 5: Atualizar estado e checkpoint**
+- [x] **Step 5: Atualizar estado e checkpoint**
 
 Registrar:
 
@@ -513,7 +524,7 @@ Registrar:
 - Consome: `Minerador.interromper`, `salvarResultadoParcial` e `AcoesProgresso`.
 - Produz: `criarControleMineracao`, com `pausar`, `retomar`, `interromper`, `estado` e `resultadosDisponiveis`; o controlador de `index.ts` usará esse contrato para uma sessão por `PedidoMineracao`.
 
-- [ ] **Step 1: Escrever os testes que falham**
+- [x] **Step 1: Escrever os testes que falham**
 
 Criar `tests/content/controle-mineracao.test.ts`. O helper abaixo cria um motor falso com o contrato consumido pelo controle, sem relógio real nem DOM:
 
@@ -575,7 +586,7 @@ it('interrompe, salva parcial e não permite retomar', async () => {
 
 O teste de criação de nova sessão deve ficar em `tests/content-mineracao.test.ts` e verificar diretamente que `iniciarMineracao` passa `store.todos().map((anuncio) => anuncio.id)` ao novo `criarMinerador`.
 
-- [ ] **Step 2: Rodar e confirmar o RED**
+- [x] **Step 2: Rodar e confirmar o RED**
 
 Rodar:
 
@@ -585,7 +596,7 @@ npx.cmd vitest run tests/content-mineracao.test.ts tests/content/resultados.test
 
 Esperado: falha porque `src/content/controle-mineracao.ts` e `criarControleMineracao` ainda não existem, além da falha de integração na passagem dos IDs iniciais.
 
-- [ ] **Step 3: Implementar o controlador**
+- [x] **Step 3: Implementar o controlador**
 
 Criar em `src/content/controle-mineracao.ts`:
 
@@ -644,7 +655,7 @@ No callback de repetir, usar `pedidoAtual` para criar uma nova sessão, substitu
 
 O fluxo que aguarda `motor.iniciar()` deve continuar chamando `finalizarResultado` somente para estados normais. Ao finalizar, mostrar `Ver resultados` e `Minerar novamente`. Ao pausar, não logar “mineração encerrada”; ao interromper, registrar que a sessão terminou com parcial.
 
-- [ ] **Step 4: Rodar e confirmar o GREEN**
+- [x] **Step 4: Rodar e confirmar o GREEN**
 
 Rodar:
 
@@ -655,7 +666,7 @@ npm.cmd run typecheck
 
 Esperado: fluxo de sessão verde e typecheck sem erros.
 
-- [ ] **Step 5: Atualizar estado e checkpoint**
+- [x] **Step 5: Atualizar estado e checkpoint**
 
 Registrar:
 
@@ -677,7 +688,7 @@ Registrar:
 - Consome: `rotuloDoResultado` e `ResultadoLocal.estado`.
 - Produz: cabeçalho com `data-testid="resultado-estado"` e texto correto para snapshots parciais e finais.
 
-- [ ] **Step 1: Escrever os testes que falham**
+- [x] **Step 1: Escrever os testes que falham**
 
 Adicionar:
 
@@ -698,7 +709,7 @@ it.each([
 })
 ```
 
-- [ ] **Step 2: Rodar e confirmar o RED**
+- [x] **Step 2: Rodar e confirmar o RED**
 
 Rodar:
 
@@ -708,7 +719,7 @@ npx.cmd vitest run tests/resultados-ui.test.tsx
 
 Esperado: falha porque o cabeçalho ainda não renderiza o estado.
 
-- [ ] **Step 3: Implementar**
+- [x] **Step 3: Implementar**
 
 Importar `rotuloDoResultado` em `App.tsx` e renderizar no resumo:
 
@@ -720,7 +731,7 @@ Importar `rotuloDoResultado` em `App.tsx` e renderizar no resumo:
 
 Manter a quantidade de aprovados, origem, data, ordenação, cards e Links sem alteração comportamental.
 
-- [ ] **Step 4: Rodar e confirmar o GREEN**
+- [x] **Step 4: Rodar e confirmar o GREEN**
 
 Rodar:
 
@@ -731,7 +742,7 @@ npm.cmd run typecheck
 
 Esperado: testes verdes e layout tipado.
 
-- [ ] **Step 5: Atualizar estado e checkpoint**
+- [x] **Step 5: Atualizar estado e checkpoint**
 
 Registrar:
 
@@ -747,7 +758,7 @@ Registrar:
 
 - Modificar: `docs/superpowers/plans/2026-09-17-ciclo-mineracao.md`
 
-- [ ] **Step 1: Rodar a suíte completa**
+- [x] **Step 1: Rodar a suíte completa**
 
 Rodar nesta ordem:
 
@@ -775,11 +786,11 @@ Na Biblioteca:
 
 Não declarar sucesso se a gravação do parcial ainda estiver pendente ou se o estado exibido disser “concluída” para uma parcial.
 
-- [ ] **Step 3: Atualizar o bloco Progresso**
+- [x] **Step 3: Atualizar o bloco Progresso**
 
 Marcar cada Task somente após sua verificação correspondente passar, registrar os números reais de testes e anotar divergências descobertas no teste manual.
 
-- [ ] **Step 4: Preparar o checkpoint final**
+- [x] **Step 4: Preparar o checkpoint final**
 
 Mensagem:
 
@@ -803,7 +814,7 @@ O plano só está concluído quando:
 - pausa salva parcial e libera `Ver resultados` depois da gravação;
 - parada salva parcial como `interrompida` e não permite retomar;
 - nova mineração cria motor novo e ignora IDs presentes no store;
-- finalização normal mantém o pós-filtro antes da gravação;
+- finalização normal salva e libera resultados sem aguardar consultas de Instagram;
 - a página distingue pausada, interrompida e estados terminais;
 - `npm.cmd test`, `npm.cmd run typecheck`, `npm.cmd run verify:build` e `npx.cmd playwright test` passam;
 - o bloco `Progresso` está atualizado e o checkpoint está versionado pelo reviewer.

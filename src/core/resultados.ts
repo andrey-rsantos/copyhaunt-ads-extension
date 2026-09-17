@@ -26,11 +26,23 @@ const ESTADOS: ReadonlySet<EstadoMineracao> = new Set([
   'parado',
   'minerando',
   'pausado',
+  'interrompida',
   'concluido',
   'esgotado',
   'incompreensivel',
   'limite-seguranca',
 ])
+
+/** O cabeçalho da página diz se o snapshot é parcial ou final. */
+export function rotuloDoResultado(estado: EstadoMineracao): string {
+  if (estado === 'pausado') return 'Resultados parciais — mineração pausada'
+  if (estado === 'interrompida') {
+    return 'Resultados parciais — mineração interrompida'
+  }
+  if (estado === 'concluido') return 'Mineração concluída'
+  if (estado === 'esgotado') return 'Fim dos resultados'
+  return 'Mineração encerrada'
+}
 
 export function serializarResultado(resultado: ResultadoLocal): ResultadoPersistidoV1 {
   return {

@@ -2,13 +2,36 @@ import { useEffect, useRef, type ReactElement } from 'react'
 import { montarDestinos, type DestinoOpen } from '../core/links'
 import type { Ad } from '../core/types'
 
+/** O item Instagram sem URL: só `desconhecido` é clicável, e só ele consulta. */
+export type EstadoInstagram =
+  | 'desconhecido'
+  | 'buscando'
+  | 'encontrado'
+  | 'ausente'
+  | 'falha'
+
+const TEXTO_INSTAGRAM: Record<Exclude<EstadoInstagram, 'encontrado'>, string> = {
+  desconhecido: 'Buscar Instagram',
+  buscando: 'Buscando Instagram…',
+  ausente: 'Instagram não encontrado',
+  falha: 'Não foi possível buscar Instagram',
+}
+
 interface LinksMenuProps {
   ad: Ad
   aberto: boolean
   aoAlternar: (aberto: boolean) => void
+  estadoInstagram?: EstadoInstagram
+  aoBuscarInstagram?: () => void
 }
 
-export function LinksMenu({ ad, aberto, aoAlternar }: LinksMenuProps): ReactElement {
+export function LinksMenu({
+  ad,
+  aberto,
+  aoAlternar,
+  estadoInstagram = 'desconhecido',
+  aoBuscarInstagram,
+}: LinksMenuProps): ReactElement {
   const raiz = useRef<HTMLDivElement>(null)
   const destinos = montarDestinos(ad)
 
@@ -37,7 +60,12 @@ export function LinksMenu({ ad, aberto, aoAlternar }: LinksMenuProps): ReactElem
       {aberto && (
         <div className="links-list" role="menu">
           {destinos.map((destino) => (
-            <ItemDestino key={destino.chave} destino={destino} />
+            <ItemDestino
+              key={destino.chave}
+              destino={destino}
+              estadoInstagram={estadoInstagram}
+              aoBuscarInstagram={aoBuscarInstagram}
+            />
           ))}
         </div>
       )}
@@ -45,7 +73,15 @@ export function LinksMenu({ ad, aberto, aoAlternar }: LinksMenuProps): ReactElem
   )
 }
 
-function ItemDestino({ destino }: { destino: DestinoOpen }): ReactElement {
+function ItemDestino({
+  destino,
+  estadoInstagram,
+  aoBuscarInstagram,
+}: {
+  destino: DestinoOpen
+  estadoInstagram: EstadoInstagram
+  aoBuscarInstagram?: () => void
+}): ReactElement {
   if (destino.url) {
     return (
       <a
@@ -57,6 +93,24 @@ function ItemDestino({ destino }: { destino: DestinoOpen }): ReactElement {
       >
         {destino.rotulo}
       </a>
+    )
+  }
+
+  // Instagram sem URL é ação, não falta de dado: a consulta só sai no clique.
+  if (destino.chave === 'instagram' && estadoInstagram !== 'encontrado') {
+    return (
+      <button
+        type="button"
+        data-link-chave={destino.chave}
+        data-estado={estadoInstagram}
+        disabled={estadoInstagram !== 'desconhecido'}
+        onClick={(evento) => {
+          evento.stopPropagation()
+          aoBuscarInstagram?.()
+        }}
+      >
+        {TEXTO_INSTAGRAM[estadoInstagram]}
+      </button>
     )
   }
 

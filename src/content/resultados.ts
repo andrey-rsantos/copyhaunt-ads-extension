@@ -28,13 +28,44 @@ export interface DependenciasFinalizacao {
   agora?: () => Date
 }
 
+/** Pausa e interrupção gravam o que há, sem pós-filtro: o snapshot é parcial. */
+const ESTADOS_PARCIAIS = new Set<Progresso['estado']>(['pausado', 'interrompida'])
+
+export interface DependenciasParcial {
+  salvar?: DependenciasFinalizacao['salvar']
+  agora?: () => Date
+}
+
+/** Devolve `true` só quando a gravação resolveu: o cartão não pode fingir. */
+export async function salvarResultadoParcial(
+  progresso: Progresso,
+  aprovados: Ad[],
+  origem: string,
+  deps: DependenciasParcial = {},
+): Promise<boolean> {
+  if (!ESTADOS_PARCIAIS.has(progresso.estado)) return false
+
+  try {
+    const salvar = deps.salvar ?? salvarResultado
+    await salvar({
+      origem,
+      estado: progresso.estado,
+      salvoEm: deps.agora?.() ?? new Date(),
+      anuncios: aprovados,
+    })
+    return true
+  } catch {
+    return false
+  }
+}
+
 export async function finalizarResultado(
   progresso: Progresso,
   aprovados: Ad[],
   origem: string,
   deps: DependenciasFinalizacao = {},
 ): Promise<Ad[] | null> {
-  if (progresso.estado === 'pausado') return null
+  if (ESTADOS_PARCIAIS.has(progresso.estado)) return null
 
   const finais = deps.filtrar ? await deps.filtrar(aprovados) : aprovados
   try {

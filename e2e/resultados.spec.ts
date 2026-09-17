@@ -101,3 +101,29 @@ test('a mensagem abrir-resultados faz o service worker abrir a página', async (
   await aberta.waitForLoadState()
   expect(aberta.url()).toBe(`chrome-extension://${extensionId}/src/resultados/index.html`)
 })
+
+test('Instagram desconhecido só oferece a busca; nada sai para a Meta ao abrir Links', async ({ context, extensionId }) => {
+  const page = await context.newPage()
+  const requisicoes: string[] = []
+  page.on('request', (r) => requisicoes.push(r.url()))
+
+  await page.goto(`chrome-extension://${extensionId}/src/resultados/index.html`)
+  await page.evaluate(async (payload) => {
+    await chrome.storage.local.set({ 'copyhaunt:resultado:v1': payload })
+  }, serializarResultado({
+    salvoEm: new Date('2026-09-17T12:00:00Z'),
+    origem: 'https://www.facebook.com/ads/library/?q=receitas',
+    estado: 'esgotado',
+    anuncios: [anuncio({ id: 'sem-instagram' })],
+  }))
+  await page.reload()
+
+  await expect(page.locator('[data-testid="resultado-card"]')).toHaveCount(1)
+  await page.locator('[data-acao="links"]').click()
+
+  const item = page.locator('[data-link-chave="instagram"]')
+  await expect(item).toHaveText('Buscar Instagram')
+  await expect(item).toBeEnabled()
+  expect(requisicoes.filter((u) => /facebook\.com|instagram\.com/.test(u))).toEqual([])
+  expect(page.url()).toBe(`chrome-extension://${extensionId}/src/resultados/index.html`)
+})

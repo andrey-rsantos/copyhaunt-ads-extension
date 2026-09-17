@@ -25,6 +25,26 @@ describe('montarMinerar', () => {
     expect(v('limiteEncontrados')).toBe('100')
   })
 
+  it('preenche os filtros da mineração anterior', () => {
+    const anterior = {
+      criterios: {
+        colacaoMinima: 8,
+        presencaMinima: 13,
+        diasMin: null,
+        diasMax: null,
+      },
+      limiteEncontrados: 24,
+    }
+    const el = montarMinerar(document, URL_ATUAL, agora, () => {}, anterior)
+    const v = (c: string) =>
+      el.querySelector<HTMLInputElement>('[data-campo="' + c + '"]')
+
+    expect(v('colacaoMinima')?.value).toBe('8')
+    expect(v('presencaMinima')?.value).toBe('13')
+    expect(v('limiteEncontrados')?.value).toBe('24')
+    expect(v('exigirInstagram')).toBeNull()
+  })
+
   it('iniciar entrega os critérios e o alvo', () => {
     const espiao = vi.fn()
     const el = montarMinerar(document, URL_ATUAL, agora, espiao)
@@ -39,31 +59,13 @@ describe('montarMinerar', () => {
         presencaMinima: 10,
       },
       limiteEncontrados: 100,
-      exigirInstagram: false,
     })
   })
 
-  it('avisa que o Instagram roda ao final e pode reduzir o total', () => {
+  it('não oferece filtro de Instagram na gaveta', () => {
     const el = montarMinerar(document, URL_ATUAL, agora, () => {})
-    const nota = el.querySelector('[data-papel="nota-instagram"]')
-
-    expect(nota?.textContent).toContain('ao final')
-    expect(nota?.textContent).toContain('aprovados')
-    expect(nota?.textContent).not.toContain('durante a varredura.')
-  })
-
-  it('o toggle do Instagram viaja no pedido quando ligado', () => {
-    const espiao = vi.fn()
-    const el = montarMinerar(document, URL_ATUAL, agora, espiao)
-
-    const ig = el.querySelector<HTMLInputElement>(
-      '[data-campo="exigirInstagram"]',
-    )
-    if (ig) ig.checked = true
-
-    el.querySelector<HTMLElement>('[data-acao="iniciar"]')?.click()
-
-    expect(espiao.mock.calls[0][0].exigirInstagram).toBe(true)
+    expect(el.querySelector('[data-campo="exigirInstagram"]')).toBeNull()
+    expect(el.querySelector('[data-papel="nota-instagram"]')).toBeNull()
   })
 
   it('herda o tempo ativo da URL como critério do motor', () => {

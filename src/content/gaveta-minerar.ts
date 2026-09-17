@@ -17,8 +17,6 @@ import { lerFaixaDaUrl } from '../core/dateFilter'
 export interface PedidoMineracao {
   criterios: Criterios
   limiteEncontrados: number
-  /** Pós-filtro: descarta aprovados sem Instagram, ao fim da varredura. */
-  exigirInstagram: boolean
 }
 
 export function montarMinerar(
@@ -26,6 +24,7 @@ export function montarMinerar(
   urlAtual: string,
   agora: Date,
   aoIniciar: (pedido: PedidoMineracao) => void,
+  pedidoInicial?: PedidoMineracao,
 ): HTMLElement {
   const raiz = doc.createElement('div')
 
@@ -33,26 +32,20 @@ export function montarMinerar(
   titulo.textContent = 'Minerar'
   raiz.appendChild(titulo)
 
-  const colacao = campo(doc, 'colacaoMinima', CRITERIOS_PADRAO.colacaoMinima)
-  const presenca = campo(doc, 'presencaMinima', CRITERIOS_PADRAO.presencaMinima)
-  const alvo = campo(doc, 'limiteEncontrados', 100)
-
-  const instagram = doc.createElement('input')
-  instagram.type = 'checkbox'
-  instagram.dataset.campo = 'exigirInstagram'
+  const colacao = campo(
+    doc,
+    'colacaoMinima',
+    valorInicial(pedidoInicial?.criterios.colacaoMinima, CRITERIOS_PADRAO.colacaoMinima),
+  )
+  const presenca = campo(
+    doc,
+    'presencaMinima',
+    valorInicial(pedidoInicial?.criterios.presencaMinima, CRITERIOS_PADRAO.presencaMinima),
+  )
+  const alvo = campo(doc, 'limiteEncontrados', pedidoInicial?.limiteEncontrados ?? 100)
 
   raiz.appendChild(linha(doc, 'Criativos repetidos', colacao))
   raiz.appendChild(linha(doc, 'Anúncios do anunciante', presenca))
-  raiz.appendChild(linha(doc, 'Possui Instagram', instagram))
-
-  const notaIg = doc.createElement('div')
-  notaIg.className = 'nota'
-  notaIg.dataset.papel = 'nota-instagram'
-  // Exigido pela seção 7.2: o total final pode diminuir, e o usuário precisa
-  // saber disso antes de apertar, não depois.
-  notaIg.textContent =
-    'Verificado ao final, só nos anúncios aprovados — depois da varredura. Pode reduzir o total.'
-  raiz.appendChild(notaIg)
 
   raiz.appendChild(linha(doc, 'Quantidade de aprovados', alvo))
 
@@ -94,7 +87,6 @@ export function montarMinerar(
         diasMax: faixa.diasMax,
       },
       limiteEncontrados: limite,
-      exigirInstagram: instagram.checked,
     })
   })
   raiz.appendChild(iniciar)
@@ -127,6 +119,13 @@ function linha(doc: Document, texto: string, campo: HTMLElement): HTMLElement {
 
   l.append(rotulo, campo)
   return l
+}
+
+function valorInicial(
+  anterior: number | null | undefined,
+  padrao: number | null,
+): number | null {
+  return anterior === undefined ? padrao : anterior
 }
 
 /** Campo vazio é critério desligado (`criteria.ts`), e desligado é `null`. */

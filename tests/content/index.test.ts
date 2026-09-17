@@ -6,6 +6,7 @@ vi.hoisted(() => {
   vi.stubGlobal('chrome', {
     runtime: {
       sendMessage: vi.fn(),
+      onMessage: { addListener: vi.fn() },
       getURL: vi.fn((caminho: string) => `chrome-extension://teste/${caminho}`),
     },
   })

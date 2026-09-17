@@ -8,7 +8,7 @@ import { lerFaixaDaUrl, montarUrlFiltro, rotuloDaFaixa } from '../core/dateFilte
 import { precisaOrdenar, urlOrdenada } from '../core/ordenacao'
 import { acharCards, definirPadraoAncora } from './anchor'
 import { plantarEnxertos, type Enxerto, type Plantio } from './enxertos'
-import { alternarGaveta, fecharGaveta } from './gaveta'
+import { abrirGaveta, alternarGaveta, fecharGaveta } from './gaveta'
 import { escreverNaBusca, montarExemplos } from './gaveta-exemplos'
 import { montarCalendario } from './gaveta-calendario'
 import { montarMinerar, type PedidoMineracao } from './gaveta-minerar'
@@ -16,12 +16,17 @@ import { buscarInstagram, definirDocIdAnunciante } from './instagram'
 import { observarGrade, type Observacao } from './observer'
 import { pintarGrade } from './overlay'
 import { processarCaptura, processarSsr } from './pipeline'
-import { filtrarPorInstagram } from './pos-instagram'
+import { atenderBuscaInstagram } from './ponte-instagram'
 import { atualizarProgresso, liberarResultados, montarProgresso } from './progresso'
 import {
   abrirPaginaResultados,
   finalizarResultado,
 } from './resultados'
+import { salvarResultado } from '../storage/resultados'
+import {
+  criarControleMineracao,
+  type ControleMineracao,
+} from './controle-mineracao'
 
 /** Índice da sessão. Vive enquanto a aba viver. */
 const store = new AdStore()
@@ -44,7 +49,10 @@ const SEM_CRITERIOS: Criterios = {
 /** O ritmo de fábrica. A config remota pode substituí-lo. */
 let ritmo = { pisoMs: 2500, timeoutMs: 4500, jitter: 0.4 }
 
-let minerador: Minerador | null = null
+/** A sessão em curso. Um motor por `PedidoMineracao`; `Minerar novamente` troca os três. */
+let motorAtual: Minerador | null = null
+let controleAtual: ControleMineracao | null = null
+let pedidoAtual: PedidoMineracao | null = null
 
 /** Monta o motor com os efeitos reais do navegador ligados. */
 export function criarMinerador(
@@ -52,8 +60,10 @@ export function criarMinerador(
   criterios: Criterios,
   limiteEncontrados: number,
   ritmoAtual: { pisoMs: number; timeoutMs: number; jitter: number },
+  idsAvaliadosInicialmente: Iterable<string> = [],
 ): Minerador {
   return new Minerador({
+    idsAvaliadosInicialmente,
     store: storeAtual,
     criterios,
     relogio: relogioDeWorker(),
@@ -69,27 +79,51 @@ export function criarMinerador(
       console.info(
         `[CopyHaunt] ${p.estado}: ${p.encontrados} de ${limiteEncontrados} encontrados; ${p.analisados} analisados em ${p.rolagens} rolagens`,
       )
-      const cartao = plantio
-        ?.hospedeiro()
-        ?.shadowRoot?.querySelector<HTMLElement>('[data-chave="progresso"]')
+      const cartao = cartaoAtual()
       if (cartao) atualizarProgresso(cartao, p, alvoAtual)
     },
   })
 }
 
-/** Inicia ou retoma a única mineração desta sessão. */
-export function iniciarMineracao(pedido: {
-  criterios: Criterios
-  limiteEncontrados: number
-}): Minerador {
-  minerador ??= criarMinerador(
-    store,
-    pedido.criterios,
-    pedido.limiteEncontrados,
-    ritmo,
+/** O cartão vive no shadow root dos enxertos; buscar sempre, nunca guardar. */
+function cartaoAtual(): HTMLElement | null {
+  return (
+    plantio?.hospedeiro()?.shadowRoot?.querySelector<HTMLElement>(
+      '[data-chave="progresso"]',
+    ) ?? null
   )
-  void minerador.iniciar()
-  return minerador
+}
+
+/**
+ * Devolve o motor da sessão: o atual, se ainda dá para retomar; senão um novo.
+ *
+ * O novo nasce com os IDs do store como já avaliados (spec, 2.3): a aba
+ * continua indexando, mas a sessão nova conta só o que for inédito.
+ */
+export function iniciarMineracao(
+  pedido: PedidoMineracao,
+  storeAtual: AdStore = store,
+): Minerador {
+  const estado = motorAtual?.progresso().estado
+  if (!motorAtual || (estado !== 'minerando' && estado !== 'pausado')) {
+    const idsAvaliadosInicialmente = motorAtual
+      ? storeAtual.todos().map((anuncio) => anuncio.id)
+      : []
+    motorAtual = criarMinerador(
+      storeAtual,
+      pedido.criterios,
+      pedido.limiteEncontrados,
+      ritmo,
+      idsAvaliadosInicialmente,
+    )
+    controleAtual = criarControleMineracao({
+      motor: motorAtual,
+      origem: location.href,
+      salvarParcial: salvarResultado,
+    })
+  }
+  pedidoAtual = { ...pedido }
+  return motorAtual
 }
 
 let observacao: Observacao | null = null
@@ -128,16 +162,42 @@ function garantirObservador(): void {
  * quando a resposta chegar. Esperar pela rede para pintar o primeiro card
  * seria trocar um risco raro por uma lentidão certa.
  */
-function aplicarConfig(): void {
-  chrome.runtime.sendMessage({ tipo: 'obter-config' }, (config) => {
-    if (chrome.runtime.lastError || !config?.anchors?.libraryIdPattern) return
-    definirPadraoAncora(config.anchors.libraryIdPattern)
-    // Sem este campo, a consulta forjada nem sai. É o interruptor remoto do
-    // recurso: apagar o campo do arquivo hospedado o desliga em minutos.
-    definirDocIdAnunciante(config.advertiserDocId)
-    if (config.mining) ritmo = config.mining
+function aplicarConfig(): Promise<void> {
+  return new Promise((resolver) => {
+    chrome.runtime.sendMessage({ tipo: 'obter-config' }, (config) => {
+      if (!chrome.runtime.lastError && config?.anchors?.libraryIdPattern) {
+        definirPadraoAncora(config.anchors.libraryIdPattern)
+        // Sem este campo, a consulta forjada nem sai. É o interruptor remoto
+        // do recurso: apagar o campo do arquivo hospedado o desliga em minutos.
+        definirDocIdAnunciante(config.advertiserDocId)
+        if (config.mining) ritmo = config.mining
+      }
+      resolver()
+    })
   })
 }
+
+/** A config já aplicada — ou a ausência dela. A ponte de Instagram espera por isto. */
+let configPronta: Promise<void> = Promise.resolve()
+
+/**
+ * O comando da página de resultados chega pelo canal privado da extensão,
+ * nunca por `window.postMessage`: só o service worker fala aqui.
+ */
+chrome.runtime.onMessage.addListener((mensagem, _remetente, responder) => {
+  if (mensagem?.tipo !== 'buscar-instagram') return false
+
+  void atenderBuscaInstagram(mensagem, {
+    aguardarConfig: () => configPronta,
+    buscar: (pageId) =>
+      buscarInstagram(pageId, {
+        buscar: (...args) => fetch(...args),
+        html: () => document.documentElement.innerHTML,
+      }),
+  }).then(responder)
+
+  return true
+})
 
 /**
  * Lê o lote que a Meta embutiu no HTML da primeira carga.
@@ -167,7 +227,7 @@ window.addEventListener('message', (event) => {
     const resultado = processarCaptura(event.data.payload as Captura, store)
     if (resultado.novos > 0) {
       console.info(`[CopyHaunt] indexados: ${resultado.total}`)
-      minerador?.avisarLote()
+      motorAtual?.avisarLote()
       repintar()
     }
   }
@@ -189,20 +249,57 @@ let alvoAtual = 100
 function mostrarProgresso(shadow: ShadowRoot): HTMLElement | null {
   fecharGaveta(shadow)
 
-  const botao = shadow.querySelector<HTMLElement>('[data-chave="minerar"]')
-  if (!botao) return null
-
-  const cartao = montarProgresso(
-    document,
-    () => {
-      const p = minerador?.progresso()
-      if (p?.estado === 'pausado') void minerador?.iniciar()
-      else minerador?.parar()
-    },
-    abrirPaginaResultados,
+  // Na primeira vez substitui o botão; em `Minerar novamente`, o cartão velho.
+  const alvo = shadow.querySelector<HTMLElement>(
+    '[data-chave="minerar"], [data-chave="progresso"]',
   )
+  if (!alvo) return null
+
+  const cartao = montarProgresso(document, {
+    aoAlternarPausa: () => {
+      const controle = controleAtual
+      if (!controle) return
+      if (controle.estado() === 'pausado') {
+        acompanharLaco(controle.retomar())
+        // O motor só avisa ao fim de cada ciclo; o rótulo precisa virar agora.
+        const atual = cartaoAtual()
+        if (atual && motorAtual) atualizarProgresso(atual, motorAtual.progresso(), alvoAtual)
+        return
+      }
+      void controle.pausar().then((salvo) => {
+        const atual = cartaoAtual()
+        if (salvo && atual) liberarResultados(atual)
+      })
+    },
+    aoAbrirResultados: abrirPaginaResultados,
+    aoParar: () => {
+      void controleAtual?.interromper().then((salvo) => {
+        const atual = cartaoAtual()
+        if (salvo && atual) liberarResultados(atual)
+        console.info(
+          `[CopyHaunt] mineração interrompida; parcial ${salvo ? 'gravada' : 'não gravada'}`,
+        )
+      })
+    },
+    aoMinerarNovamente: () => {
+      const cartao = cartaoAtual()
+      if (!cartao || !pedidoAtual) return
+
+      abrirGaveta(
+        shadow,
+        cartao,
+        montarMinerar(
+          document,
+          location.href,
+          new Date(),
+          (pedido) => dispararMineracao(pedido, shadow),
+          pedidoAtual,
+        ),
+      )
+    },
+  })
   cartao.dataset.chave = 'progresso'
-  botao.replaceWith(cartao)
+  alvo.replaceWith(cartao)
   return cartao
 }
 
@@ -271,37 +368,34 @@ function dispararMineracao(pedido: PedidoMineracao, shadow: ShadowRoot): void {
   }
 
   alvoAtual = pedido.limiteEncontrados
-  const cartao = mostrarProgresso(shadow)
+  mostrarProgresso(shadow)
   const motor = iniciarMineracao(pedido)
+  acompanharLaco(motor.iniciar())
+}
 
-  // O pós-filtro só roda quando o laço termina — a trava da seção 6.4.
-  void motor.iniciar().then(async () => {
+/**
+ * Espera o laço terminar e fecha o resultado. Religado a cada início, inclusive
+ * ao retomar: a Promise de `iniciar()` é de um laço só, e a pausa a resolve.
+ *
+ * O pós-filtro só roda quando o laço termina — a trava da seção 6.4. Pausa e
+ * interrupção gravam parcial por outro caminho, sem pós-filtro.
+ */
+function acompanharLaco(laco: Promise<void>): void {
+  const motor = motorAtual
+  const pedido = pedidoAtual
+  if (!motor || !pedido) return
+
+  void laco.then(async () => {
     const p = motor.progresso()
-    if (p.estado === 'pausado') return
+    if (p.estado === 'pausado' || p.estado === 'interrompida') return
 
-    const relogio = relogioDeWorker()
     const finais = await finalizarResultado(
       p,
       motor.encontrados(),
       location.href,
       {
-        filtrar: pedido.exigirInstagram
-          ? (aprovados) =>
-              filtrarPorInstagram(aprovados, {
-                consultar: (pageId) =>
-                  buscarInstagram(pageId, {
-                    buscar: (...args) => fetch(...args),
-                    html: () => document.documentElement.innerHTML,
-                  }),
-                esperar: (ms) => relogio.esperar(ms),
-                aoProgredir: (feitos, total) => {
-                  console.info(
-                    `[CopyHaunt] Instagram: ${feitos} de ${total} anunciantes`,
-                  )
-                },
-              })
-          : async (aprovados) => aprovados,
         liberar: () => {
+          const cartao = cartaoAtual()
           if (cartao) liberarResultados(cartao)
         },
       },
@@ -324,7 +418,7 @@ window.postMessage(createMessage('content-ready', {}), location.origin)
  * renderizar os cards, então a primeira pintura também precisa esperar.
  */
 function iniciar(): void {
-  aplicarConfig()
+  configPronta = aplicarConfig()
   plantio = plantarEnxertos(document, montarEnxertos())
   lerLoteInicial()
   garantirObservador()

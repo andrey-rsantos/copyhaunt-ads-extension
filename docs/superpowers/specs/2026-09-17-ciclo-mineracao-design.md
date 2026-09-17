@@ -29,9 +29,9 @@ Ao clicar em `Pausar`:
 4. aparecem `Ver resultados` e `Parar mineração`;
 5. `Ver resultados` abre o snapshot parcial já salvo.
 
-O snapshot pausado é deliberadamente parcial. O pós-filtro de Instagram não
-roda durante uma pausa: a mineração ainda pode continuar e a pausa deve
-mostrar o que já está disponível sem iniciar consultas adicionais.
+O snapshot pausado é deliberadamente parcial. A busca de Instagram não
+participa da mineração; ela fica disponível sob demanda na página de
+resultados, sem prolongar a sessão.
 
 ### 2.2 Parar mineração
 
@@ -40,16 +40,16 @@ entra no novo estado terminal `interrompida`, a rolagem é interrompida e os
 aprovados conhecidos são persistidos como snapshot parcial. O cartão oferece
 `Ver resultados` e `Minerar novamente`.
 
-O filtro de Instagram também não é executado ao interromper. A interrupção é
+A busca de Instagram também não é executada ao interromper. A interrupção é
 uma ação explícita de parada e não deve prolongar a sessão com consultas que o
 usuário não pediu naquele momento; o estado visual deixa claro que o resultado
 é parcial.
 
 ### 2.3 Mineração novamente
 
-`Minerar novamente` reutiliza os últimos critérios, o limite e a opção
-`exigirInstagram`, mas cria uma nova sessão do motor. A sessão anterior não é
-retomada nem somada ao contador de aprovados.
+`Minerar novamente` reutiliza os últimos critérios e o limite, mas cria uma
+nova sessão do motor. A sessão anterior não é retomada nem somada ao contador
+de aprovados.
 
 O `AdStore` da aba continua vivo para que os enxertos existentes não sumam e
 para que novas capturas continuem sendo indexadas. O novo `Minerador` recebe
@@ -100,11 +100,13 @@ O content script terá duas operações testáveis:
 - `salvarResultadoParcial`: salva imediatamente os aprovados atuais com o
   estado `pausado` ou `interrompida`, sem pós-filtro e sem liberar ações de
   uma mineração concluída;
-- `finalizarResultado`: mantém o fluxo atual para estados terminais normais,
-  executando o pós-filtro antes de salvar e liberando o atalho de resultados.
+- `finalizarResultado`: salva imediatamente os aprovados para estados
+  terminais normais e libera o atalho de resultados.
 
-O snapshot parcial substitui o resultado anterior. A página não deve chamar
-`fetch`, ler a sessão da Meta ou tentar completar um filtro por conta própria.
+O snapshot parcial substitui o resultado anterior. A página de resultados não
+deve chamar `fetch`, ler a sessão da Meta ou tentar completar um filtro por
+conta própria; a busca de Instagram ocorre somente pelo comando explícito no
+menu `Links`.
 
 Se uma gravação parcial falhar, o erro é registrado pelo adaptador já
 existente e o cartão não deve fingir que `Ver resultados` está disponível.
@@ -132,10 +134,11 @@ Enquanto o snapshot parcial ainda está sendo salvo, `Ver resultados` permanece
 desabilitado. O rótulo do estado deve comunicar `Pausado` ou `Mineração
 interrompida`; não usar “concluída” para parciais.
 
-O botão `Minerar novamente` deve usar os últimos dados de `PedidoMineracao`,
-sem abrir a gaveta e sem apagar o overlay já plantado. A próxima sessão começa
-com contadores do motor zerados e com os IDs presentes no `AdStore` marcados
-como já avaliados.
+O botão `Minerar novamente` reabre a gaveta de mineração com os últimos dados
+de `PedidoMineracao` preenchidos, sem apagar o overlay já plantado. A próxima
+sessão só começa depois de o usuário confirmar em `Iniciar mineração`, com
+contadores do motor zerados e com os IDs presentes no `AdStore` marcados como
+já avaliados.
 
 ## 5. Página de resultados
 
@@ -174,7 +177,8 @@ Antes da implementação, testes unitários devem falhar para:
 - transição `minerando/pausado -> interrompida` sem possibilidade de retomar;
 - nova instância ignorando IDs que já estavam no store;
 - gravação de parcial em pausa e interrupção;
-- finalização normal ainda executando o pós-filtro antes da gravação;
+- finalização normal salvando e liberando resultados sem aguardar consultas de
+  Instagram;
 - cartão exibindo as ações corretas em cada estado;
 - página distinguindo snapshot pausado, interrompido e terminal.
 

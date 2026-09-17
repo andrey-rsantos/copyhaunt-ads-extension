@@ -13,6 +13,7 @@ const ROTULOS: Record<EstadoMineracao, string> = {
   parado: 'Pronto',
   minerando: 'Minerando',
   pausado: 'Pausado',
+  interrompida: 'Mineração interrompida',
   concluido: 'Concluído',
   esgotado: 'Fim dos resultados',
   incompreensivel: 'Mineração encerrada',
@@ -21,6 +22,7 @@ const ROTULOS: Record<EstadoMineracao, string> = {
 
 /** Estados em que não há mais o que pausar nem retomar. */
 const TERMINAIS: ReadonlySet<EstadoMineracao> = new Set([
+  'interrompida',
   'concluido',
   'esgotado',
   'incompreensivel',
@@ -31,11 +33,14 @@ export function rotuloDoEstado(estado: EstadoMineracao): string {
   return ROTULOS[estado]
 }
 
-export function montarProgresso(
-  doc: Document,
-  aoPausar: () => void,
-  aoAbrirResultados: () => void = () => {},
-): HTMLElement {
+export interface AcoesProgresso {
+  aoAlternarPausa: () => void
+  aoAbrirResultados: () => void
+  aoParar: () => void
+  aoMinerarNovamente: () => void
+}
+
+export function montarProgresso(doc: Document, acoes: AcoesProgresso): HTMLElement {
   const cartao = doc.createElement('div')
   cartao.className = 'progresso'
 
@@ -50,25 +55,12 @@ export function montarProgresso(
   barra.dataset.papel = 'barra'
   trilho.appendChild(barra)
 
-  const pausar = doc.createElement('button')
-  pausar.className = 'pausar'
-  pausar.dataset.acao = 'pausar'
-  pausar.textContent = 'Pausar'
-  pausar.addEventListener('click', (ev) => {
-    ev.stopPropagation()
-    aoPausar()
-  })
+  const pausar = botao(doc, 'pausar', 'Pausar', acoes.aoAlternarPausa)
+  pausar.hidden = false
 
-  const resultados = doc.createElement('button')
-  resultados.className = 'resultados'
-  resultados.dataset.acao = 'resultados'
-  resultados.textContent = 'Resultados'
-  resultados.hidden = true
+  // Só ganha vida quando o snapshot parcial ou final estiver gravado.
+  const resultados = botao(doc, 'resultados', 'Ver resultados', acoes.aoAbrirResultados)
   resultados.disabled = true
-  resultados.addEventListener('click', (ev) => {
-    ev.stopPropagation()
-    aoAbrirResultados()
-  })
 
   cartao.append(
     estado,
@@ -77,12 +69,34 @@ export function montarProgresso(
     contador(doc, 'analisados', 'analisados'),
     contador(doc, 'rolagens', 'rolagens'),
     pausar,
+    botao(doc, 'parar', 'Parar mineração', acoes.aoParar),
     resultados,
+    botao(doc, 'repetir', 'Minerar novamente', acoes.aoMinerarNovamente),
   )
 
   return cartao
 }
 
+/** Um botão do cartão; nasce escondido, `atualizarProgresso` decide quem aparece. */
+function botao(
+  doc: Document,
+  acao: string,
+  texto: string,
+  aoClicar: () => void,
+): HTMLButtonElement {
+  const el = doc.createElement('button')
+  el.className = acao
+  el.dataset.acao = acao
+  el.textContent = texto
+  el.hidden = true
+  el.addEventListener('click', (ev) => {
+    ev.stopPropagation()
+    aoClicar()
+  })
+  return el
+}
+
+/** Habilita o atalho; a visibilidade continua sendo decidida pelo estado. */
 export function liberarResultados(cartao: HTMLElement): void {
   const botao = cartao.querySelector<HTMLButtonElement>('[data-acao="resultados"]')
   if (!botao) return
@@ -114,11 +128,18 @@ export function atualizarProgresso(
     barra.style.width = `${Math.round(pct)}%`
   }
 
-  const pausar = cartao.querySelector<HTMLButtonElement>('[data-acao="pausar"]')
-  if (pausar) {
-    pausar.hidden = TERMINAIS.has(p.estado)
-    pausar.textContent = p.estado === 'pausado' ? 'Retomar' : 'Pausar'
+  const terminou = TERMINAIS.has(p.estado)
+  const mostrar = (acao: string, visivel: boolean): HTMLButtonElement | null => {
+    const el = cartao.querySelector<HTMLButtonElement>(`[data-acao="${acao}"]`)
+    if (el) el.hidden = !visivel
+    return el
   }
+
+  const pausar = mostrar('pausar', !terminou)
+  if (pausar) pausar.textContent = p.estado === 'pausado' ? 'Retomar' : 'Pausar'
+  mostrar('parar', p.estado === 'pausado')
+  mostrar('resultados', p.estado === 'pausado' || terminou)
+  mostrar('repetir', terminou)
 }
 
 function contador(doc: Document, papel: string, rotulo: string): HTMLElement {

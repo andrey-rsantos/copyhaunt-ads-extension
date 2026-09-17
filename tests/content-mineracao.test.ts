@@ -1,14 +1,21 @@
 /** @vitest-environment jsdom */
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { criarMinerador } from '../src/content/index'
+import { criarMinerador, iniciarMineracao } from '../src/content/index'
 import { CRITERIOS_PADRAO } from '../src/core/criteria'
+import { Minerador } from '../src/core/miner'
 import { AdStore } from '../src/core/store'
+
+vi.mock('../src/core/miner', async (importar) => {
+  const real = await importar<typeof import('../src/core/miner')>()
+  return { ...real, Minerador: vi.fn(class extends real.Minerador {}) }
+})
 
 vi.hoisted(() => {
   vi.stubGlobal('chrome', {
     runtime: {
       sendMessage: vi.fn(),
+      onMessage: { addListener: vi.fn() },
       getURL: vi.fn((caminho: string) => `chrome-extension://teste/${caminho}`),
     },
   })
@@ -54,4 +61,26 @@ describe('criarMinerador', () => {
     )).toThrow(RangeError)
   })
 
+  it('a primeira sessão também avalia IDs que já estão no store', () => {
+    const store = new AdStore()
+    store.adicionar([{
+      id: 'antigo',
+      iniciouEm: new Date('2026-08-01T12:00:00Z'),
+      colacao: 1,
+      anunciante: { pageId: 'p1', pageName: 'A' },
+      midias: [],
+      plataformas: [],
+      ativo: true,
+    }])
+    vi.mocked(Minerador).mockClear()
+
+    const m = iniciarMineracao(
+      { criterios: CRITERIOS_PADRAO, limiteEncontrados: 10 },
+      store,
+    )
+
+    expect(m.progresso().estado).toBe('parado')
+    expect(vi.mocked(Minerador)).toHaveBeenCalledTimes(1)
+    expect(vi.mocked(Minerador).mock.calls[0][0].idsAvaliadosInicialmente).toEqual([])
+  })
 })

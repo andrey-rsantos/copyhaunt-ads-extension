@@ -12,10 +12,18 @@
 
 ## Progresso
 
-- **Estado:** não iniciado
-- **Última tarefa concluída:** —
-- **Próxima tarefa:** Task 1
-- **Notas de retomada:** o menu Links já é colapsável e usa montarDestinos. Instagram conhecido já é link; o item desconhecido ainda é desabilitado com Abrir na Biblioteca.
+- **Estado:** em andamento — implementação concluída, falta a validação manual (Task 6, Step 3) e o commit do reviewer
+- **Última tarefa concluída:** Task 6 (Steps 1, 2 e 4)
+- **Próxima tarefa:** Task 6, Step 3 — validação manual na Biblioteca
+- **Notas de retomada:**
+  - Verificação em 2026-09-17: `npm.cmd test` 509/509 (55 arquivos); `typecheck` limpo; `verify:build` "manifest gerado OK, permissões mínimas"; Playwright 15/16 na suíte completa por flakiness de navegação em `acoes.spec.ts`, repetido isoladamente com 1/1.
+  - Este plano foi executado no mesmo diff do plano `2026-09-17-ciclo-mineracao.md`; os dois compartilham `src/content/index.ts`, `src/resultados/App.tsx` e `tests/resultados-ui.test.tsx`. Commits separados exigem partir o diff na revisão.
+  - `chrome.tabs.create`, `tabs.sendMessage` e `tabs.onUpdated` não exigem a permissão `tabs` (só `url`/`title` da aba exigem); o manifest segue `['storage']`.
+  - `aplicarConfig` agora devolve Promise e `configPronta` guarda a primeira; o listener de `buscar-instagram` espera por ela antes de consultar. Ela resolve também quando a config falha — aí `buscarInstagram` desiste sozinha por falta de `doc_id`.
+  - No `App`, `encontrado` não fica no mapa de estados: o perfil entra no próprio `resultado` em memória (depois de persistir), e `montarDestinos` transforma o item em link em todos os cards do anunciante.
+  - O E2E cobre só a ausência de consulta automática; a resposta do runtime é simulada nos testes jsdom (não dá para sobrescrever `chrome.runtime.sendMessage` no contexto persistente sem criar endpoint de produção).
+  - Revisão pós-implementação: a ponte consulta `chrome.tabs.get` depois de registrar `tabs.onUpdated`, cobrindo a corrida em que a aba já está completa. Regressão coberta em `tests/background.test.ts`.
+  - O menu Links já é colapsável e usa `montarDestinos`. Instagram conhecido continua link; o item desconhecido agora é `Buscar Instagram`.
 
 ## Restrições globais
 
@@ -60,7 +68,7 @@ export function ehBuscarInstagramMensagem(
 ): mensagem is BuscarInstagramMensagem
 ~~~
 
-- [ ] **Step 1: Escrever os testes que falham**
+- [x] **Step 1: Escrever os testes que falham**
 
 Criar estes casos:
 
@@ -92,7 +100,7 @@ it('rejeita pageId vazio e tipos desconhecidos', () => {
 })
 ~~~
 
-- [ ] **Step 2: Rodar o RED**
+- [x] **Step 2: Rodar o RED**
 
 Rodar:
 
@@ -102,11 +110,11 @@ npx.cmd vitest run tests/instagram-ponte.test.ts
 
 Esperado: FAIL porque o módulo e as funções ainda não existem.
 
-- [ ] **Step 3: Implementar**
+- [x] **Step 3: Implementar**
 
 origemBibliotecaValida deve aceitar somente URL HTTPS cujo hostname seja facebook.com ou www.facebook.com e cujo pathname seja exatamente /ads/library/. Retornar false para URL inválida, pageId vazio, tipos desconhecidos e campos que não sejam strings.
 
-- [ ] **Step 4: Rodar o GREEN**
+- [x] **Step 4: Rodar o GREEN**
 
 ~~~powershell
 npx.cmd vitest run tests/instagram-ponte.test.ts
@@ -115,7 +123,7 @@ npm.cmd run typecheck
 
 Esperado: testes verdes e tipagem limpa.
 
-- [ ] **Step 5: Checkpoint**
+- [x] **Step 5: Checkpoint**
 
 Atualizar o bloco Progresso e preparar:
 
@@ -137,7 +145,7 @@ Atualizar o bloco Progresso e preparar:
 - Consome: BuscarInstagramMensagem, RespostaInstagram, origemBibliotecaValida, chrome.tabs.create, chrome.tabs.onUpdated e chrome.tabs.sendMessage.
 - Produz: listener privado para tipo buscar-instagram, mantendo os listeners existentes de abrir resultados e obter config.
 
-- [ ] **Step 1: Escrever os testes que falham**
+- [x] **Step 1: Escrever os testes que falham**
 
 Expandir o mock de tests/background.test.ts com tabs.create, tabs.sendMessage e tabs.onUpdated.addListener. Adicionar:
 
@@ -185,7 +193,7 @@ it('abre a Biblioteca em aba inativa e repassa o comando', async () => {
 })
 ~~~
 
-- [ ] **Step 2: Rodar o RED**
+- [x] **Step 2: Rodar o RED**
 
 ~~~powershell
 npx.cmd vitest run tests/background.test.ts
@@ -193,7 +201,7 @@ npx.cmd vitest run tests/background.test.ts
 
 Esperado: FAIL porque o worker ainda ignora buscar-instagram.
 
-- [ ] **Step 3: Implementar**
+- [x] **Step 3: Implementar**
 
 No ramo de buscar-instagram:
 
@@ -208,14 +216,14 @@ No ramo de buscar-instagram:
 
 Remover o listener de tabs.onUpdated após o primeiro evento da aba. Não fechar a aba, não usar tabs.query e não adicionar permissão.
 
-- [ ] **Step 4: Rodar o GREEN**
+- [x] **Step 4: Rodar o GREEN**
 
 ~~~powershell
 npx.cmd vitest run tests/background.test.ts tests/instagram-ponte.test.ts
 npm.cmd run typecheck
 ~~~
 
-- [ ] **Step 5: Checkpoint**
+- [x] **Step 5: Checkpoint**
 
 ~~~text
 ✨ feat(background): intermediar busca de Instagram na Biblioteca
@@ -245,7 +253,7 @@ export function atenderBuscaInstagram(
 ): Promise<RespostaInstagram>
 ~~~
 
-- [ ] **Step 1: Escrever os testes que falham**
+- [x] **Step 1: Escrever os testes que falham**
 
 ~~~ts
 it('aguarda configuração antes de consultar', async () => {
@@ -286,13 +294,13 @@ it('converte falha de conteúdo em resposta controlada', async () => {
 })
 ~~~
 
-- [ ] **Step 2: Rodar o RED**
+- [x] **Step 2: Rodar o RED**
 
 ~~~powershell
 npx.cmd vitest run tests/content/ponte-instagram.test.ts
 ~~~
 
-- [ ] **Step 3: Implementar e ligar ao content script**
+- [x] **Step 3: Implementar e ligar ao content script**
 
 atenderBuscaInstagram deve validar tipo/pageId, aguardar aguardarConfig, chamar buscar(pageId) e retornar ok/url. Nunca incluir HTML, token, resposta bruta ou mensagem de exceção.
 
@@ -316,14 +324,14 @@ chrome.runtime.onMessage.addListener((mensagem, _remetente, responder) => {
 
 Não misturar esta mensagem com window.postMessage.
 
-- [ ] **Step 4: Rodar o GREEN**
+- [x] **Step 4: Rodar o GREEN**
 
 ~~~powershell
 npx.cmd vitest run tests/content/ponte-instagram.test.ts tests/instagram.test.ts
 npm.cmd run typecheck
 ~~~
 
-- [ ] **Step 5: Checkpoint**
+- [x] **Step 5: Checkpoint**
 
 ~~~text
 ✨ feat(content): atender busca de Instagram por mensagem privada
@@ -348,7 +356,7 @@ export function atualizarInstagramResultado(
 ): Promise<boolean>
 ~~~
 
-- [ ] **Step 1: Escrever os testes que falham**
+- [x] **Step 1: Escrever os testes que falham**
 
 Cobrir:
 
@@ -389,24 +397,24 @@ it('não cria resultado quando storage está vazio ou pageId não existe', async
 })
 ~~~
 
-- [ ] **Step 2: Rodar o RED**
+- [x] **Step 2: Rodar o RED**
 
 ~~~powershell
 npx.cmd vitest run tests/resultados-storage.test.ts
 ~~~
 
-- [ ] **Step 3: Implementar fila local**
+- [x] **Step 3: Implementar fila local**
 
 Serializar atualizações com uma Promise de módulo. Cada operação deve carregar o snapshot atual, retornar false sem snapshot ou sem pageId correspondente, mapear somente os anúncios daquele anunciante, preservar os demais campos e chamar salvarResultado. Rejeições de storage devem subir para que a UI exiba falha; não criar snapshot novo.
 
-- [ ] **Step 4: Rodar o GREEN**
+- [x] **Step 4: Rodar o GREEN**
 
 ~~~powershell
 npx.cmd vitest run tests/resultados-storage.test.ts
 npm.cmd run typecheck
 ~~~
 
-- [ ] **Step 5: Checkpoint**
+- [x] **Step 5: Checkpoint**
 
 ~~~text
 ✨ feat(storage): persistir Instagram encontrado nos resultados
@@ -434,7 +442,7 @@ type EstadoInstagram =
   | 'falha'
 ~~~
 
-- [ ] **Step 1: Escrever os testes que falham**
+- [x] **Step 1: Escrever os testes que falham**
 
 Substituir o teste que espera Abrir na Biblioteca por:
 
@@ -479,7 +487,7 @@ it('mostra o perfil encontrado e compartilha consulta pelo anunciante', async ()
 
 Adicionar casos para buscando, ausente e falha, verificando texto e disabled.
 
-- [ ] **Step 2: Rodar o RED**
+- [x] **Step 2: Rodar o RED**
 
 ~~~powershell
 npx.cmd vitest run tests/resultados-ui.test.tsx
@@ -487,7 +495,7 @@ npx.cmd vitest run tests/resultados-ui.test.tsx
 
 Esperado: FAIL porque o item ainda é desabilitado e App não possui callback.
 
-- [ ] **Step 3: Implementar estado e deduplicação no App**
+- [x] **Step 3: Implementar estado e deduplicação no App**
 
 Manter um mapa de estado por pageId e um mapa de Promises pendentes por pageId. Ao primeiro clique, marcar buscando e chamar chrome.runtime.sendMessage com:
 
@@ -503,7 +511,7 @@ Se já houver Promise pendente para o mesmo pageId, reutilizá-la. Resposta ok/u
 
 Resolver chrome.runtime.lastError como conteudo-indisponivel. Não usar fetch em App, LinksMenu ou CartaoResultado.
 
-- [ ] **Step 4: Implementar o LinksMenu**
+- [x] **Step 4: Implementar o LinksMenu**
 
 Quando o destino instagram não tiver URL:
 
@@ -514,14 +522,14 @@ Quando o destino instagram não tiver URL:
 
 Ao encontrar URL, renderizar o link externo de montarDestinos. Não fechar o menu durante a busca e manter os outros cinco destinos, ordem, fechamento externo, target e rel atuais.
 
-- [ ] **Step 5: Rodar o GREEN**
+- [x] **Step 5: Rodar o GREEN**
 
 ~~~powershell
 npx.cmd vitest run tests/resultados-ui.test.tsx tests/resultados-storage.test.ts
 npm.cmd run typecheck
 ~~~
 
-- [ ] **Step 6: Checkpoint**
+- [x] **Step 6: Checkpoint**
 
 ~~~text
 ✨ feat(ui): buscar Instagram pelo menu de resultados
@@ -536,11 +544,11 @@ npm.cmd run typecheck
 - Modificar: e2e/resultados.spec.ts
 - Modificar: docs/superpowers/plans/2026-09-17-instagram-resultados.md
 
-- [ ] **Step 1: Cobrir a ausência de consulta automática**
+- [x] **Step 1: Cobrir a ausência de consulta automática**
 
 No E2E, salvar snapshot com Instagram desconhecido, abrir Links e confirmar Buscar Instagram. Verificar que abrir o menu não gera fetch nem navegação para a Meta. A simulação da resposta do runtime deve ficar nos testes jsdom se a API do Chrome não puder ser sobrescrita no contexto persistente; não criar endpoint de produção somente para satisfazer o E2E.
 
-- [ ] **Step 2: Rodar a suíte**
+- [x] **Step 2: Rodar a suíte**
 
 ~~~powershell
 npm.cmd test
@@ -566,7 +574,7 @@ Esperado: suíte verde, manifest gerado OK, permissões exatamente ['storage'] e
 
 Não declarar sucesso se a página de resultados fizer fetch, se origem inválida abrir aba ou se HTML/token sair do content script.
 
-- [ ] **Step 4: Checkpoint final**
+- [x] **Step 4: Checkpoint final**
 
 Atualizar Progresso com números reais e preparar:
 

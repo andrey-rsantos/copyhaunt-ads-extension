@@ -2,7 +2,9 @@ import { describe, expect, it } from 'vitest'
 import {
   hidratarResultado,
   ordenarAnuncios,
+  rotuloDoResultado,
   serializarResultado,
+  type ResultadoLocal,
 } from '../src/core/resultados'
 import type { Ad } from '../src/core/types'
 
@@ -25,7 +27,34 @@ function anuncio(opcoes: Partial<Ad> = {}): Ad {
   }
 }
 
+function resultadoDeTeste(opcoes: Partial<ResultadoLocal> = {}): ResultadoLocal {
+  return {
+    origem: 'https://www.facebook.com/ads/library/?q=receitas',
+    estado: 'esgotado',
+    salvoEm: AGORA,
+    anuncios: [anuncio()],
+    ...opcoes,
+  }
+}
+
 describe('resultado', () => {
+  it('serializa e hidrata um snapshot interrompido', () => {
+    const resultado = resultadoDeTeste({ estado: 'interrompida' })
+    const hidratado = hidratarResultado(serializarResultado(resultado))
+
+    expect(hidratado?.estado).toBe('interrompida')
+    expect(hidratado?.anuncios).toHaveLength(resultado.anuncios.length)
+  })
+
+  it('traduz estados do snapshot para o cabeçalho', () => {
+    expect(rotuloDoResultado('pausado')).toBe('Resultados parciais — mineração pausada')
+    expect(rotuloDoResultado('interrompida')).toBe(
+      'Resultados parciais — mineração interrompida',
+    )
+    expect(rotuloDoResultado('concluido')).toBe('Mineração concluída')
+    expect(rotuloDoResultado('esgotado')).toBe('Fim dos resultados')
+  })
+
   it('serializa e hidrata iniciouEm sem perder os campos opcionais', () => {
     const persistido = serializarResultado({
       origem: 'https://www.facebook.com/ads/library/?q=receitas',

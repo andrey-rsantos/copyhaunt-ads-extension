@@ -7,6 +7,7 @@ export type EstadoMineracao =
   | 'parado'
   | 'minerando'
   | 'pausado'
+  | 'interrompida'
   | 'concluido'
   | 'esgotado'
   | 'incompreensivel'
@@ -50,7 +51,21 @@ export interface OpcoesMineracao {
   /** Quantos cards a Meta renderizou no DOM atual. */
   cardsNaTela: () => number
   aoProgredir?: (p: Progresso) => void
+  /**
+   * Fronteira de uma sessão nova: IDs que já passaram pelo crivo em sessões
+   * anteriores desta aba e não devem ser recontados.
+   */
+  idsAvaliadosInicialmente?: Iterable<string>
 }
+
+/** Estados dos quais o motor não sai por conta própria. */
+const TERMINAIS: ReadonlySet<EstadoMineracao> = new Set([
+  'interrompida',
+  'concluido',
+  'esgotado',
+  'incompreensivel',
+  'limite-seguranca',
+])
 
 /**
  * Conduz a mineração: rola, deixa a página pedir mais, e avalia o que
@@ -63,7 +78,9 @@ export interface OpcoesMineracao {
 export class Minerador {
   private estado: EstadoMineracao = 'parado'
   private rolagens = 0
-  private readonly avaliados = new Set<string>()
+  /** Só os desta sessão: a fronteira herdada não conta como trabalho feito. */
+  private analisados = 0
+  private readonly avaliados: Set<string>
   private readonly aprovados: Ad[] = []
   private laco: Promise<void> | null = null
   private avisarPendente: (() => void) | null = null
@@ -75,12 +92,13 @@ export class Minerador {
     if (!Number.isInteger(limite) || limite < 1 || limite > 100) {
       throw new RangeError('limiteEncontrados deve ser um inteiro entre 1 e 100')
     }
+    this.avaliados = new Set(opcoes.idsAvaliadosInicialmente ?? [])
   }
 
   progresso(): Progresso {
     return {
       estado: this.estado,
-      analisados: this.avaliados.size,
+      analisados: this.analisados,
       encontrados: this.aprovados.length,
       rolagens: this.rolagens,
     }
@@ -91,7 +109,25 @@ export class Minerador {
   }
 
   parar(): void {
-    if (this.estado === 'minerando') this.estado = 'pausado'
+    if (this.estado !== 'minerando') return
+    this.estado = 'pausado'
+    this.soltarEspera()
+    this.opcoes.aoProgredir?.(this.progresso())
+  }
+
+  /** Fim definitivo: diferente de `parar`, daqui não se retoma. */
+  interromper(): void {
+    if (this.estado !== 'minerando' && this.estado !== 'pausado') return
+    this.estado = 'interrompida'
+    this.soltarEspera()
+    this.opcoes.aoProgredir?.(this.progresso())
+  }
+
+  /** Acorda o laço preso na espera pelo lote, para ele ver o estado novo. */
+  private soltarEspera(): void {
+    const avisar = this.avisarPendente
+    this.avisarPendente = null
+    if (avisar) avisar()
   }
 
   /**
@@ -102,14 +138,13 @@ export class Minerador {
    * quase metade sem trazer nada.
    */
   avisarLote(): void {
-    const avisar = this.avisarPendente
-    this.avisarPendente = null
-    if (avisar) avisar()
+    this.soltarEspera()
   }
 
   /** Chamar duas vezes devolve o mesmo laço, não abre um segundo. */
   iniciar(): Promise<void> {
     if (this.laco) return this.laco
+    if (TERMINAIS.has(this.estado)) return Promise.resolve()
     this.estado = 'minerando'
     this.voltasVazias = 0
     this.alturaAnterior = this.opcoes.alturaDaPagina()
@@ -204,6 +239,7 @@ export class Minerador {
       if (this.aprovados.length >= o.limiteEncontrados) break
       if (this.avaliados.has(ad.id)) continue
       this.avaliados.add(ad.id)
+      this.analisados += 1
 
       const veredito = avaliar(ad, o.criterios, {
         presenca: o.store.presenca(ad.anunciante.pageId),

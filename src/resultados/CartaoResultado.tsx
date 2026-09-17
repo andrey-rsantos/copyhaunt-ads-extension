@@ -3,7 +3,7 @@ import { montarCopias, type ItemCopia } from '../core/copy'
 import { baixarCriativos } from '../content/download'
 import { diasAtivos, faixaBadge } from '../core/display'
 import type { Ad } from '../core/types'
-import { LinksMenu } from './LinksMenu'
+import { LinksMenu, type EstadoInstagram } from './LinksMenu'
 
 interface CartaoResultadoProps {
   ad: Ad
@@ -12,6 +12,8 @@ interface CartaoResultadoProps {
   presenca: number
   linksAbertos: boolean
   aoAlternarLinks: (aberto: boolean) => void
+  estadoInstagram?: EstadoInstagram
+  aoBuscarInstagram?: () => void
 }
 
 export function CartaoResultado({
@@ -21,6 +23,8 @@ export function CartaoResultado({
   presenca,
   linksAbertos,
   aoAlternarLinks,
+  estadoInstagram,
+  aoBuscarInstagram,
 }: CartaoResultadoProps): ReactElement {
   const [copiasAbertas, setCopiasAbertas] = useState(false)
   const [copiaConfirmada, setCopiaConfirmada] = useState<string | null>(null)
@@ -100,6 +104,8 @@ export function CartaoResultado({
             ad={ad}
             aberto={linksAbertos}
             aoAlternar={aoAlternarLinks}
+            estadoInstagram={estadoInstagram}
+            aoBuscarInstagram={aoBuscarInstagram}
           />
           <div className="copiar-menu">
             <button

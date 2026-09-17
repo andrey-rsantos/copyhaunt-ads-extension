@@ -22,7 +22,7 @@ function ad(id: string, colacao: number, pageId = 'p1'): Ad {
 /** Sem presença mínima, para os testes isolarem a colação. */
 const CRIT: Criterios = { ...CRITERIOS_PADRAO, presencaMinima: null }
 
-function montar(opts: Partial<Record<string, unknown>> = {}) {
+function montar(opts: Partial<OpcoesMineracao> = {}) {
   const store = new AdStore()
   const relogio = relogioDeTeste(AGORA)
   const rolar = vi.fn()
@@ -116,6 +116,51 @@ describe('Minerador', () => {
     await p
     expect(minerador.progresso().estado).toBe('pausado')
     expect(rolar).toHaveBeenCalledTimes(1)
+  })
+
+  it('interrompe a sessão e não permite retomada', async () => {
+    const { relogio, rolar, minerador } = montar({ maxRolagens: 10 })
+    const trabalho = minerador.iniciar()
+
+    await relogio.avancar(1000)
+    minerador.interromper()
+    await trabalho
+
+    expect(minerador.progresso().estado).toBe('interrompida')
+    expect(rolar).toHaveBeenCalledTimes(1)
+
+    const novaTentativa = minerador.iniciar()
+    await novaTentativa
+    expect(minerador.progresso().estado).toBe('interrompida')
+    expect(rolar).toHaveBeenCalledTimes(1)
+  })
+
+  it('interrompe uma mineração já pausada', async () => {
+    const { relogio, minerador } = montar({ maxRolagens: 10 })
+    const trabalho = minerador.iniciar()
+
+    await relogio.avancar(1000)
+    minerador.parar()
+    await trabalho
+    expect(minerador.progresso().estado).toBe('pausado')
+
+    minerador.interromper()
+    expect(minerador.progresso().estado).toBe('interrompida')
+  })
+
+  it('começa uma sessão ignorando IDs já processados', async () => {
+    const { store, relogio, minerador } = montar({
+      maxRolagens: 1,
+      idsAvaliadosInicialmente: ['antigo'],
+    })
+    store.adicionar([ad('antigo', 5), ad('novo', 5)])
+
+    const trabalho = minerador.iniciar()
+    await avancarCiclo(relogio, minerador)
+    await trabalho
+
+    expect(minerador.progresso().analisados).toBe(1)
+    expect(minerador.encontrados().map((item) => item.id)).toEqual(['novo'])
   })
 
   it('conclui ao atingir o limite de encontrados', async () => {

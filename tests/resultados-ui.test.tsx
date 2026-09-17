@@ -74,10 +74,32 @@ function resultadoComTresAnuncios(): ResultadoLocal {
 }
 
 function mapaStorage(resultado: ResultadoLocal | null): StorageLocal {
+  let guardado: unknown = resultado ? serializarResultado(resultado) : null
   return {
-    get: async () => (resultado ? serializarResultado(resultado) : null),
-    set: async () => {},
+    get: async () => guardado,
+    set: async (_chave, valor) => {
+      guardado = valor
+    },
   }
+}
+
+/** O runtime da extensão, respondendo o que o teste mandar. */
+function stubRuntime(responder?: (mensagem: unknown) => unknown) {
+  const enviar = vi.fn((_mensagem: unknown, callback: (resposta: unknown) => void) => {
+    if (responder) callback(responder(_mensagem))
+  })
+  vi.stubGlobal('chrome', { runtime: { sendMessage: enviar, lastError: undefined } })
+  return enviar
+}
+
+function semInstagram(): ResultadoLocal {
+  const resultado = resultadoComTresAnuncios()
+  for (const anuncio of resultado.anuncios) anuncio.anunciante.instagram = undefined
+  return resultado
+}
+
+function itemInstagram(): HTMLButtonElement {
+  return document.querySelector<HTMLButtonElement>('[data-link-chave="instagram"]')!
 }
 
 function renderizarComStorage(resultado: ResultadoLocal | null): void {
@@ -116,10 +138,124 @@ function clicar(seletor: string): void {
   act(() => document.querySelector<HTMLElement>(seletor)?.click())
 }
 
+describe('estado do snapshot', () => {
+  it.each([
+    ['pausado', 'Resultados parciais — mineração pausada'],
+    ['interrompida', 'Resultados parciais — mineração interrompida'],
+    ['concluido', 'Mineração concluída'],
+    ['esgotado', 'Fim dos resultados'],
+  ] as const)('exibe o estado %s no cabeçalho', async (estado, rotulo) => {
+    renderizarComStorage({
+      ...resultadoComTresAnuncios(),
+      estado,
+    })
+
+    await aguardarCards()
+    expect(
+      document.querySelector('[data-testid="resultado-estado"]')?.textContent,
+    ).toBe(rotulo)
+  })
+})
+
+
+describe('busca de Instagram pelo menu', () => {
+  it('mostra o perfil encontrado e compartilha consulta pelo anunciante', async () => {
+    const enviar = stubRuntime(() => ({ ok: true, url: 'https://www.instagram.com/oficial' }))
+    const resultado = semInstagram()
+    renderizarComStorage(resultado)
+    await aguardarCards()
+
+    // `antigo` e `criativo-mais-repetido` são do mesmo anunciante (p1).
+    const links = (id: string) =>
+      document.querySelector<HTMLButtonElement>(`[data-ad-id="${id}"] [data-acao="links"]`)!
+    act(() => links('antigo').click())
+    await act(async () => { itemInstagram().click() })
+
+    await vi.waitFor(() => expect(enviar).toHaveBeenCalledTimes(1))
+    expect(enviar.mock.calls[0][0]).toEqual({
+      tipo: 'buscar-instagram',
+      pageId: 'p1',
+      origem: resultado.origem,
+    })
+    await vi.waitFor(() => {
+      const link = document.querySelector<HTMLAnchorElement>('a[data-link-chave="instagram"]')
+      expect(link?.getAttribute('href')).toBe('https://www.instagram.com/oficial')
+      expect(link?.textContent).toBe('Instagram do anunciante')
+    })
+
+    // O outro card do mesmo anunciante já vem como link, sem nova consulta.
+    act(() => links('criativo-mais-repetido').click())
+    expect(
+      document.querySelector<HTMLAnchorElement>('a[data-link-chave="instagram"]')?.getAttribute('href'),
+    ).toBe('https://www.instagram.com/oficial')
+    expect(enviar).toHaveBeenCalledTimes(1)
+  })
+
+  it('mantém o menu aberto e o item ocupado enquanto busca', async () => {
+    let responder!: (resposta: unknown) => void
+    const enviar = vi.fn((_m: unknown, callback: (resposta: unknown) => void) => {
+      responder = callback
+    })
+    vi.stubGlobal('chrome', { runtime: { sendMessage: enviar, lastError: undefined } })
+
+    renderizarComStorage(semInstagram())
+    await aguardarCards()
+    clicar('[data-acao="links"]')
+    await act(async () => { itemInstagram().click() })
+
+    expect(itemInstagram().disabled).toBe(true)
+    expect(itemInstagram().textContent).toContain('Buscando Instagram…')
+
+    await act(async () => { responder({ ok: true, url: null }) })
+    expect(itemInstagram().disabled).toBe(true)
+    expect(itemInstagram().textContent).toContain('Instagram não encontrado')
+  })
+
+  it('mostra falha controlada quando a ponte não responde', async () => {
+    stubRuntime(() => ({ ok: false, motivo: 'aba-indisponivel' }))
+
+    renderizarComStorage(semInstagram())
+    await aguardarCards()
+    clicar('[data-acao="links"]')
+    await act(async () => { itemInstagram().click() })
+
+    await vi.waitFor(() => {
+      expect(itemInstagram().disabled).toBe(true)
+      expect(itemInstagram().textContent).toContain('Não foi possível buscar Instagram')
+    })
+  })
+
+  it('persiste o perfil encontrado no snapshot', async () => {
+    stubRuntime(() => ({ ok: true, url: 'https://www.instagram.com/oficial' }))
+    const resultado = semInstagram()
+    const storage = mapaStorage(resultado)
+    document.body.innerHTML = '<div id="root"></div>'
+    raiz = createRoot(document.querySelector('#root')!)
+    act(() => {
+      raiz?.render(<App storage={storage} agora={() => new Date('2026-09-17T12:00:00Z')} />)
+    })
+    await aguardarCards()
+    clicar('[data-acao="links"]')
+    await act(async () => { itemInstagram().click() })
+
+    await vi.waitFor(async () => {
+      const salvo = (await storage.get('copyhaunt:resultado:v1')) as {
+        anuncios: Array<{ anunciante: { pageId: string; instagram?: string } }>
+      }
+      expect(salvo.anuncios.map((a) => a.anunciante.instagram)).toEqual([
+        'https://www.instagram.com/oficial',
+        'https://www.instagram.com/oficial',
+        undefined,
+      ])
+    })
+  })
+})
+
 afterEach(() => {
   act(() => raiz?.unmount())
   raiz = null
   document.body.innerHTML = ''
+  vi.unstubAllGlobals()
 })
 
 describe('página de resultados', () => {
@@ -170,18 +306,17 @@ describe('página de resultados', () => {
     expect(document.querySelector('[data-link-chave]')).toBeNull()
   })
 
-  it('desabilita Instagram desconhecido e orienta a busca na Biblioteca', async () => {
-    const resultado = resultadoComTresAnuncios()
-    for (const anuncio of resultado.anuncios) anuncio.anunciante.instagram = undefined
-    renderizarComStorage(resultado)
-    await aguardarCards()
+  it('oferece Buscar Instagram somente por ação explícita', async () => {
+    const enviar = stubRuntime()
 
+    renderizarComStorage(semInstagram())
+    await aguardarCards()
     clicar('[data-acao="links"]')
-    const instagram = document.querySelector<HTMLButtonElement>(
-      '[data-link-chave="instagram"]',
-    )!
-    expect(instagram.disabled).toBe(true)
-    expect(instagram.textContent).toContain('Abrir na Biblioteca')
+
+    const instagram = itemInstagram()
+    expect(instagram.disabled).toBe(false)
+    expect(instagram.textContent).toContain('Buscar Instagram')
+    expect(enviar).not.toHaveBeenCalled()
   })
 
   it('mostra o termo da busca no cabeçalho e os dias como badge da imagem', async () => {
