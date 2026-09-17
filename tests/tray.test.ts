@@ -49,6 +49,21 @@ describe('plantarBandeja', () => {
     expect(host?.getAttribute(ATRIBUTO_ID)).toBe('652131454176487')
   })
 
+  it('reserva uma faixa no topo do card para a bandeja e o badge', () => {
+    // Sem a faixa, os dois cobrem a linha "Active" e o Library ID da Meta.
+    const c = card()
+    plantarBandeja(c, ad(), AGORA)
+    expect(c.style.paddingTop).toBe('46px')
+  })
+
+  it('não deixa o card esticar até a altura da linha da grade', () => {
+    // A grade da Meta é grid com altura de linha fixa: sem isto o card mais
+    // curto da linha ganha um vazio no rodapé.
+    const c = card()
+    plantarBandeja(c, ad(), AGORA)
+    expect(c.style.alignSelf).toBe('start')
+  })
+
   it('plantar duas vezes não duplica', () => {
     const c = card()
     plantarBandeja(c, ad(), AGORA)

@@ -174,6 +174,13 @@ export function plantarBandeja(
   if (getComputedStyle(card).position === 'static') {
     card.style.position = 'relative'
   }
+  // A faixa onde bandeja e badge moram sozinhos: 30 px de botão mais 8 px de
+  // cada lado. Sem ela, os dois cobrem a linha "Active" e o Library ID.
+  card.style.paddingTop = '46px'
+  // A grade da Meta é `grid` com altura de linha fixa por medição, e o card
+  // estica até preenchê-la — sobra um vazio no rodapé dos cards mais curtos.
+  // Com `start` o card abraça o conteúdo; a linha da grade continua da Meta.
+  card.style.alignSelf = 'start'
 
   const host = existente ?? document.createElement('div')
   host.setAttribute(ATRIBUTO_ID, ad.id)
