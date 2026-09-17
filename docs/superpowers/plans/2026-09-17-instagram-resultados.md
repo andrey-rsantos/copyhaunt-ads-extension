@@ -12,9 +12,9 @@
 
 ## Progresso
 
-- **Estado:** em andamento — implementação concluída, falta a validação manual (Task 6, Step 3) e o commit do reviewer
-- **Última tarefa concluída:** Task 6 (Steps 1, 2 e 4)
-- **Próxima tarefa:** Task 6, Step 3 — validação manual na Biblioteca
+- **Estado:** concluído
+- **Última tarefa concluída:** Task 6, Step 3 — validação manual na Biblioteca
+- **Próxima tarefa:** —
 - **Notas de retomada:**
   - Verificação em 2026-09-17: `npm.cmd test` 509/509 (55 arquivos); `typecheck` limpo; `verify:build` "manifest gerado OK, permissões mínimas"; Playwright 15/16 na suíte completa por flakiness de navegação em `acoes.spec.ts`, repetido isoladamente com 1/1.
   - Este plano foi executado no mesmo diff do plano `2026-09-17-ciclo-mineracao.md`; os dois compartilham `src/content/index.ts`, `src/resultados/App.tsx` e `tests/resultados-ui.test.tsx`. Commits separados exigem partir o diff na revisão.
@@ -24,6 +24,7 @@
   - O E2E cobre só a ausência de consulta automática; a resposta do runtime é simulada nos testes jsdom (não dá para sobrescrever `chrome.runtime.sendMessage` no contexto persistente sem criar endpoint de produção).
   - Revisão pós-implementação: a ponte consulta `chrome.tabs.get` depois de registrar `tabs.onUpdated`, cobrindo a corrida em que a aba já está completa. Regressão coberta em `tests/background.test.ts`.
   - O menu Links já é colapsável e usa `montarDestinos`. Instagram conhecido continua link; o item desconhecido agora é `Buscar Instagram`.
+  - Validação manual confirmada pelo responsável em 2026-09-17; commit final `4e1df0d` registrado.
 
 ## Restrições globais
 
@@ -560,7 +561,7 @@ git status --short
 
 Esperado: suíte verde, manifest gerado OK, permissões exatamente ['storage'] e nenhuma alteração inesperada.
 
-- [ ] **Step 3: Validar manualmente**
+- [x] **Step 3: Validar manualmente**
 
 1. abrir resultados com card sem Instagram;
 2. abrir Links e confirmar que nada ocorre;

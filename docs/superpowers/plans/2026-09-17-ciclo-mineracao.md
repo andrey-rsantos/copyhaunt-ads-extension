@@ -12,9 +12,9 @@
 
 ## Progresso
 
-- **Estado:** em andamento — implementação concluída, falta a conferência manual (Task 7, Step 2) e o commit do reviewer
-- **Última tarefa concluída:** Task 7 (Steps 1, 3 e 4)
-- **Próxima tarefa:** Task 7, Step 2 — conferência manual na Biblioteca
+- **Estado:** concluído
+- **Última tarefa concluída:** Task 7, Step 2 — conferência manual na Biblioteca
+- **Próxima tarefa:** —
 - **Notas de retomada:**
   - Verificação em 2026-09-17: `npm.cmd test` 509/509 (55 arquivos); `typecheck` limpo; `verify:build` "manifest gerado OK"; Playwright 15/16 na suíte completa por flakiness de navegação em `acoes.spec.ts`, repetido isoladamente com 1/1.
   - `parar()` e `interromper()` soltam a espera pelo lote (o laço acorda na hora, sem esperar o timeout) e `parar()` emite `aoProgredir` para o cartão virar `Retomar`. `iniciar()` não emite: ao retomar, `index.ts` atualiza o cartão por conta própria.
@@ -27,6 +27,8 @@
 
   - Ajuste de UX aprovado: `Minerar novamente` reabre a gaveta com os filtros da sessão anterior preenchidos; a nova sessão só começa após clicar novamente em `Iniciar mineração`.
   - Decisão de produto após validação manual: remover o filtro de Instagram da mineração; resultados finais devem ser liberados imediatamente, e a busca fica somente na tela de resultados.
+  - Validação manual confirmada pelo responsável em 2026-09-17; commit final `4e1df0d` registrado.
+  - Investigação inicial de carregamento em 2026-09-17: a Biblioteca real levou 3,1–4,2 s até `DOMContentLoaded`, entregou HTML de 1,5–2,0 MB e scripts JSON de até ~198 KB; `acharCards` custou ~11 ms em 8.311 elementos. O próximo alvo é iniciar após `body`/barra, sem esperar `DOMContentLoaded`, e depois reduzir repinturas completas por captura.
 
 ## Restrições globais
 
@@ -772,7 +774,7 @@ git status --short
 
 Esperado: todos os testes passam, `manifest gerado OK`, E2E verde e somente alterações deste plano aparecem no status.
 
-- [ ] **Step 2: Conferir manualmente os fluxos**
+- [x] **Step 2: Conferir manualmente os fluxos**
 
 Na Biblioteca:
 
