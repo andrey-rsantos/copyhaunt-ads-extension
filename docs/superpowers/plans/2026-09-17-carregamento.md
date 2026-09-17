@@ -3,9 +3,9 @@
 ## Progresso
 
 - **Estado:** em andamento
-- **Última tarefa concluída:** Task 2
-- **Próxima tarefa:** Task 3
-- **Notas de retomada:** Task 2 verificada em 2026-09-17: `npx.cmd vitest run tests/content/agendamento.test.ts` → 2/2; `npm.cmd test` → 57 arquivos, 514 testes; `npm.cmd run typecheck` limpo; observer.ts não precisou mudar. Task 1 verificada em 2026-09-17: `npx.cmd vitest run tests/content/arranque.test.ts` → 3/3; `npm.cmd test -- --run tests/content` → 14 arquivos, 102 testes; `npm.cmd test` → 56 arquivos, 512 testes; `npm.cmd run typecheck` limpo. Decisões: o fixture E2E da Task 3 precisará de `input[type="search"]` com ancestral contendo `[role="combobox"]` (é o que `acharLinhaDaBusca` exige; o HTML do plano não ancoraria); o RED da Task 3 será provado revertendo `src/content/index.ts` temporariamente para a versão de `main`.
+- **Última tarefa concluída:** Task 3
+- **Próxima tarefa:** Task 4
+- **Notas de retomada:** Task 3 verificada em 2026-09-17: RED provado com `src/content/index.ts` de `main` (host nunca anexado, timeout 10 s); GREEN `npx.cmd playwright test e2e/carregamento.spec.ts e2e/ssr.spec.ts` → 2/2 em duas rodadas. Métricas reais (ms desde o início da navegação): DOMContentLoaded 2740 / 2792; primeiro host anexado 1447 / 1588 (antes do DCL); primeira bandeja observável 4846 / 4799; 26 bandejas na primeira tela; lote do HTML 30. O fixture do E2E usa `input[type="search"]` + `[role="combobox"]` (o HTML do plano não ancoraria); os marcos são medidos por MutationObserver injetado via `addInitScript` (mede o instante real, não o intervalo de sondagem). Task 2 verificada em 2026-09-17: `npx.cmd vitest run tests/content/agendamento.test.ts` → 2/2; `npm.cmd test` → 57 arquivos, 514 testes; `npm.cmd run typecheck` limpo; observer.ts não precisou mudar. Task 1 verificada em 2026-09-17: `npx.cmd vitest run tests/content/arranque.test.ts` → 3/3; `npm.cmd test -- --run tests/content` → 14 arquivos, 102 testes; `npm.cmd test` → 56 arquivos, 512 testes; `npm.cmd run typecheck` limpo. Decisões: o fixture E2E da Task 3 precisará de `input[type="search"]` com ancestral contendo `[role="combobox"]` (é o que `acharLinhaDaBusca` exige; o HTML do plano não ancoraria); o RED da Task 3 será provado revertendo `src/content/index.ts` temporariamente para a versão de `main`.
 
 > **For agentic workers:** REQUIRED SUB-SKILL: use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (- [ ]) syntax for tracking.
 
@@ -363,7 +363,7 @@ Arquivos:
 - Alterar e2e/ssr.spec.ts para registrar métricas, sem limiar rígido
   dependente da rede.
 
-- [ ] **Step 1: escrever o teste E2E que falha no bootstrap antigo**
+- [x] **Step 1: escrever o teste E2E que falha no bootstrap antigo**
 
 Criar um cenário local no domínio permitido pela extensão. A página deverá
 ter um body e uma barra mínima antes de um script parser-blocking:
@@ -414,7 +414,7 @@ Se o seletor real do host for diferente, usar o atributo já emitido pelo
 componente e manter o contrato explícito no teste; não trocar por uma espera
 de tempo.
 
-- [ ] **Step 2: executar o E2E em RED**
+- [x] **Step 2: executar o E2E em RED**
 
 Executar:
 
@@ -425,14 +425,14 @@ npx.cmd playwright test e2e/carregamento.spec.ts
 Resultado esperado antes das Tasks 1 e 2: falha ou expiração do auto-wait,
 porque o bootstrap antigo só monta a interface depois de DOMContentLoaded.
 
-- [ ] **Step 3: executar GREEN e ajustar apenas o contrato necessário**
+- [x] **Step 3: executar GREEN e ajustar apenas o contrato necessário**
 
 Após as Tasks 1 e 2, executar novamente o mesmo comando. O host deverá ser
 anexado enquanto document.readyState ainda é loading. Se o teste falhar por
 causa do fixture ou da rota, corrigir o cenário mantendo a mesma propriedade:
 o script parser-blocking continua aberto até depois de o host ser detectado.
 
-- [ ] **Step 4: preservar o diagnóstico da Biblioteca real**
+- [x] **Step 4: preservar o diagnóstico da Biblioteca real**
 
 Em e2e/ssr.spec.ts, registrar com performance.now():
 
@@ -446,7 +446,7 @@ Usar locators e expect.poll/auto-waiting para detectar os marcos. Não usar
 waitForTimeout e não falhar o teste por um limite absoluto de segundos da Meta.
 Os valores deverão aparecer no output para comparação antes/depois.
 
-- [ ] **Step 5: executar os testes E2E relacionados**
+- [x] **Step 5: executar os testes E2E relacionados**
 
 Executar:
 
@@ -459,7 +459,7 @@ validação SSR existente. Se o teste conhecido de e2e/acoes.spec.ts for
 executado pela suíte completa e falhar apenas pela navegação instável,
 reexecutá-lo isoladamente antes de classificar a alteração como regressão.
 
-- [ ] **Step 6: checkpoint**
+- [x] **Step 6: checkpoint**
 
 Marcar os Steps 1 a 5 como [x], atualizar Progresso para Task 4 como próxima
 tarefa e registrar os tempos observados no diagnóstico.
