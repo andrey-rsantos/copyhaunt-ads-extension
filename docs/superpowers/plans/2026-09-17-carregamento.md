@@ -2,10 +2,10 @@
 
 ## Progresso
 
-- **Estado:** não iniciado
-- **Última tarefa concluída:** —
-- **Próxima tarefa:** Task 1
-- **Notas de retomada:** investigação concluída; o plano separa bootstrap antecipado, processamento SSR e coalescimento de repinturas.
+- **Estado:** em andamento
+- **Última tarefa concluída:** Task 1
+- **Próxima tarefa:** Task 2
+- **Notas de retomada:** Task 1 verificada em 2026-09-17: `npx.cmd vitest run tests/content/arranque.test.ts` → 3/3; `npm.cmd test -- --run tests/content` → 14 arquivos, 102 testes; `npm.cmd test` → 56 arquivos, 512 testes; `npm.cmd run typecheck` limpo. Decisões: o fixture E2E da Task 3 precisará de `input[type="search"]` com ancestral contendo `[role="combobox"]` (é o que `acharLinhaDaBusca` exige; o HTML do plano não ancoraria); o RED da Task 3 será provado revertendo `src/content/index.ts` temporariamente para a versão de `main`.
 
 > **For agentic workers:** REQUIRED SUB-SKILL: use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (- [ ]) syntax for tracking.
 
@@ -53,7 +53,7 @@ Arquivos:
 - Criar tests/content/arranque.test.ts.
 - Alterar src/content/index.ts.
 
-- [ ] **Step 1: escrever os testes que falham**
+- [x] **Step 1: escrever os testes que falham**
 
 Criar tests/content/arranque.test.ts com os contratos:
 
@@ -117,7 +117,7 @@ export function iniciarQuandoHouverBody(
 ): ControleArranque
 ~~~
 
-- [ ] **Step 2: executar a unidade em RED**
+- [x] **Step 2: executar a unidade em RED**
 
 Executar:
 
@@ -128,7 +128,7 @@ npx.cmd vitest run tests/content/arranque.test.ts
 Resultado esperado antes da implementação: falha porque src/content/arranque.ts
 e iniciarQuandoHouverBody ainda não existem.
 
-- [ ] **Step 3: implementar o helper mínimo**
+- [x] **Step 3: implementar o helper mínimo**
 
 Implementar src/content/arranque.ts com estas regras:
 
@@ -140,7 +140,7 @@ Implementar src/content/arranque.ts com estas regras:
   chamada posterior.
 - Não usar setTimeout, DOMContentLoaded ou atraso arbitrário.
 
-- [ ] **Step 4: integrar o bootstrap em src/content/index.ts**
+- [x] **Step 4: integrar o bootstrap em src/content/index.ts**
 
 Extrair as responsabilidades atuais para funções nomeadas:
 
@@ -174,7 +174,7 @@ Manter o listener de raw-capture, o registro do interceptor e o restante da
 configuração no mesmo nível de módulo. iniciarSsr deverá continuar sendo
 executado uma única vez.
 
-- [ ] **Step 5: executar a unidade em GREEN e as regressões de conteúdo**
+- [x] **Step 5: executar a unidade em GREEN e as regressões de conteúdo**
 
 Executar:
 
@@ -185,7 +185,7 @@ npm.cmd test -- --run tests/content
 
 Esperado: os testes do helper e os testes existentes de conteúdo passam.
 
-- [ ] **Step 6: checkpoint**
+- [x] **Step 6: checkpoint**
 
 Atualizar este plano:
 

@@ -7,6 +7,7 @@ import type { Captura } from '../interceptor/xhr-patch'
 import { lerFaixaDaUrl, montarUrlFiltro, rotuloDaFaixa } from '../core/dateFilter'
 import { precisaOrdenar, urlOrdenada } from '../core/ordenacao'
 import { acharCards, definirPadraoAncora } from './anchor'
+import { iniciarQuandoHouverBody } from './arranque'
 import { plantarEnxertos, type Enxerto, type Plantio } from './enxertos'
 import { abrirGaveta, alternarGaveta, fecharGaveta } from './gaveta'
 import { escreverNaBusca, montarExemplos } from './gaveta-exemplos'
@@ -414,21 +415,30 @@ window.postMessage(createMessage('content-ready', {}), location.origin)
 
 /**
  * O content script roda em `document_start`, quando `document.body` ainda não
- * existe — observar ali daria em nada. E os payloads chegam antes de a Meta
- * renderizar os cards, então a primeira pintura também precisa esperar.
+ * existe. A interface (enxertos, observador, primeira repintura) não depende
+ * do HTML da Meta — só do body existir — e sobe assim que ele nascer, sem
+ * esperar `DOMContentLoaded`. Já o lote embutido no SSR só existe quando a
+ * página termina de carregar, então essa leitura continua condicionada ao
+ * evento.
  */
-function iniciar(): void {
+function iniciarInterface(): void {
   configPronta = aplicarConfig()
   plantio = plantarEnxertos(document, montarEnxertos())
-  lerLoteInicial()
   garantirObservador()
   repintar()
 }
 
+function iniciarSsr(): void {
+  lerLoteInicial()
+  repintar()
+}
+
+iniciarQuandoHouverBody(document, iniciarInterface)
+
 if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', iniciar, { once: true })
+  document.addEventListener('DOMContentLoaded', iniciarSsr, { once: true })
 } else {
-  iniciar()
+  iniciarSsr()
 }
 
 console.info('[CopyHaunt] content script ativo')
