@@ -22,6 +22,51 @@ describe('processarCaptura', () => {
     expect(store.total()).toBe(r.novos)
   })
 
+  it('indexa uma busca que chega no segundo bloco de uma resposta deferred', () => {
+    const store = new AdStore()
+    const lote = readFileSync(join(PASTA, 'payload-01.json'), 'utf8')
+    const corpo = [
+      '{"data":{"page":null},"extensions":{"is_final":false}}',
+      lote,
+    ].join('\n')
+
+    const r = processarCaptura(
+      { url: 'https://www.facebook.com/api/graphql/', corpo },
+      store,
+    )
+
+    expect(r.tipo).toBe('busca')
+    expect(r.novos).toBeGreaterThan(0)
+    expect(store.total()).toBe(r.novos)
+  })
+
+  it('acumula anúncios de dois lotes deferred distintos no mesmo corpo', () => {
+    const primeiro = processarCaptura(
+      captura('payload-01.json'),
+      new AdStore(),
+    )
+    const segundo = processarCaptura(
+      captura('payload-02.json'),
+      new AdStore(),
+    )
+    const esperado = primeiro.novos + segundo.novos
+    const corpo = [
+      readFileSync(join(PASTA, 'payload-01.json'), 'utf8'),
+      readFileSync(join(PASTA, 'payload-02.json'), 'utf8'),
+    ].join('\n')
+    const store = new AdStore()
+
+    const r = processarCaptura(
+      { url: 'https://www.facebook.com/api/graphql/', corpo },
+      store,
+    )
+
+    expect(r.tipo).toBe('busca')
+    expect(r.novos).toBe(esperado)
+    expect(r.total).toBe(esperado)
+    expect(store.total()).toBe(esperado)
+  })
+
   it('soma ao longo de várias capturas', () => {
     const store = new AdStore()
     const a = processarCaptura(captura('payload-01.json'), store)

@@ -1,4 +1,5 @@
 import { ehEndpointDeAnuncios, type Captura } from '../interceptor/xhr-patch'
+import { extrairObjetosJson } from './json-stream'
 
 export type TipoCaptura =
   | 'busca'
@@ -22,11 +23,8 @@ export function classificar(captura: Captura): TipoCaptura {
 
   const corpo = captura.corpo.replace(PREFIXO_ANTI_SEQUESTRO, '')
 
-  try {
-    JSON.parse(corpo)
-  } catch {
-    return 'ignorar'
-  }
+  const objetos = extrairObjetosJson(captura.corpo)
+  if (objetos.length === 0) return 'ignorar'
 
   // A ordem importa. Uma resposta de busca também contém `collated_results`
   // dentro de cada nó — são campos diferentes: `collated_results` é o
