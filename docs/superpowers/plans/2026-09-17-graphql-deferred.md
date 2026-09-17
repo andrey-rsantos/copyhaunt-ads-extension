@@ -3,9 +3,9 @@
 ## Progresso
 
 - **Estado:** em andamento
-- **Última tarefa concluída:** Task 1 — parser JSON único/deferred
-- **Próxima tarefa:** Task 2
-- **Notas de retomada:** Parser criado em `src/core/json-stream.ts`; commit `ab8a9a5`; revisão da Task 1 aprovada após corrigir a instrução de checkpoint do executor.
+- **Última tarefa concluída:** Task 2 — integração e regressões deferred
+- **Próxima tarefa:** revisão final da branch e validação manual
+- **Notas de retomada:** Parser e integração concluídos; commits `ab8a9a5`, `fcf546a` e `8be4de8`; Vitest 528/528, typecheck e build aprovados. E2E 17/18 por falha pré-existente em onboarding.
 
 > **Para agentes:** SUBSKILL OBRIGATÓRIA: use `superpowers:subagent-driven-development` (recomendado) ou `superpowers:executing-plans` para executar este plano tarefa a tarefa. Os passos usam checkboxes (`- [ ]`) para acompanhamento.
 
@@ -168,7 +168,7 @@ Set-Content .commit-msg-codex "✨ feat(core): interpretar respostas JSON deferr
 - `processarCaptura(captura: Captura, store: AdStore): ResultadoCaptura` continua com a mesma assinatura e acumula anúncios encontrados em qualquer objeto JSON válido da captura.
 - `extrairObjetosJson` da Task 1 é a única fronteira de parsing; não duplicar lógica de `JSON.parse` nos consumidores.
 
-- [ ] **Step 1: Escrever regressões que falham**
+- [x] **Step 1: Escrever regressões que falham**
 
 Em `tests/router.test.ts`, adicionar um caso com dois objetos válidos separados por linha e o marcador no segundo:
 
@@ -210,7 +210,7 @@ it('indexa uma busca que chega no segundo bloco de uma resposta deferred', () =>
 })
 ```
 
-- [ ] **Step 2: Rodar as regressões para confirmar o RED**
+- [x] **Step 2: Rodar as regressões para confirmar o RED**
 
 Executar:
 
@@ -220,7 +220,7 @@ npm.cmd test -- tests/router.test.ts tests/pipeline.test.ts
 
 Esperado: os dois novos testes falham porque o roteador e o pipeline ainda tentam interpretar o corpo inteiro como um único JSON.
 
-- [ ] **Step 3: Integrar o parser no roteador**
+- [x] **Step 3: Integrar o parser no roteador**
 
 Em `src/core/router.ts`:
 
@@ -239,7 +239,7 @@ const corpo = captura.corpo.replace(PREFIXO_ANTI_SEQUESTRO, '')
 if (corpo.includes('search_results_connection')) return 'busca'
 ```
 
-- [ ] **Step 4: Integrar o parser no pipeline**
+- [x] **Step 4: Integrar o parser no pipeline**
 
 Em `src/content/pipeline.ts`:
 
@@ -260,7 +260,7 @@ const total = store.total()
 return { tipo, novos: total - antes, total }
 ```
 
-- [ ] **Step 5: Rodar os testes de integração**
+- [x] **Step 5: Rodar os testes de integração**
 
 Executar:
 
@@ -270,7 +270,7 @@ npm.cmd test -- tests/router.test.ts tests/pipeline.test.ts
 
 Esperado: todos os testes dos dois arquivos passando, incluindo os casos deferred.
 
-- [ ] **Step 6: Rodar a verificação completa**
+- [x] **Step 6: Rodar a verificação completa**
 
 Executar, nesta ordem:
 
@@ -283,7 +283,7 @@ npm.cmd run e2e
 
 Esperado: suíte Vitest, typecheck, build/manifest e E2E sem regressão. Se o E2E ao vivo falhar por instabilidade da Meta, registrar a saída exata e repetir apenas o spec afetado antes de concluir.
 
-- [ ] **Step 7: Fazer checkpoint**
+- [x] **Step 7: Fazer checkpoint**
 
 Como executor e reviewer são agentes distintos neste fluxo, o executor não deve
 criar o commit. Deve escrever a mensagem proposta em `.commit-msg-codex` e
