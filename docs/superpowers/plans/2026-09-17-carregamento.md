@@ -3,9 +3,9 @@
 ## Progresso
 
 - **Estado:** em andamento
-- **Última tarefa concluída:** Task 1
-- **Próxima tarefa:** Task 2
-- **Notas de retomada:** Task 1 verificada em 2026-09-17: `npx.cmd vitest run tests/content/arranque.test.ts` → 3/3; `npm.cmd test -- --run tests/content` → 14 arquivos, 102 testes; `npm.cmd test` → 56 arquivos, 512 testes; `npm.cmd run typecheck` limpo. Decisões: o fixture E2E da Task 3 precisará de `input[type="search"]` com ancestral contendo `[role="combobox"]` (é o que `acharLinhaDaBusca` exige; o HTML do plano não ancoraria); o RED da Task 3 será provado revertendo `src/content/index.ts` temporariamente para a versão de `main`.
+- **Última tarefa concluída:** Task 2
+- **Próxima tarefa:** Task 3
+- **Notas de retomada:** Task 2 verificada em 2026-09-17: `npx.cmd vitest run tests/content/agendamento.test.ts` → 2/2; `npm.cmd test` → 57 arquivos, 514 testes; `npm.cmd run typecheck` limpo; observer.ts não precisou mudar. Task 1 verificada em 2026-09-17: `npx.cmd vitest run tests/content/arranque.test.ts` → 3/3; `npm.cmd test -- --run tests/content` → 14 arquivos, 102 testes; `npm.cmd test` → 56 arquivos, 512 testes; `npm.cmd run typecheck` limpo. Decisões: o fixture E2E da Task 3 precisará de `input[type="search"]` com ancestral contendo `[role="combobox"]` (é o que `acharLinhaDaBusca` exige; o HTML do plano não ancoraria); o RED da Task 3 será provado revertendo `src/content/index.ts` temporariamente para a versão de `main`.
 
 > **For agentic workers:** REQUIRED SUB-SKILL: use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (- [ ]) syntax for tracking.
 
@@ -213,7 +213,7 @@ Arquivos:
 - Alterar a integração de src/content/observer.ts somente se o callback
   precisar receber a função agendada em vez de repintar diretamente.
 
-- [ ] **Step 1: escrever os testes que falham**
+- [x] **Step 1: escrever os testes que falham**
 
 Criar tests/content/agendamento.test.ts com scheduler controlado:
 
@@ -268,7 +268,7 @@ export function criarAgendadorRepintura(
 ): () => void
 ~~~
 
-- [ ] **Step 2: executar a unidade em RED**
+- [x] **Step 2: executar a unidade em RED**
 
 Executar:
 
@@ -279,7 +279,7 @@ npx.cmd vitest run tests/content/agendamento.test.ts
 Resultado esperado antes da implementação: falha porque o módulo e a função
 ainda não existem.
 
-- [ ] **Step 3: implementar o agendador puro**
+- [x] **Step 3: implementar o agendador puro**
 
 Implementar o estado mínimo:
 
@@ -300,7 +300,7 @@ O callback deverá liberar pendente antes de executar repintar, permitindo que
 uma solicitação gerada durante a pintura seja agendada para o próximo frame. O
 módulo não deverá acessar window, document ou timers.
 
-- [ ] **Step 4: conectar todas as origens ao mesmo agendador**
+- [x] **Step 4: conectar todas as origens ao mesmo agendador**
 
 Em src/content/index.ts, criar o adaptador de produção:
 
@@ -328,7 +328,7 @@ O observador deverá continuar observando a mesma raiz e usando os mesmos
 limites de segurança; apenas o callback recebido deverá ser agendarRepintura.
 Não remover a repintura após SSR.
 
-- [ ] **Step 5: executar GREEN e conferir comportamento**
+- [x] **Step 5: executar GREEN e conferir comportamento**
 
 Executar:
 
@@ -341,7 +341,7 @@ npm.cmd run typecheck
 Esperado: o agendador passa, os testes de conteúdo passam e o TypeScript não
 emite erros.
 
-- [ ] **Step 6: checkpoint**
+- [x] **Step 6: checkpoint**
 
 Marcar os Steps 1 a 5 como [x], atualizar o bloco Progresso para indicar Task 3
 como próxima tarefa e registrar as saídas.

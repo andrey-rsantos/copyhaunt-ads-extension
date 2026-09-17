@@ -7,6 +7,7 @@ import type { Captura } from '../interceptor/xhr-patch'
 import { lerFaixaDaUrl, montarUrlFiltro, rotuloDaFaixa } from '../core/dateFilter'
 import { precisaOrdenar, urlOrdenada } from '../core/ordenacao'
 import { acharCards, definirPadraoAncora } from './anchor'
+import { criarAgendadorRepintura } from './agendamento'
 import { iniciarQuandoHouverBody } from './arranque'
 import { plantarEnxertos, type Enxerto, type Plantio } from './enxertos'
 import { abrirGaveta, alternarGaveta, fecharGaveta } from './gaveta'
@@ -153,8 +154,22 @@ function repintar(): void {
  */
 function garantirObservador(): void {
   if (observacao) return
-  observacao = observarGrade(document.body, repintar, 300)
+  observacao = observarGrade(document.body, agendarRepintura, 300)
 }
+
+/**
+ * Ponto único de repintura: captura, observador da grade, SSR e a primeira
+ * pintura da interface pedem por aqui, nunca chamando `repintar()` direto.
+ * Assim várias solicitações seguidas — comuns quando a Meta troca dezenas de
+ * nós de uma vez — viram uma repintura só, no próximo frame.
+ */
+const agendarRepintura = criarAgendadorRepintura(repintar, (callback) => {
+  if (typeof window.requestAnimationFrame === 'function') {
+    window.requestAnimationFrame(callback)
+  } else {
+    window.setTimeout(callback, 0)
+  }
+})
 
 /**
  * Pede a config ao service worker e aplica o que dela depende.
@@ -229,7 +244,7 @@ window.addEventListener('message', (event) => {
     if (resultado.novos > 0) {
       console.info(`[CopyHaunt] indexados: ${resultado.total}`)
       motorAtual?.avisarLote()
-      repintar()
+      agendarRepintura()
     }
   }
 })
@@ -425,12 +440,12 @@ function iniciarInterface(): void {
   configPronta = aplicarConfig()
   plantio = plantarEnxertos(document, montarEnxertos())
   garantirObservador()
-  repintar()
+  agendarRepintura()
 }
 
 function iniciarSsr(): void {
   lerLoteInicial()
-  repintar()
+  agendarRepintura()
 }
 
 iniciarQuandoHouverBody(document, iniciarInterface)
