@@ -1,4 +1,4 @@
-import { lerFaixaDaUrl, rotuloDaFaixa } from './dateFilter'
+import { lerFaixaDaUrl, rotuloDaFaixa, type FaixaDias } from './dateFilter'
 
 /**
  * A linha "Vai varrer", que declara a URL herdada.
@@ -28,7 +28,11 @@ const STATUS: Record<string, string> = {
   all: 'Ativos e inativos',
 }
 
-export function descreverBusca(url: string, agora: Date): string {
+export function descreverBusca(
+  url: string,
+  agora: Date,
+  faixaInformada?: FaixaDias,
+): string {
   const p = new URL(url).searchParams
   const partes: string[] = []
 
@@ -44,7 +48,7 @@ export function descreverBusca(url: string, agora: Date): string {
   const status = p.get('active_status')
   if (status) partes.push(STATUS[status] ?? status)
 
-  const faixa = lerFaixaDaUrl(url, agora)
+  const faixa = faixaInformada ?? lerFaixaDaUrl(url, agora)
   if (faixa.diasMin !== null || faixa.diasMax !== null) {
     partes.push(rotuloDaFaixa(faixa))
   }

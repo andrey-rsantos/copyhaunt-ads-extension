@@ -33,6 +33,69 @@ export interface Plantio {
   hospedeiro(): HTMLElement | null
 }
 
+const LARGURA_RESPONSIVA = 800
+
+interface EstiloResponsivo {
+  linha: HTMLElement
+  flexWrap: string
+  host: HTMLElement
+  flex: string
+  justifyContent: string
+}
+
+/**
+ * Em telas estreitas, a fila da Meta não pode disputar largura com a busca.
+ * O host vira uma segunda linha do mesmo container, sem depender da estrutura
+ * interna (que muda entre estados autenticado e público).
+ */
+function aplicarLayoutResponsivo(
+  doc: Document,
+  linha: HTMLElement,
+  host: HTMLElement,
+  estilos: Map<HTMLElement, EstiloResponsivo>,
+): void {
+  const janela = doc.defaultView
+  const estreita = (janela?.innerWidth ?? Number.POSITIVE_INFINITY) <= LARGURA_RESPONSIVA
+  const flexivel = janela
+    ? janela.getComputedStyle(linha).display === 'flex' &&
+      janela.getComputedStyle(linha).flexDirection !== 'column'
+    : false
+
+  if (estreita && flexivel) {
+    if (!estilos.has(linha)) {
+      estilos.set(linha, {
+        linha,
+        flexWrap: linha.style.flexWrap,
+        host,
+        flex: host.style.flex,
+        justifyContent: host.style.justifyContent,
+      })
+    }
+
+    linha.style.flexWrap = 'wrap'
+    host.style.flex = '0 0 100%'
+    host.style.justifyContent = 'flex-end'
+    return
+  }
+
+  const original = estilos.get(linha)
+  if (!original) return
+
+  linha.style.flexWrap = original.flexWrap
+  host.style.flex = original.flex
+  host.style.justifyContent = original.justifyContent
+  estilos.delete(linha)
+}
+
+function restaurarLayoutResponsivo(estilos: Map<HTMLElement, EstiloResponsivo>): void {
+  for (const original of estilos.values()) {
+    original.linha.style.flexWrap = original.flexWrap
+    original.host.style.flex = original.flex
+    original.host.style.justifyContent = original.justifyContent
+  }
+  estilos.clear()
+}
+
 function montarHost(doc: Document, enxertos: Enxerto[]): HTMLElement {
   const host = doc.createElement('div')
   host.id = ID_ENXERTOS
@@ -77,6 +140,7 @@ export function plantarEnxertos(
 ): Plantio {
   let observacao: Observacao | null = null
   let parado = false
+  const estilosResponsivos = new Map<HTMLElement, EstiloResponsivo>()
 
   const plantar = (): void => {
     if (parado) return
@@ -85,11 +149,16 @@ export function plantarEnxertos(
     if (!linha) return
 
     const existente = doc.getElementById(ID_ENXERTOS)
-    if (existente?.parentElement === linha) return
+    if (existente?.parentElement === linha) {
+      aplicarLayoutResponsivo(doc, linha, existente, estilosResponsivos)
+      return
+    }
 
     // Host órfão de um plantio anterior, numa barra que a Meta já descartou.
     existente?.remove()
-    linha.appendChild(montarHost(doc, enxertos))
+    const host = montarHost(doc, enxertos)
+    linha.appendChild(host)
+    aplicarLayoutResponsivo(doc, linha, host, estilosResponsivos)
   }
 
   plantar()
@@ -104,6 +173,7 @@ export function plantarEnxertos(
       parado = true
       observacao?.parar()
       doc.defaultView?.removeEventListener('resize', plantar)
+      restaurarLayoutResponsivo(estilosResponsivos)
       doc.getElementById(ID_ENXERTOS)?.remove()
     },
     hospedeiro: () => doc.getElementById(ID_ENXERTOS),

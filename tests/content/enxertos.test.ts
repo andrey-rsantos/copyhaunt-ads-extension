@@ -49,6 +49,21 @@ function doisEnxertos(aoClicar = () => {}): Enxerto[] {
 }
 
 describe('plantarEnxertos', () => {
+  it('reflui os enxertos para uma segunda linha em viewport estreita', () => {
+    montarBarra()
+    Object.defineProperty(window, 'innerWidth', {
+      configurable: true,
+      value: 752,
+    })
+
+    plantio = plantarEnxertos(document, doisEnxertos())
+
+    const host = document.getElementById(ID_ENXERTOS)
+    expect(host?.parentElement?.style.flexWrap).toBe('wrap')
+    expect(host?.style.flex).toBe('0 0 100%')
+    expect(host?.style.justifyContent).toBe('flex-end')
+  })
+
   it('planta o host dentro da fila da busca', () => {
     montarBarra()
     plantio = plantarEnxertos(document, doisEnxertos())

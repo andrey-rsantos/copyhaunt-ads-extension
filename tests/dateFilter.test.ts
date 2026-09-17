@@ -1,9 +1,11 @@
 import { describe, expect, it } from 'vitest'
 import {
   lerFaixaDaUrl,
+  lerFaixaPersistida,
   montarUrlFiltro,
   PRESETS,
   rotuloDaFaixa,
+  salvarFaixaPersistida,
 } from '../src/core/dateFilter'
 
 const AGORA = new Date('2026-09-10T12:00:00Z')
@@ -130,5 +132,59 @@ describe('lerFaixaDaUrl', () => {
         agora,
       ),
     ).toEqual({ diasMin: null, diasMax: null })
+  })
+})
+
+describe('persistência do tempo ativo', () => {
+  function armazenamento(): Storage {
+    const dados = new Map<string, string>()
+    return {
+      getItem: (chave) => dados.get(chave) ?? null,
+      setItem: (chave, valor) => void dados.set(chave, valor),
+      removeItem: (chave) => void dados.delete(chave),
+      clear: () => void dados.clear(),
+      key: (indice) => [...dados.keys()][indice] ?? null,
+      get length() {
+        return dados.size
+      },
+    }
+  }
+
+  it('recupera o preset mesmo quando a Meta deixa a data sem valor', () => {
+    const storage = armazenamento()
+    const origem = 'https://www.facebook.com/ads/library/?q=receitas&country=BR'
+    salvarFaixaPersistida(origem, { diasMin: 14, diasMax: null }, storage)
+
+    expect(
+      lerFaixaPersistida(
+        `${origem}&start_date[max]&start_date[min]`,
+        storage,
+      ),
+    ).toEqual({ diasMin: 14, diasMax: null })
+  })
+
+  it('não reaproveita o preset em outra busca da mesma aba', () => {
+    const storage = armazenamento()
+    salvarFaixaPersistida(
+      'https://www.facebook.com/ads/library/?q=receitas',
+      { diasMin: 14, diasMax: null },
+      storage,
+    )
+
+    expect(
+      lerFaixaPersistida(
+        'https://www.facebook.com/ads/library/?q=suplementos',
+        storage,
+      ),
+    ).toBeNull()
+  })
+
+  it('permite limpar o preset salvo', () => {
+    const storage = armazenamento()
+    const origem = 'https://www.facebook.com/ads/library/?q=receitas'
+    salvarFaixaPersistida(origem, { diasMin: 14, diasMax: null }, storage)
+    salvarFaixaPersistida(origem, { diasMin: null, diasMax: null }, storage)
+
+    expect(lerFaixaPersistida(origem, storage)).toEqual({ diasMin: null, diasMax: null })
   })
 })

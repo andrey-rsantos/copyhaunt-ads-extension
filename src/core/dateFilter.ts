@@ -20,6 +20,8 @@ export interface FaixaDias {
 /** 3 e 5 dias, depois 2 semanas, 1 mês e 2 meses. */
 export const PRESETS = [3, 5, 14, 30, 60]
 
+const CHAVE_PERSISTENCIA = 'copyhaunt.tempo-ativo'
+
 const UM_DIA = 24 * 60 * 60 * 1000
 
 function iso(d: Date): string {
@@ -91,6 +93,72 @@ export function lerFaixaDaUrl(url: string, agora: Date): FaixaDias {
   return {
     diasMin: diasDesde(p.get('start_date[max]'), agora),
     diasMax: diasDesde(p.get('start_date[min]'), agora),
+  }
+}
+
+/**
+ * Identifica a busca sem depender dos parâmetros de data que a Meta altera ou
+ * remove depois de navegar. A ordenação também é ignorada porque é um detalhe
+ * aplicado pela extensão, não uma busca diferente.
+ */
+function chaveDaBusca(urlAtual: string): string {
+  const url = new URL(urlAtual)
+  for (const nome of [
+    'start_date[max]',
+    'start_date[min]',
+    'sort_data[mode]',
+    'sort_data[direction]',
+  ]) {
+    url.searchParams.delete(nome)
+  }
+  url.searchParams.sort()
+  return url.toString()
+}
+
+/** Salva a escolha do usuário na sessão da aba, fora da URL da Meta. */
+export function salvarFaixaPersistida(
+  urlAtual: string,
+  faixa: FaixaDias,
+  armazenamento: Storage,
+): void {
+  try {
+    armazenamento.setItem(
+      CHAVE_PERSISTENCIA,
+      JSON.stringify({ chave: chaveDaBusca(urlAtual), faixa }),
+    )
+  } catch {
+    // A URL continua sendo um fallback válido se o armazenamento estiver
+    // indisponível ou bloqueado pelo navegador.
+  }
+}
+
+/**
+ * Recupera o preset salvo para a busca atual. `null` significa que ainda não
+ * existe escolha persistida ou que ela pertence a outra busca.
+ */
+export function lerFaixaPersistida(
+  urlAtual: string,
+  armazenamento: Storage,
+): FaixaDias | null {
+  try {
+    const bruto = armazenamento.getItem(CHAVE_PERSISTENCIA)
+    if (!bruto) return null
+
+    const salvo = JSON.parse(bruto) as {
+      chave?: unknown
+      faixa?: { diasMin?: unknown; diasMax?: unknown }
+    }
+    if (salvo.chave !== chaveDaBusca(urlAtual)) return null
+    if (!Number.isInteger(salvo.faixa?.diasMin) && salvo.faixa?.diasMin !== null) {
+      return null
+    }
+    if (salvo.faixa?.diasMax !== null) return null
+
+    const diasMin = salvo.faixa.diasMin as number | null
+    if (diasMin !== null && !PRESETS.includes(diasMin)) return null
+    return { diasMin, diasMax: null }
+  } catch {
+    return null
   }
 }
 

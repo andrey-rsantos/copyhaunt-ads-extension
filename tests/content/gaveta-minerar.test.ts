@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 import { describe, expect, it, vi } from 'vitest'
 import { montarMinerar } from '../../src/content/gaveta-minerar'
+import { salvarFaixaPersistida } from '../../src/core/dateFilter'
 
 const agora = new Date('2026-09-10T12:00:00Z')
 const URL_ATUAL =
@@ -80,6 +81,23 @@ describe('montarMinerar', () => {
     el.querySelector<HTMLElement>('[data-acao="iniciar"]')?.click()
 
     expect(espiao.mock.calls[0][0].criterios.diasMin).toBe(7)
+  })
+
+  it('herda o preset salvo quando a Meta remove o valor da URL', () => {
+    salvarFaixaPersistida(URL_ATUAL, { diasMin: 14, diasMax: null }, sessionStorage)
+    const espiao = vi.fn()
+    const el = montarMinerar(
+      document,
+      `${URL_ATUAL}&start_date[max]&start_date[min]`,
+      agora,
+      espiao,
+    )
+
+    expect(el.querySelector('[data-papel="vai-varrer"]')?.textContent).toContain('14+ dias no ar')
+    el.querySelector<HTMLElement>('[data-acao="iniciar"]')?.click()
+
+    expect(espiao.mock.calls[0][0].criterios.diasMin).toBe(14)
+    sessionStorage.clear()
   })
 
   it('alvo fora de 1 a 100 não inicia e avisa', () => {

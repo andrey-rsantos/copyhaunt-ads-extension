@@ -16,7 +16,7 @@ const PAGINA_FALSA = `
 const URL_ALVO =
   'https://www.facebook.com/ads/library/?active_status=active&q=emagrecer'
 
-test('o atalho do calendário reescreve a URL da Biblioteca', async ({
+test('o preset do calendário reescreve a URL sem limite máximo', async ({
   context,
 }) => {
   const page = await context.newPage()
@@ -29,17 +29,20 @@ test('o atalho do calendário reescreve a URL da Biblioteca', async ({
   await expect(host).toBeAttached({ timeout: 10_000 })
 
   await host.locator('[data-chave="calendario"]').click()
-  await host.locator('[data-preset="3"]').click()
+  await expect(host.locator('[data-preset="14"]')).toHaveText('14+ Dias')
+  await host.locator('[data-preset="14"]').click()
   await host.locator('[data-acao="aplicar"]').click()
 
-  // A Meta recarrega com o corte; a busca do usuário sobrevive.
   await expect
     .poll(() => decodeURIComponent(page.url()), { timeout: 10_000 })
     .toContain('start_date[max]=')
+  expect(page.url()).not.toContain('start_date[min]=')
   expect(page.url()).toContain('q=emagrecer')
 })
 
-test('o máximo de dias corta pela data mínima', async ({ context }) => {
+test('o preset selecionado permanece marcado após recarregar', async ({
+  context,
+}) => {
   const page = await context.newPage()
   await page.route('https://www.facebook.com/ads/library/**', (route) =>
     route.fulfill({ contentType: 'text/html', body: PAGINA_FALSA }),
@@ -48,13 +51,18 @@ test('o máximo de dias corta pela data mínima', async ({ context }) => {
 
   const host = page.locator('#copyhaunt-enxertos')
   await expect(host).toBeAttached({ timeout: 10_000 })
-
   await host.locator('[data-chave="calendario"]').click()
-  await host.locator('[data-campo="diasMin"]').fill('')
-  await host.locator('[data-campo="diasMax"]').fill('3')
+  await host.locator('[data-preset="14"]').click()
   await host.locator('[data-acao="aplicar"]').click()
+  await expect.poll(() => page.url(), { timeout: 10_000 }).toContain('start_date')
 
-  await expect
-    .poll(() => decodeURIComponent(page.url()), { timeout: 10_000 })
-    .toContain('start_date[min]=')
+  await page.reload()
+  const novoHost = page.locator('#copyhaunt-enxertos')
+  await expect(novoHost).toBeAttached({ timeout: 10_000 })
+  await novoHost.locator('[data-chave="calendario"]').click()
+
+  await expect(novoHost.locator('[data-preset="14"]')).toHaveAttribute(
+    'aria-pressed',
+    'true',
+  )
 })

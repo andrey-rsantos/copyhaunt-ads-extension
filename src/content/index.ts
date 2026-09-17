@@ -4,7 +4,14 @@ import { createMessage, isCopyHauntMessage } from '../core/messages'
 import { Minerador } from '../core/miner'
 import { AdStore } from '../core/store'
 import type { Captura } from '../interceptor/xhr-patch'
-import { lerFaixaDaUrl, montarUrlFiltro, rotuloDaFaixa } from '../core/dateFilter'
+import {
+  lerFaixaDaUrl,
+  lerFaixaPersistida,
+  montarUrlFiltro,
+  rotuloDaFaixa,
+  salvarFaixaPersistida,
+  type FaixaDias,
+} from '../core/dateFilter'
 import { precisaOrdenar, urlOrdenada } from '../core/ordenacao'
 import { acharCards, definirPadraoAncora } from './anchor'
 import { criarAgendadorRepintura } from './agendamento'
@@ -46,6 +53,15 @@ const SEM_CRITERIOS: Criterios = {
   diasMin: null,
   diasMax: null,
   presencaMinima: null,
+}
+
+/** A Meta pode apagar as datas da URL; a escolha da extensão vive na aba. */
+function faixaAtual(): FaixaDias {
+  const url = location.href
+  return (
+    lerFaixaPersistida(url, window.sessionStorage) ??
+    lerFaixaDaUrl(url, new Date())
+  )
 }
 
 /** O ritmo de fábrica. A config remota pode substituí-lo. */
@@ -339,14 +355,14 @@ function montarEnxertos(): Enxerto[] {
     },
     {
       chave: 'calendario',
-      glifo: rotuloDaFaixa(lerFaixaDaUrl(location.href, new Date())),
+      glifo: rotuloDaFaixa(faixaAtual()),
       titulo: 'Tempo ativo',
       variante: 'contorno',
       aoClicar: (botao) => {
         const shadow = botao.getRootNode() as ShadowRoot
-        const agora = new Date()
         alternarGaveta(shadow, botao, () =>
-          montarCalendario(document, lerFaixaDaUrl(location.href, agora), (f) => {
+          montarCalendario(document, faixaAtual(), (f) => {
+            salvarFaixaPersistida(location.href, f, window.sessionStorage)
             location.assign(montarUrlFiltro(location.href, f, new Date()))
           }),
         )

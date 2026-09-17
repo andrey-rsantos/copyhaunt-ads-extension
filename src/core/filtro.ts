@@ -37,6 +37,7 @@ export function lerComandoFiltro(valor: unknown): ComandoFiltro | null {
   const diasMin = ladoValido(bruto.diasMin)
   const diasMax = ladoValido(bruto.diasMax)
   if (diasMin === undefined || diasMax === undefined) return null
+  if (diasMax !== null) return null
 
   // Faixa invertida não filtra nada: devolveria a interseção vazia.
   if (diasMin !== null && diasMax !== null && diasMin > diasMax) return null

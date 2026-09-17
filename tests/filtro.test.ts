@@ -9,16 +9,9 @@ describe('lerComandoFiltro', () => {
     expect(lerComandoFiltro({ diasMin: 7, diasMax: null })).toEqual({ diasMin: 7, diasMax: null })
   })
 
-  it('aceita só o máximo', () => {
-    expect(lerComandoFiltro({ diasMin: null, diasMax: 7 })).toEqual({ diasMin: null, diasMax: 7 })
-  })
-
-  it('aceita a faixa', () => {
-    expect(lerComandoFiltro({ diasMin: 7, diasMax: 30 })).toEqual({ diasMin: 7, diasMax: 30 })
-  })
-
-  it('recusa faixa invertida', () => {
-    expect(lerComandoFiltro({ diasMin: 30, diasMax: 7 })).toBeNull()
+  it('recusa máximo e faixa fechada', () => {
+    expect(lerComandoFiltro({ diasMin: null, diasMax: 7 })).toBeNull()
+    expect(lerComandoFiltro({ diasMin: 7, diasMax: 30 })).toBeNull()
   })
 
   it('recusa fora do intervalo permitido', () => {
@@ -46,12 +39,6 @@ describe('urlDoComando', () => {
     expect(url.searchParams.get('start_date[min]')).toBeNull()
   })
 
-  it('aplica o máximo pela data mínima de início', () => {
-    const url = new URL(urlDoComando({ diasMin: null, diasMax: 3 }, BUSCA, agora))
-    expect(url.searchParams.get('start_date[min]')).toBe('2026-09-03')
-    expect(url.searchParams.get('start_date[max]')).toBeNull()
-  })
-
   it('preserva a busca do usuário', () => {
     const url = new URL(urlDoComando({ diasMin: 7, diasMax: null }, BUSCA, agora))
     expect(url.searchParams.get('q')).toBe('emagrecer')
@@ -59,7 +46,7 @@ describe('urlDoComando', () => {
   })
 
   it('troca o filtro anterior em vez de acumular', () => {
-    const antes = urlDoComando({ diasMin: null, diasMax: 3 }, BUSCA, agora)
+    const antes = 'https://www.facebook.com/ads/library/?q=x&start_date[min]=2020-01-01'
     const url = new URL(urlDoComando({ diasMin: 7, diasMax: null }, antes, agora))
     expect(url.searchParams.get('start_date[min]')).toBeNull()
     expect(url.searchParams.get('start_date[max]')).toBe('2026-08-30')

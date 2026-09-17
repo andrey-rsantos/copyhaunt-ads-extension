@@ -5,70 +5,52 @@ import { montarCalendario } from '../../src/content/gaveta-calendario'
 const VAZIA = { diasMin: null, diasMax: null }
 
 describe('montarCalendario', () => {
-  it('oferece os cinco atalhos da seção 7.2', () => {
+  it('oferece os cinco presets e a opção de limpar', () => {
     const el = montarCalendario(document, VAZIA, () => {})
     const atalhos = [...el.querySelectorAll('[data-preset]')].map(
       (a) => a.textContent,
     )
-    expect(atalhos).toEqual(['3+', '5+', '14+', '30+', '60+'])
+    expect(atalhos).toEqual(['Sem filtro', '3+ Dias', '5+ Dias', '14+ Dias', '30+ Dias', '60+ Dias'])
   })
 
-  it('parte dos valores recebidos', () => {
-    const el = montarCalendario(document, { diasMin: 7, diasMax: 30 }, () => {})
-    const min = el.querySelector<HTMLInputElement>('[data-campo="diasMin"]')
-    const max = el.querySelector<HTMLInputElement>('[data-campo="diasMax"]')
+  it('marca o preset em vigor', () => {
+    const el = montarCalendario(document, { diasMin: 14, diasMax: null }, () => {})
 
-    expect(min?.value).toBe('7')
-    expect(max?.value).toBe('30')
+    expect(el.querySelector('[data-preset="14"]')?.getAttribute('aria-pressed')).toBe('true')
+    expect(el.querySelector('[data-preset="5"]')?.getAttribute('aria-pressed')).toBe('false')
+    expect(el.querySelector<HTMLElement>('[data-preset="14"]')?.style.outline).toBe(
+      '2px solid #7C3AED',
+    )
+    expect(el.querySelector<HTMLElement>('[data-preset="5"]')?.style.outline).toBe('none')
   })
 
-  it('um atalho move o mínimo e não mexe no máximo', () => {
-    const el = montarCalendario(document, { diasMin: 3, diasMax: 30 }, () => {})
+  it('não mostra campos numéricos de mínimo ou máximo', () => {
+    const el = montarCalendario(document, VAZIA, () => {})
+
+    expect(el.querySelector('[data-campo="diasMin"]')).toBeNull()
+    expect(el.querySelector('[data-campo="diasMax"]')).toBeNull()
+  })
+
+  it('aplicar entrega o preset selecionado como mínimo sem máximo', () => {
+    const espiao = vi.fn()
+    const el = montarCalendario(document, VAZIA, espiao)
+
     el.querySelector<HTMLElement>('[data-preset="14"]')?.click()
-
-    const min = el.querySelector<HTMLInputElement>('[data-campo="diasMin"]')
-    const max = el.querySelector<HTMLInputElement>('[data-campo="diasMax"]')
-
-    expect(min?.value).toBe('14')
-    expect(max?.value).toBe('30')
-  })
-
-  it('aplicar entrega a faixa digitada', () => {
-    const espiao = vi.fn()
-    const el = montarCalendario(document, VAZIA, espiao)
-
-    const min = el.querySelector<HTMLInputElement>('[data-campo="diasMin"]')
-    if (min) min.value = '5'
-
+    expect(el.querySelector<HTMLElement>('[data-preset="14"]')?.style.outline).toBe(
+      '2px solid #7C3AED',
+    )
     el.querySelector<HTMLElement>('[data-acao="aplicar"]')?.click()
 
-    expect(espiao).toHaveBeenCalledWith({ diasMin: 5, diasMax: null })
+    expect(espiao).toHaveBeenCalledWith({ diasMin: 14, diasMax: null })
   })
 
-  it('campo vazio vira null, não zero', () => {
+  it('sem filtro entrega faixa vazia', () => {
     const espiao = vi.fn()
-    const el = montarCalendario(document, { diasMin: 7, diasMax: 30 }, espiao)
+    const el = montarCalendario(document, { diasMin: 14, diasMax: null }, espiao)
 
-    const max = el.querySelector<HTMLInputElement>('[data-campo="diasMax"]')
-    if (max) max.value = ''
-
+    el.querySelector<HTMLElement>('[data-preset="none"]')?.click()
     el.querySelector<HTMLElement>('[data-acao="aplicar"]')?.click()
 
-    expect(espiao).toHaveBeenCalledWith({ diasMin: 7, diasMax: null })
-  })
-
-  it('faixa invertida não aplica e avisa na própria gaveta', () => {
-    const espiao = vi.fn()
-    const el = montarCalendario(document, VAZIA, espiao)
-
-    const min = el.querySelector<HTMLInputElement>('[data-campo="diasMin"]')
-    const max = el.querySelector<HTMLInputElement>('[data-campo="diasMax"]')
-    if (min) min.value = '30'
-    if (max) max.value = '7'
-
-    el.querySelector<HTMLElement>('[data-acao="aplicar"]')?.click()
-
-    expect(espiao).not.toHaveBeenCalled()
-    expect(el.textContent).toContain('mínimo não pode ser maior')
+    expect(espiao).toHaveBeenCalledWith({ diasMin: null, diasMax: null })
   })
 })

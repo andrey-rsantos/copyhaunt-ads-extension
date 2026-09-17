@@ -1,6 +1,6 @@
 import { descreverBusca } from '../core/busca-descrita'
 import { CRITERIOS_PADRAO, type Criterios } from '../core/criteria'
-import { lerFaixaDaUrl } from '../core/dateFilter'
+import { lerFaixaDaUrl, lerFaixaPersistida } from '../core/dateFilter'
 
 /**
  * A gaveta do Minerar: os critérios que só nós temos, mais o alvo.
@@ -52,7 +52,10 @@ export function montarMinerar(
   const resumo = doc.createElement('div')
   resumo.className = 'nota'
   resumo.dataset.papel = 'vai-varrer'
-  resumo.textContent = `Vai varrer: ${descreverBusca(urlAtual, agora)}`
+  const faixa =
+    lerFaixaPersistida(urlAtual, window.sessionStorage) ??
+    lerFaixaDaUrl(urlAtual, agora)
+  resumo.textContent = `Vai varrer: ${descreverBusca(urlAtual, agora, faixa)}`
   raiz.appendChild(resumo)
 
   const aviso = doc.createElement('div')
@@ -76,8 +79,6 @@ export function montarMinerar(
     }
 
     aviso.hidden = true
-    const faixa = lerFaixaDaUrl(urlAtual, agora)
-
     aoIniciar({
       criterios: {
         colacaoMinima: ler(colacao),
