@@ -2,10 +2,10 @@
 
 ## Progresso
 
-- **Estado:** em andamento
-- **Última tarefa concluída:** Task 2 — integração e regressões deferred
-- **Próxima tarefa:** revisão final da branch e validação manual
-- **Notas de retomada:** Parser e integração concluídos; commits `ab8a9a5`, `fcf546a` e `8be4de8`; Vitest 528/528, typecheck e build aprovados. E2E 17/18 por falha pré-existente em onboarding.
+- **Estado:** concluído
+- **Última tarefa concluída:** validação manual SPA/SSR
+- **Próxima tarefa:** —
+- **Notas de retomada:** Correção validada no Chrome: pesquisa sem hard refresh indexou e pintou os cards. Commits `ab8a9a5`, `fcf546a` e `8be4de8`; Vitest 528/528, typecheck e build aprovados. E2E 17/18 por falha pré-existente em onboarding.
 
 > **Para agentes:** SUBSKILL OBRIGATÓRIA: use `superpowers:subagent-driven-development` (recomendado) ou `superpowers:executing-plans` para executar este plano tarefa a tarefa. Os passos usam checkboxes (`- [ ]`) para acompanhamento.
 
