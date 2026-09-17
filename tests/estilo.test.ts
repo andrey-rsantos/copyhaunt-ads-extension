@@ -55,3 +55,27 @@ describe('criarShadow', () => {
     expect(document.head.querySelector('style[data-copyhaunt]')).toBeNull()
   })
 })
+
+/**
+ * Cada host recebe só a sua folha. A folha compartilhada entre bandejas e
+ * enxertos colidiu três vezes pela classe `.botao` — a última deu aos
+ * enxertos o `width: 30px` da bandeja, e "Tempo ativo" não cabe em 30 px.
+ * jsdom não faz layout, então o teste lê o texto do <style> de fallback.
+ */
+describe('criarShadow separa as folhas', () => {
+  const css = (host: HTMLElement): string =>
+    criarShadow(host).querySelector('style')?.textContent ?? ''
+
+  it('o shadow dos enxertos não recebe as regras da bandeja', () => {
+    const host = document.createElement('div')
+    host.id = 'copyhaunt-enxertos'
+    expect(css(host)).not.toContain('width: 30px')
+    expect(css(host)).toContain(':host(#copyhaunt-enxertos)')
+  })
+
+  it('o shadow da bandeja não recebe as regras dos enxertos', () => {
+    const host = document.createElement('div')
+    expect(css(host)).toContain('width: 30px')
+    expect(css(host)).not.toContain(':host(#copyhaunt-enxertos)')
+  })
+})

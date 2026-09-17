@@ -272,38 +272,51 @@ export const CSS_PROGRESSO = `
   }
 `
 
-let folha: CSSStyleSheet | null = null
-
 /**
- * Uma folha construída para todos os shadow roots.
+ * Uma folha construída por tipo de host, adotada por todos os shadows dele.
  *
- * Construída uma vez e adotada por todos: com 25 cards na tela, duplicar o
- * CSS 25 vezes seria desperdício puro.
+ * Construída uma vez: com 25 cards na tela, duplicar o CSS 25 vezes seria
+ * desperdício. E uma por tipo, não uma só: a folha única colidiu três vezes
+ * pela classe `.botao` — a última deu aos enxertos o `width: 30px` da
+ * bandeja, e "Tempo ativo" não cabe em 30 px. Bandeja e enxertos nunca
+ * moram no mesmo shadow, então não há motivo para um ver o CSS do outro.
  */
-export function folhaCompartilhada(): CSSStyleSheet | null {
+const FOLHAS = {
+  bandeja: CSS_BANDEJA,
+  enxertos: CSS_ENXERTOS + CSS_GAVETA + CSS_PROGRESSO,
+} as const
+
+type TipoDeHost = keyof typeof FOLHAS
+
+const construidas: Partial<Record<TipoDeHost, CSSStyleSheet | null>> = {}
+
+function folhaConstruida(tipo: TipoDeHost): CSSStyleSheet | null {
   if (typeof CSSStyleSheet === 'undefined') return null
-  if (folha) return folha
+  if (tipo in construidas) return construidas[tipo] ?? null
   try {
-    folha = new CSSStyleSheet()
-    folha.replaceSync(CSS_BANDEJA + CSS_ENXERTOS + CSS_GAVETA + CSS_PROGRESSO)
-    return folha
+    const folha = new CSSStyleSheet()
+    folha.replaceSync(FOLHAS[tipo])
+    construidas[tipo] = folha
   } catch {
-    return null // navegador sem folha construída: cai para <style>
+    construidas[tipo] = null // navegador sem folha construída: cai para <style>
   }
+  return construidas[tipo] ?? null
 }
 
-/** Cria (ou reaproveita) o shadow root do host, já com o estilo dentro. */
+/** Cria (ou reaproveita) o shadow root do host, já com o estilo dele dentro. */
 export function criarShadow(host: HTMLElement): ShadowRoot {
   if (host.shadowRoot) return host.shadowRoot
 
+  const tipo: TipoDeHost =
+    host.id === 'copyhaunt-enxertos' ? 'enxertos' : 'bandeja'
   const shadow = host.attachShadow({ mode: 'open' })
-  const compartilhada = folhaCompartilhada()
+  const construida = folhaConstruida(tipo)
 
-  if (compartilhada && 'adoptedStyleSheets' in shadow) {
-    shadow.adoptedStyleSheets = [compartilhada]
+  if (construida && 'adoptedStyleSheets' in shadow) {
+    shadow.adoptedStyleSheets = [construida]
   } else {
     const style = document.createElement('style')
-    style.textContent = CSS_BANDEJA + CSS_ENXERTOS + CSS_GAVETA + CSS_PROGRESSO
+    style.textContent = FOLHAS[tipo]
     shadow.appendChild(style)
   }
 
