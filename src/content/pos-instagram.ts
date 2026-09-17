@@ -42,23 +42,33 @@ export async function filtrarPorInstagram(
   const paginas = [...new Set(aprovados.map((a) => a.anunciante.pageId))]
   if (paginas.length === 0) return []
 
-  const temInstagram = new Map<string, boolean>()
+  const perfis = new Map<string, string | null>()
+  const consultaFalhou = new Set<string>()
 
   for (const [i, pageId] of paginas.entries()) {
     if (i > 0) await deps.esperar(espaco)
 
     try {
       const perfil = await deps.consultar(pageId)
-      temInstagram.set(pageId, perfil !== null)
+      perfis.set(pageId, perfil)
     } catch {
       // Falha de rede não é ausência de Instagram. Descartar aqui apagaria um
       // aprovado legítimo por causa de um erro nosso; manter deixa o filtro
       // um pouco permissivo, que é o lado certo para errar.
-      temInstagram.set(pageId, true)
+      consultaFalhou.add(pageId)
     }
 
     deps.aoProgredir?.(i + 1, paginas.length)
   }
 
-  return aprovados.filter((a) => temInstagram.get(a.anunciante.pageId))
+  return aprovados
+    .filter((a) => consultaFalhou.has(a.anunciante.pageId) || perfis.get(a.anunciante.pageId))
+    .map((a) => {
+      const perfil = perfis.get(a.anunciante.pageId)
+      if (!perfil) return a
+      return {
+        ...a,
+        anunciante: { ...a.anunciante, instagram: perfil },
+      }
+    })
 }

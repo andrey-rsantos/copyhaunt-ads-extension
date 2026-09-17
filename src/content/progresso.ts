@@ -34,6 +34,7 @@ export function rotuloDoEstado(estado: EstadoMineracao): string {
 export function montarProgresso(
   doc: Document,
   aoPausar: () => void,
+  aoAbrirResultados: () => void = () => {},
 ): HTMLElement {
   const cartao = doc.createElement('div')
   cartao.className = 'progresso'
@@ -58,6 +59,17 @@ export function montarProgresso(
     aoPausar()
   })
 
+  const resultados = doc.createElement('button')
+  resultados.className = 'resultados'
+  resultados.dataset.acao = 'resultados'
+  resultados.textContent = 'Resultados'
+  resultados.hidden = true
+  resultados.disabled = true
+  resultados.addEventListener('click', (ev) => {
+    ev.stopPropagation()
+    aoAbrirResultados()
+  })
+
   cartao.append(
     estado,
     trilho,
@@ -65,9 +77,17 @@ export function montarProgresso(
     contador(doc, 'analisados', 'analisados'),
     contador(doc, 'rolagens', 'rolagens'),
     pausar,
+    resultados,
   )
 
   return cartao
+}
+
+export function liberarResultados(cartao: HTMLElement): void {
+  const botao = cartao.querySelector<HTMLButtonElement>('[data-acao="resultados"]')
+  if (!botao) return
+  botao.hidden = false
+  botao.disabled = false
 }
 
 export function atualizarProgresso(

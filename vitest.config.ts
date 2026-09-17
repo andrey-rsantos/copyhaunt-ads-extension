@@ -5,6 +5,6 @@ export default defineConfig({
     // Padrão continua node; arquivos que precisam de DOM declaram
     // `@vitest-environment jsdom` no topo.
     environment: 'node',
-    include: ['tests/**/*.test.ts'],
+    include: ['tests/**/*.test.{ts,tsx}'],
   },
 })

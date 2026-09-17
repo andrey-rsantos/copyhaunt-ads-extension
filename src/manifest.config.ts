@@ -21,6 +21,7 @@ export const manifest = {
   description: pkg.description,
   icons: { '128': 'icon-128.png' },
   permissions: ['storage'],
+  action: { default_title: 'Abrir resultados' },
   host_permissions: [AD_LIBRARY, CONFIG_REMOTA],
   background: {
     service_worker: 'src/background/index.ts',

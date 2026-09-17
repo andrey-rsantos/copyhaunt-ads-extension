@@ -8,7 +8,10 @@ export default defineConfig({
   plugins: [react(), tailwindcss(), crx({ manifest })],
   build: {
     rollupOptions: {
-      input: { panel: 'src/panel/index.html' },
+      input: {
+        panel: 'src/panel/index.html',
+        resultados: 'src/resultados/index.html',
+      },
     },
   },
 })

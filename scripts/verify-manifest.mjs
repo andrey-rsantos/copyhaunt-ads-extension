@@ -1,7 +1,15 @@
-import { readFileSync } from 'node:fs'
+import { existsSync, readFileSync } from 'node:fs'
 
 const manifest = JSON.parse(readFileSync('dist/manifest.json', 'utf8'))
 const falhas = []
+
+if (manifest.action?.default_title !== 'Abrir resultados') {
+  falhas.push('action.default_title deveria ser "Abrir resultados"')
+}
+
+if (!existsSync('dist/src/resultados/index.html')) {
+  falhas.push('dist/src/resultados/index.html não foi gerado')
+}
 
 const scripts = manifest.content_scripts ?? []
 const main = scripts.find((s) => s.world === 'MAIN')

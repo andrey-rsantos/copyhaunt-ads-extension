@@ -2,6 +2,7 @@
 import { describe, expect, it, vi } from 'vitest'
 import {
   atualizarProgresso,
+  liberarResultados,
   montarProgresso,
   rotuloDoEstado,
 } from '../../src/content/progresso'
@@ -34,6 +35,19 @@ describe('rotuloDoEstado', () => {
 })
 
 describe('cartão de progresso', () => {
+  it('começa sem resultado e libera o atalho quando solicitado', () => {
+    const c = montarProgresso(document, vi.fn(), vi.fn())
+    const botao = c.querySelector<HTMLButtonElement>('[data-acao="resultados"]')!
+
+    expect(botao.hidden).toBe(true)
+    expect(botao.disabled).toBe(true)
+
+    liberarResultados(c)
+
+    expect(botao.hidden).toBe(false)
+    expect(botao.disabled).toBe(false)
+  })
+
   it('mostra os três contadores', () => {
     const c = montarProgresso(document, () => {})
     atualizarProgresso(

@@ -12,10 +12,10 @@
 
 ## Progresso
 
-- **Estado:** não iniciado
-- **Última tarefa concluída:** —
-- **Próxima tarefa:** Task 1
-- **Notas de retomada:** —
+- **Estado:** concluído
+- **Última tarefa concluída:** Task 8 — abrir resultados pelo service worker (correção pós-revisão)
+- **Próxima tarefa:** —
+- **Notas de retomada:** Task 1 implementada com codec versionado, hidratação defensiva e ordenação estável sobre `AdStore`. Task 2 usa `chrome.storage.local` apenas no adaptador e registra falhas de leitura/gravação. Task 3 concentrou a guarda de estado, pós-filtro, persistência e liberação em `finalizarResultado` para manter a ordem testável. Task 4 registrou a entrada, ação e listener. Task 5 expandiu o include do Vitest para descobrir testes `.tsx` e usa `ReactElement` por compatibilidade com React 19. Task 6 adicionou 2 testes E2E; o RED previsto não ocorreu porque a implementação da jornada já estava verde após a Task 5. Task 7 (2026-09-17): `npm test` 52 arquivos / 463 testes, typecheck limpo, `verify:build` OK, Playwright 14/14. Na primeira rodada do Codex o `pipeline.spec.ts` falhou por instabilidade da Meta ao vivo (1 indexação em vez de 2); na rodada seguinte passou sem alteração de código. Ajuste na revisão: `dispararMineracao` volta a sair cedo quando a mineração termina pausada, em vez de logar "0 aprovados finais". Nenhum `fetch` de Instagram em `src/resultados/`; o único `fetch` ali é o de `baixarCriativos`. Task 8 (2026-09-17): teste manual revelou que `window.open` do content script é bloqueado; abertura passou a ser exclusiva do service worker via mensagem `abrir-resultados`.
 
 ## Restrições globais
 
@@ -42,7 +42,7 @@
 - Consome: `Ad`, `AdStore`, `EstadoMineracao` e `diasAtivos` existentes.
 - Produz: `CHAVE_RESULTADO`, `ResultadoPersistidoV1`, `ResultadoLocal`, `OrdenacaoResultado`, `serializarResultado`, `hidratarResultado` e `ordenarAnuncios`.
 
-- [ ] **Step 1: Escrever os testes que falham**
+- [x] **Step 1: Escrever os testes que falham**
 
 Cobrir pelo menos:
 
@@ -82,13 +82,13 @@ Os helpers de teste devem criar `Ad` reais, com `colacaoId` e `pageId` variados,
 
 No topo do arquivo de teste, definir `AGORA`, `INICIO`, `DIAS_7_ATRAS`, `DIAS_30_ATRAS` e `DIAS_90_ATRAS` como `Date` determinísticas e um helper `anuncio(opcoes: Partial<...> = {}): Ad` que parte de um anúncio válido, aplica `id`, `iniciouEm`, `colacao`, `colacaoId` e `pageId`, e retorna `Ad` completo com `midias: []`.
 
-- [ ] **Step 2: Rodar os testes e confirmar que falham**
+- [x] **Step 2: Rodar os testes e confirmar que falham**
 
 Rodar: `npx.cmd vitest run tests/resultados.test.ts`
 
 Esperado: FAIL porque `src/core/resultados.ts` ainda não existe.
 
-- [ ] **Step 3: Escrever a implementação mínima**
+- [x] **Step 3: Escrever a implementação mínima**
 
 Usar estes contratos:
 
@@ -116,13 +116,13 @@ export interface ResultadoLocal {
 
 `ordenarAnuncios` deve reconstruir um `AdStore`, adicionar todos os anúncios e ordenar uma cópia estável por `diasAtivos`, `store.colacaoDe` ou `store.presenca`, sempre descendente. Em empate, preservar a ordem original.
 
-- [ ] **Step 4: Rodar os testes e confirmar que passam**
+- [x] **Step 4: Rodar os testes e confirmar que passam**
 
 Rodar: `npx.cmd vitest run tests/resultados.test.ts`
 
 Esperado: todos os testes do arquivo passam.
 
-- [ ] **Step 5: Rodar typecheck e registrar o checkpoint**
+- [x] **Step 5: Rodar typecheck e registrar o checkpoint**
 
 Rodar: `npm.cmd run typecheck`
 
@@ -146,7 +146,7 @@ Esperado: sem erros. Atualizar o bloco Progresso para Task 1 e preparar a mensag
 - Consome: `CHAVE_RESULTADO`, `ResultadoLocal`, `serializarResultado` e `hidratarResultado`.
 - Produz: `StorageLocal`, `criarStorageChrome`, `salvarResultado`, `carregarResultado`.
 
-- [ ] **Step 1: Escrever os testes que falham**
+- [x] **Step 1: Escrever os testes que falham**
 
 Testar com um mapa em memória injetado:
 
@@ -171,23 +171,23 @@ it('trata storage vazio ou corrompido como ausência de resultado', async () => 
 
 O arquivo deve definir `mapaStorage(inicial?: Record<string, unknown>): StorageLocal`, `resultadoDeTeste(): ResultadoLocal` e manter o mapa mutável fechado no helper para que o teste observe a chave gravada sem mockar implementação interna.
 
-- [ ] **Step 2: Rodar e confirmar que falha**
+- [x] **Step 2: Rodar e confirmar que falha**
 
 Rodar: `npx.cmd vitest run tests/resultados-storage.test.ts`
 
 Esperado: FAIL por módulo e funções ausentes.
 
-- [ ] **Step 3: Implementar o adaptador mínimo**
+- [x] **Step 3: Implementar o adaptador mínimo**
 
 `criarStorageChrome()` deve adaptar `chrome.storage.local.get(chave)` e `set({ [chave]: valor })` para `StorageLocal`. Não importar Chrome no módulo puro da Task 1. As assinaturas são `salvarResultado(resultado: ResultadoLocal, storage?: StorageLocal): Promise<void>` e `carregarResultado(storage?: StorageLocal): Promise<ResultadoLocal | null>`; quando o segundo parâmetro não vier, usar `criarStorageChrome()`. `salvarResultado` deve persistir o payload serializado; `carregarResultado` deve retornar `null` em storage vazio, inválido ou quando a API rejeitar, registrando apenas `[CopyHaunt] resultados: falha ao ler/gravar` no console.
 
-- [ ] **Step 4: Rodar e confirmar que passa**
+- [x] **Step 4: Rodar e confirmar que passa**
 
 Rodar: `npx.cmd vitest run tests/resultados-storage.test.ts`
 
 Esperado: todos os testes passam.
 
-- [ ] **Step 5: Rodar a suíte de lógica**
+- [x] **Step 5: Rodar a suíte de lógica**
 
 Rodar: `npx.cmd vitest run tests/resultados.test.ts tests/resultados-storage.test.ts`
 
@@ -213,7 +213,7 @@ Esperado: todos os testes passam. Atualizar Progresso e preparar:
 - Consome: `salvarResultado`, `chrome.runtime.getURL`, `ResultadoLocal` e o `Minerador` já existente.
 - Produz: `urlDaPaginaResultados`, `abrirPaginaResultados`, `liberarResultados` e o botão `[data-acao="resultados"]`.
 
-- [ ] **Step 1: Escrever os testes que falham**
+- [x] **Step 1: Escrever os testes que falham**
 
 Cobrir:
 
@@ -241,13 +241,13 @@ it('não grava quando a mineração termina pausada', async () => {
 
 O teste de integração deve provar que, com `exigirInstagram`, o snapshot recebe os anúncios depois que `filtrarPorInstagram` resolve, e não durante o laço. A alteração necessária em `filtrarPorInstagram` deve preservar no anúncio final o perfil retornado por `consultar`, em `anunciante.instagram`, para que o menu Links tenha o destino conhecido na página de resultados.
 
-- [ ] **Step 2: Rodar e confirmar que falha**
+- [x] **Step 2: Rodar e confirmar que falha**
 
 Rodar: `npx.cmd vitest run tests/content/progresso.test.ts tests/content/resultados.test.ts`
 
 Esperado: FAIL pelos contratos novos.
 
-- [ ] **Step 3: Implementar o atalho e a persistência**
+- [x] **Step 3: Implementar o atalho e a persistência**
 
 Alterar `montarProgresso` para receber `aoAbrirResultados`, criar o botão escondido e manter o botão de pausa existente. `liberarResultados` apenas revela e habilita o botão.
 
@@ -255,13 +255,13 @@ Criar `src/content/resultados.ts` com `urlDaPaginaResultados()` e `abrirPaginaRe
 
 Em `dispararMineracao`, guardar a referência do cartão retornado por `mostrarProgresso`. Depois de `finais` receber o pós-filtro, chamar `await salvarResultado({ origem: location.href, estado: p.estado, salvoEm: new Date(), anuncios: finais })`; só depois liberar o atalho. Se o storage falhar, manter o botão escondido e o log de erro.
 
-- [ ] **Step 4: Rodar e confirmar que passa**
+- [x] **Step 4: Rodar e confirmar que passa**
 
 Rodar: `npx.cmd vitest run tests/content/progresso.test.ts tests/content/resultados.test.ts`
 
 Esperado: todos os testes passam.
 
-- [ ] **Step 5: Rodar suíte e typecheck**
+- [x] **Step 5: Rodar suíte e typecheck**
 
 Rodar: `npm.cmd test` e `npm.cmd run typecheck`
 
@@ -289,7 +289,7 @@ Esperado: suíte inteira verde e tipagem sem erros. Atualizar Progresso e prepar
 - Consome: `urlDaPaginaResultados` e a URL gerada pelo Vite/CRXJS.
 - Produz: `manifest.action.default_title`, entrada de build `resultados` e abertura pelo ícone.
 
-- [ ] **Step 1: Escrever os testes que falham**
+- [x] **Step 1: Escrever os testes que falham**
 
 Adicionar ao teste do manifest:
 
@@ -302,13 +302,13 @@ it('declara ação para abrir resultados sem pedir permissões novas', () => {
 
 No teste do service worker, usar um `chrome.action.onClicked.addListener` espião e verificar que o callback chama `chrome.tabs.create({ url: 'chrome-extension://id/src/resultados/index.html' })`.
 
-- [ ] **Step 2: Rodar e confirmar que falha**
+- [x] **Step 2: Rodar e confirmar que falha**
 
 Rodar: `npx.cmd vitest run tests/manifest.test.ts tests/background.test.ts`
 
 Esperado: FAIL porque `action`, a entrada e o listener ainda não existem.
 
-- [ ] **Step 3: Implementar o registro**
+- [x] **Step 3: Implementar o registro**
 
 Adicionar `action: { default_title: 'Abrir resultados' }` ao objeto exportado do manifest. Acrescentar `resultados: 'src/resultados/index.html'` aos inputs do Rollup.
 
@@ -316,19 +316,19 @@ No background, registrar `chrome.action.onClicked.addListener(() => chrome.tabs.
 
 Atualizar o verificador para exigir `manifest.action.default_title` e a existência de `dist/src/resultados/index.html`, mantendo as verificações atuais de `world MAIN`, dois content scripts, hosts e `['storage']`.
 
-- [ ] **Step 4: Rodar e confirmar que passa**
+- [x] **Step 4: Rodar e confirmar que passa**
 
 Rodar: `npx.cmd vitest run tests/manifest.test.ts tests/background.test.ts`
 
 Esperado: todos os testes passam.
 
-- [ ] **Step 5: Rodar build verificável**
+- [x] **Step 5: Rodar build verificável**
 
 Rodar: `npm.cmd run verify:build`
 
 Esperado: build concluído, página presente e `manifest gerado OK`.
 
-- [ ] **Step 6: Atualizar Progresso e preparar:**
+- [x] **Step 6: Atualizar Progresso e preparar:**
 
 ```text
 ✨ feat(build): registrar página de resultados na extensão
@@ -353,7 +353,7 @@ Esperado: build concluído, página presente e `manifest gerado OK`.
 - Consome: `carregarResultado`, `ordenarAnuncios`, `montarDestinos`, `montarCopias`, `baixarCriativos`, tokens de `src/styles/tokens.css`.
 - Produz: estado vazio, estado corrompido tratado, cabeçalho, seletor de ordenação, grade de cards e menu de links.
 
-- [ ] **Step 1: Escrever os testes que falham**
+- [x] **Step 1: Escrever os testes que falham**
 
 Renderizar `App` em jsdom com storage injetado e verificar:
 
@@ -381,13 +381,13 @@ it('abre o menu Links com os seis destinos do gerenciador', async () => {
 })
 ```
 
-- [ ] **Step 2: Rodar e confirmar que falha**
+- [x] **Step 2: Rodar e confirmar que falha**
 
 Rodar: `npx.cmd vitest run tests/resultados-ui.test.tsx`
 
 Esperado: FAIL porque a página ainda não possui componentes.
 
-- [ ] **Step 3: Implementar o shell visual**
+- [x] **Step 3: Implementar o shell visual**
 
 `main.tsx` deve importar `../styles/tokens.css` e `resultados.css`, encontrar `#root` e montar `App` em `StrictMode`.
 
@@ -404,19 +404,19 @@ Usar os tokens da IDV: `#08070D`, `#111019`, `#7C3AED`, `#A855F7`, `#C4A7FF`, `#
 
 No topo do teste, definir `renderizarComStorage(resultado)`, `resultadoComTresAnuncios()`, `selecionar(rotulo)`, `idsDosCards()` e `clicar(seletor)`; `renderizarComStorage` deve injetar a dependência de storage da `App` em vez de substituir módulos com mock global.
 
-- [ ] **Step 4: Implementar ações do card e menu Links colapsável**
+- [x] **Step 4: Implementar ações do card e menu Links colapsável**
 
 `LinksMenu` deve ser aberto/fechado pelo botão `data-acao="links"`, chamar `montarDestinos(ad)` e conservar a ordem e os rótulos retornados. Cada item com `url` vira link externo com `target="_blank"` e `rel="noreferrer"`; item sem URL fica disabled. Instagram desconhecido mostra `Abrir na Biblioteca` como motivo e não chama `buscarInstagram`. Só um menu pode ficar aberto por vez; abrir outro fecha o anterior e clicar fora fecha o menu atual.
 
 O botão `Copiar` abre os cinco itens de `montarCopias(ad)` e usa `navigator.clipboard.writeText` quando houver valor. O botão `Baixar` chama `baixarCriativos(ad, { buscar: fetch, salvar })`; `salvar` usa âncora temporária e revoga o object URL no próximo tique, como o tray atual.
 
-- [ ] **Step 5: Rodar e confirmar que passa**
+- [x] **Step 5: Rodar e confirmar que passa**
 
 Rodar: `npx.cmd vitest run tests/resultados-ui.test.tsx tests/resultados.test.ts tests/resultados-storage.test.ts`
 
 Esperado: todos os testes passam.
 
-- [ ] **Step 6: Rodar typecheck e preparar:**
+- [x] **Step 6: Rodar typecheck e preparar:**
 
 Rodar: `npm.cmd run typecheck`
 
@@ -440,7 +440,7 @@ Esperado: sem erros. Mensagem:
 - Consome: `extensionId`, contexto persistente e a página `src/resultados/index.html` do build.
 - Produz: verificação de página vazia, página preenchida, ordenação e menu Links no navegador real da extensão.
 
-- [ ] **Step 1: Escrever os testes que falham**
+- [x] **Step 1: Escrever os testes que falham**
 
 Cobrir sem navegar na Meta:
 
@@ -466,7 +466,7 @@ test('renderiza resultado salvo, ordena e abre Links', async ({ context, extensi
 })
 ```
 
-- [ ] **Step 2: Rodar e confirmar que falha**
+- [x] **Step 2: Rodar e confirmar que falha**
 
 Rodar: `npm.cmd run verify:build; npx.cmd playwright test e2e/resultados.spec.ts`
 
@@ -474,17 +474,17 @@ Esperado: FAIL porque a entrada da página e seus seletores ainda não existem.
 
 `payloadPersistidoDeTeste()` deve ser um helper do próprio arquivo, montado com `serializarResultado` e os mesmos três anúncios determinísticos dos testes unitários; não duplicar um JSON de produção.
 
-- [ ] **Step 3: Ajustar a implementação apenas pelo comportamento observado**
+- [x] **Step 3: Ajustar a implementação apenas pelo comportamento observado**
 
 Garantir que o carregamento assíncrono não dependa de espera fixa. Depois de gravar o payload no `chrome.storage.local`, o teste deve aguardar a UI por locators.
 
-- [ ] **Step 4: Rodar o E2E e confirmar que passa**
+- [x] **Step 4: Rodar o E2E e confirmar que passa**
 
 Rodar: `npm.cmd run verify:build; npx.cmd playwright test e2e/resultados.spec.ts`
 
 Esperado: os testes da página passam.
 
-- [ ] **Step 5: Preparar:**
+- [x] **Step 5: Preparar:**
 
 ```text
 🧪 test(e2e): cobrir jornada da tela de resultados
@@ -499,7 +499,7 @@ Esperado: os testes da página passam.
 - Modificar: `docs/superpowers/plans/2026-09-17-resultados.md`
 - Opcionalmente modificar: testes que revelem regressão real nas etapas anteriores.
 
-- [ ] **Step 1: Rodar a verificação completa**
+- [x] **Step 1: Rodar a verificação completa**
 
 Rodar, nesta ordem:
 
@@ -513,15 +513,15 @@ git status --short
 
 Esperado: suíte unitária verde, typecheck sem erros, manifest gerado OK, E2E verde e apenas alterações esperadas.
 
-- [ ] **Step 2: Conferir manualmente o build**
+- [x] **Step 2: Conferir manualmente o build**
 
 Verificar que `dist/src/resultados/index.html` existe, que o manifest tem `action.default_title`, que as permissões continuam `['storage']` e que nenhum `fetch` de Instagram foi introduzido em `src/resultados/`.
 
-- [ ] **Step 3: Atualizar o bloco Progresso**
+- [x] **Step 3: Atualizar o bloco Progresso**
 
 Marcar todas as Tasks concluídas, registrar os números reais da suíte e anotar qualquer decisão que tenha divergido do plano. Só marcar `[x]` depois de a verificação correspondente passar.
 
-- [ ] **Step 4: Escrever a mensagem do checkpoint final**
+- [x] **Step 4: Escrever a mensagem do checkpoint final**
 
 ```text
 ✨ feat(ui): entregar tela persistente de resultados
@@ -537,6 +537,36 @@ Como foi feito:
 
 Considerações:
 - A busca de Instagram continua na Biblioteca quando o perfil ainda não é conhecido
+```
+
+---
+
+### Task 8: Correção pós-revisão — abrir resultados pelo service worker
+
+**Descoberta no teste manual (2026-09-17):** `window.open` com a URL
+`chrome-extension://…/src/resultados/index.html` a partir do content script é
+bloqueado pelo Chrome (`ERR_BLOCKED_BY_CLIENT`), porque a navegação parte da
+origem da Biblioteca da Meta. `chrome.runtime.getURL` e o `fetch` da página
+pelo service worker funcionam; o problema é só quem navega.
+
+**Decisão:** o service worker é o único responsável por abrir a página. Sem
+`web_accessible_resources`, sem permissão `tabs` (`chrome.tabs.create` com
+URL da própria extensão não a exige).
+
+**Arquivos:**
+
+- Modificar: `src/content/resultados.ts`, `src/background/index.ts`
+- Testar: `tests/content/resultados.test.ts`, `tests/background.test.ts`, `e2e/resultados.spec.ts`
+
+- [x] **Step 1: Escrever os testes que falham** — `abrirPaginaResultados()` chama `chrome.runtime.sendMessage({ tipo: 'abrir-resultados' })` e não `window.open`; o listener de `onMessage` abre `chrome.tabs.create` com a URL da página e ignora tipos desconhecidos. RED observado: 2 falhas.
+- [x] **Step 2: Implementar** — `abrirPaginaResultados` envia a mensagem; o listener existente de `obter-config` ganha o ramo `abrir-resultados` e reaproveita a mesma função do `action.onClicked`.
+- [x] **Step 3: E2E** — `e2e/resultados.spec.ts` envia a mensagem de uma página da extensão e espera a aba nova apontar para `src/resultados/index.html`.
+- [x] **Step 4: Verificação** — `npx vitest run tests/content/resultados.test.ts tests/background.test.ts` 7/7; `npm test` 52 arquivos / 465 testes; typecheck limpo; `verify:build` OK; Playwright 15/15.
+
+Mensagem:
+
+```text
+🐛 fix(content): abrir resultados pelo service worker
 ```
 
 ---

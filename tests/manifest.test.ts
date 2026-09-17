@@ -10,6 +10,11 @@ type ScriptEntry = { js?: string[]; world?: string; run_at?: string }
 const scripts = manifest.content_scripts as ScriptEntry[]
 
 describe('manifest MV3', () => {
+  it('declara ação para abrir resultados sem pedir permissões novas', () => {
+    expect(manifest.action).toEqual({ default_title: 'Abrir resultados' })
+    expect(manifest.permissions).toEqual(['storage'])
+  })
+
   it('declara manifest_version 3', () => {
     expect(manifest.manifest_version).toBe(3)
   })

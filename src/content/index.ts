@@ -17,7 +17,11 @@ import { observarGrade, type Observacao } from './observer'
 import { pintarGrade } from './overlay'
 import { processarCaptura, processarSsr } from './pipeline'
 import { filtrarPorInstagram } from './pos-instagram'
-import { atualizarProgresso, montarProgresso } from './progresso'
+import { atualizarProgresso, liberarResultados, montarProgresso } from './progresso'
+import {
+  abrirPaginaResultados,
+  finalizarResultado,
+} from './resultados'
 
 /** Índice da sessão. Vive enquanto a aba viver. */
 const store = new AdStore()
@@ -182,19 +186,24 @@ let alvoAtual = 100
  * host novo não tem cartão, e sem isto o progresso sumiria no meio da
  * varredura.
  */
-function mostrarProgresso(shadow: ShadowRoot): void {
+function mostrarProgresso(shadow: ShadowRoot): HTMLElement | null {
   fecharGaveta(shadow)
 
   const botao = shadow.querySelector<HTMLElement>('[data-chave="minerar"]')
-  if (!botao) return
+  if (!botao) return null
 
-  const cartao = montarProgresso(document, () => {
-    const p = minerador?.progresso()
-    if (p?.estado === 'pausado') void minerador?.iniciar()
-    else minerador?.parar()
-  })
+  const cartao = montarProgresso(
+    document,
+    () => {
+      const p = minerador?.progresso()
+      if (p?.estado === 'pausado') void minerador?.iniciar()
+      else minerador?.parar()
+    },
+    abrirPaginaResultados,
+  )
   cartao.dataset.chave = 'progresso'
   botao.replaceWith(cartao)
+  return cartao
 }
 
 /** Um enxerto por gaveta, mais o disparo. */
@@ -262,7 +271,7 @@ function dispararMineracao(pedido: PedidoMineracao, shadow: ShadowRoot): void {
   }
 
   alvoAtual = pedido.limiteEncontrados
-  mostrarProgresso(shadow)
+  const cartao = mostrarProgresso(shadow)
   const motor = iniciarMineracao(pedido)
 
   // O pós-filtro só roda quando o laço termina — a trava da seção 6.4.
@@ -270,25 +279,35 @@ function dispararMineracao(pedido: PedidoMineracao, shadow: ShadowRoot): void {
     const p = motor.progresso()
     if (p.estado === 'pausado') return
 
-    let finais = motor.encontrados()
-
-    if (pedido.exigirInstagram) {
-      const relogio = relogioDeWorker()
-      finais = await filtrarPorInstagram(finais, {
-        consultar: (pageId) =>
-          buscarInstagram(pageId, {
-            buscar: (...args) => fetch(...args),
-            html: () => document.documentElement.innerHTML,
-          }),
-        esperar: (ms) => relogio.esperar(ms),
-        aoProgredir: (feitos, total) => {
-          console.info(
-            `[CopyHaunt] Instagram: ${feitos} de ${total} anunciantes`,
-          )
+    const relogio = relogioDeWorker()
+    const finais = await finalizarResultado(
+      p,
+      motor.encontrados(),
+      location.href,
+      {
+        filtrar: pedido.exigirInstagram
+          ? (aprovados) =>
+              filtrarPorInstagram(aprovados, {
+                consultar: (pageId) =>
+                  buscarInstagram(pageId, {
+                    buscar: (...args) => fetch(...args),
+                    html: () => document.documentElement.innerHTML,
+                  }),
+                esperar: (ms) => relogio.esperar(ms),
+                aoProgredir: (feitos, total) => {
+                  console.info(
+                    `[CopyHaunt] Instagram: ${feitos} de ${total} anunciantes`,
+                  )
+                },
+              })
+          : async (aprovados) => aprovados,
+        liberar: () => {
+          if (cartao) liberarResultados(cartao)
         },
-      })
-    }
+      },
+    )
 
+    if (!finais) return
     console.info(
       `[CopyHaunt] mineração encerrada em ${p.estado}: ${finais.length} aprovados finais`,
     )
