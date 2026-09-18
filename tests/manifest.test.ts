@@ -26,7 +26,7 @@ describe('manifest MV3', () => {
   it('pede exatamente os dois hosts necessários, e nada além', () => {
     expect(manifest.host_permissions).toEqual([
       '*://*.facebook.com/ads/library/*',
-      'https://raw.githubusercontent.com/andrey-rsantos/CopyHaunt-Ads/*',
+      'https://raw.githubusercontent.com/andrey-rsantos/copyhaunt-ads-extension/*',
     ])
   })
 

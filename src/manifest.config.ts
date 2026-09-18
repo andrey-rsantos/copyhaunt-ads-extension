@@ -8,7 +8,7 @@ const AD_LIBRARY = '*://*.facebook.com/ads/library/*'
  * não o `raw.githubusercontent.com` inteiro.
  */
 const CONFIG_REMOTA =
-  'https://raw.githubusercontent.com/andrey-rsantos/CopyHaunt-Ads/*'
+  'https://raw.githubusercontent.com/andrey-rsantos/copyhaunt-ads-extension/*'
 
 /**
  * Objeto puro do manifest, exportado à parte para poder ser testado sem

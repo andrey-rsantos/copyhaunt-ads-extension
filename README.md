@@ -83,8 +83,8 @@ as permissões e a preservação do interceptador no `MAIN world`.
 - A consulta opcional de Instagram é disparada somente por ação explícita e não
   envia cookies da conta do usuário.
 
-Uma política de privacidade detalhada será publicada antes da primeira versão
-distribuída pela Chrome Web Store.
+Leia a [política de privacidade](PRIVACY.md) para saber quais dados são
+processados, onde ficam armazenados e quais requisições saem do navegador.
 
 ## Referências e processo
 

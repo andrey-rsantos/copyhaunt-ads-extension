@@ -35,7 +35,7 @@ if (permissoes.length !== 1 || permissoes[0] !== 'storage') {
 const hosts = manifest.host_permissions ?? []
 const esperados = [
   '*://*.facebook.com/ads/library/*',
-  'https://raw.githubusercontent.com/andrey-rsantos/CopyHaunt-Ads/*',
+  'https://raw.githubusercontent.com/andrey-rsantos/copyhaunt-ads-extension/*',
 ]
 if (hosts.length !== esperados.length || hosts.some((h, i) => h !== esperados[i])) {
   falhas.push(`host_permissions inesperado: ${JSON.stringify(hosts)}`)

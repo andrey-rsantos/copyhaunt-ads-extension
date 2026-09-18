@@ -8,7 +8,7 @@ import { CONFIG_EMBUTIDA, validarConfig, type ConfigRemota } from '../core/confi
  * hospedagem é mudar esta constante e o host no manifest.
  */
 export const URL_CONFIG =
-  'https://raw.githubusercontent.com/andrey-rsantos/CopyHaunt-Ads/main/config/config.json'
+  'https://raw.githubusercontent.com/andrey-rsantos/copyhaunt-ads-extension/main/config/config.json'
 
 /** Seis horas. A Meta não muda de hora em hora, e buscar por sessão bastaria. */
 export const VALIDADE_MS = 6 * 60 * 60 * 1000
