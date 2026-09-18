@@ -56,6 +56,23 @@ describe('plantarBandeja', () => {
     expect(c.style.paddingTop).toBe('46px')
   })
 
+  it('insere a bandeja no cabecalho interno que contem o ID', () => {
+    const c = card()
+    const cabecalho = document.createElement('div')
+    const id = document.createElement('span')
+    id.textContent = 'Library ID: 111111111111111'
+    cabecalho.appendChild(id)
+    c.innerHTML = ''
+    c.append(cabecalho, document.createElement('div'))
+
+    plantarBandeja(c, ad(), AGORA)
+
+    const host = c.querySelector(`[${ATRIBUTO_ID}]`)
+    expect(host?.parentElement).toBe(cabecalho)
+    expect(c.style.paddingTop).toBe('')
+    expect(cabecalho.style.paddingTop).toBe('46px')
+  })
+
   it('não deixa o card esticar até a altura da linha da grade', () => {
     // A grade da Meta é grid com altura de linha fixa: sem isto o card mais
     // curto da linha ganha um vazio no rodapé.

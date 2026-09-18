@@ -341,6 +341,8 @@ function montarEnxertos(): Enxerto[] {
     {
       chave: 'ajuda',
       glifo: '?',
+      icone: 'interrogacao',
+      somenteIcone: true,
       titulo: 'Exemplos de busca',
       variante: 'contorno',
       aoClicar: (botao) => {
@@ -356,6 +358,7 @@ function montarEnxertos(): Enxerto[] {
     {
       chave: 'calendario',
       glifo: rotuloDaFaixa(faixaAtual()),
+      icone: 'calendario',
       titulo: 'Tempo ativo',
       variante: 'contorno',
       aoClicar: (botao) => {
@@ -371,6 +374,7 @@ function montarEnxertos(): Enxerto[] {
     {
       chave: 'minerar',
       glifo: 'Minerar',
+      icone: 'picareta',
       titulo: 'Minerar',
       variante: 'solido',
       aoClicar: (botao) => {

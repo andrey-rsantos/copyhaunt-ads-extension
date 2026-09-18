@@ -10,8 +10,16 @@ import {
 } from './instagram'
 import { baixarCriativos } from './download'
 import { abrirMenu, atualizarItem, fecharMenu, type ItemMenu } from './menu'
+import { extrairLibraryId } from './anchor'
 
 export const ATRIBUTO_ID = 'data-copyhaunt-id'
+
+function encontrarCabecalho(card: HTMLElement): HTMLElement {
+  for (const filho of Array.from(card.children)) {
+    if (extrairLibraryId(filho.textContent ?? '')) return filho as HTMLElement
+  }
+  return card
+}
 
 const BOTOES = [
   { chave: 'baixar', glifo: '⤓', titulo: 'Baixar criativo' },
@@ -169,14 +177,19 @@ export function plantarBandeja(
   const existente = card.querySelector<HTMLElement>(`[${ATRIBUTO_ID}]`)
   if (existente?.getAttribute(ATRIBUTO_ID) === ad.id) return
 
-  // A bandeja é posicionada de forma absoluta sobre o card, o que exige um
-  // ancestral posicionado. Se a Meta já posicionou, não mexemos.
-  if (getComputedStyle(card).position === 'static') {
-    card.style.position = 'relative'
+  const cabecalho = encontrarCabecalho(card)
+
+  // A bandeja é posicionada de forma absoluta sobre o cabeçalho, o que exige
+  // um ancestral posicionado. Se a Meta já posicionou, não mexemos.
+  if (getComputedStyle(cabecalho).position === 'static') {
+    cabecalho.style.position = 'relative'
   }
-  // A faixa onde bandeja e badge moram sozinhos: 30 px de botão mais 8 px de
-  // cada lado. Sem ela, os dois cobrem a linha "Active" e o Library ID.
-  card.style.paddingTop = '46px'
+  // Reserva a altura dos controles dentro do cabeçalho, sem criar uma faixa
+  // separada acima do conteúdo do card.
+  cabecalho.style.paddingTop = '46px'
+  if (card !== cabecalho && card.style.paddingTop === '46px') {
+    card.style.paddingTop = ''
+  }
   // A grade da Meta é `grid` com altura de linha fixa por medição, e o card
   // estica até preenchê-la — sobra um vazio no rodapé dos cards mais curtos.
   // Com `start` o card abraça o conteúdo; a linha da grade continua da Meta.
@@ -184,7 +197,7 @@ export function plantarBandeja(
 
   const host = existente ?? document.createElement('div')
   host.setAttribute(ATRIBUTO_ID, ad.id)
-  if (!existente) card.prepend(host)
+  if (!cabecalho.contains(host)) cabecalho.prepend(host)
 
   const shadow = criarShadow(host)
   const dias = diasAtivos(ad.iniciouEm, agora)

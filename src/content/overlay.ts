@@ -1,6 +1,7 @@
 import { avaliar, type Criterios } from '../core/criteria'
 import type { AdStore } from '../core/store'
 import { acharCards } from './anchor'
+import { destacarCriativoRepetido } from './destaque'
 import { aplicarVeredito, plantarBandeja } from './tray'
 
 export interface ResumoOverlay {
@@ -29,6 +30,7 @@ export function pintarGrade(
     if (!ad) continue
 
     plantarBandeja(card, ad, agora)
+    destacarCriativoRepetido(card)
     resumo.plantados += 1
 
     const veredito = avaliar(ad, criterios, {

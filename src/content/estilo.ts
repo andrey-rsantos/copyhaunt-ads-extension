@@ -152,6 +152,11 @@ export const CSS_ENXERTOS = `
     font-weight: 600;
     transition: filter 150ms ease;
   }
+  :host(#copyhaunt-enxertos) .botao[data-icone-apenas] {
+    width: 36px;
+    padding: 0;
+    justify-content: center;
+  }
   :host(#copyhaunt-enxertos) .botao:hover { filter: brightness(1.12); }
 
   :host(#copyhaunt-enxertos) .botao[data-variante="solido"] {

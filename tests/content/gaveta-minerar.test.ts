@@ -8,6 +8,14 @@ const URL_ATUAL =
   'https://www.facebook.com/ads/library/?q=emagrecimento&country=BR&active_status=active'
 
 describe('montarMinerar', () => {
+  it('deixa explícito que os critérios de escala são mínimos', () => {
+    const el = montarMinerar(document, URL_ATUAL, agora, () => {})
+
+    expect(el.textContent).toContain('Criativos repetidos (mínimo)')
+    expect(el.textContent).toContain('Anúncios do anunciante (mínimo)')
+    expect(el.textContent).toContain('Encontrar até')
+  })
+
   it('mostra a linha "Vai varrer" com a busca em vigor', () => {
     const el = montarMinerar(document, URL_ATUAL, agora, () => {})
     const resumo = el.querySelector('[data-papel="vai-varrer"]')

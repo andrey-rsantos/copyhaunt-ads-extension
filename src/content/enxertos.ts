@@ -21,6 +21,10 @@ export interface Enxerto {
   chave: string
   /** O que aparece no botão. Texto ou glifo. */
   glifo: string
+  /** Ícone opcional do botão, desenhado inline para não criar dependência. */
+  icone?: 'picareta' | 'interrogacao' | 'calendario'
+  /** Não repete o glifo quando o botão é representado apenas pelo ícone. */
+  somenteIcone?: boolean
   titulo: string
   /** Papel visual: o calendário é secundário, Minerar é a ação (spec, 7.1). */
   variante: 'contorno' | 'solido'
@@ -114,7 +118,19 @@ function montarHost(doc: Document, enxertos: Enxerto[]): HTMLElement {
     botao.dataset.chave = e.chave
     botao.dataset.variante = e.variante
     botao.title = e.titulo
-    botao.textContent = e.glifo
+    if (e.icone) {
+      botao.appendChild(montarIcone(doc, e.icone))
+      if (e.somenteIcone) {
+        botao.dataset.iconeApenas = 'true'
+        botao.setAttribute('aria-label', e.titulo)
+      } else {
+        const texto = doc.createElement('span')
+        texto.textContent = e.glifo
+        botao.appendChild(texto)
+      }
+    } else {
+      botao.textContent = e.glifo
+    }
     botao.addEventListener('click', (ev) => {
       // A barra da Meta tem os seus próprios listeners; sem isto, clicar no
       // nosso botão também mexe no que está atrás.
@@ -126,6 +142,48 @@ function montarHost(doc: Document, enxertos: Enxerto[]): HTMLElement {
 
   shadow.appendChild(fila)
   return host
+}
+
+function montarIcone(doc: Document, nome: NonNullable<Enxerto['icone']>): SVGSVGElement {
+  const svg = doc.createElementNS('http://www.w3.org/2000/svg', 'svg')
+  svg.dataset.icone = nome
+  svg.setAttribute('viewBox', '0 0 24 24')
+  svg.setAttribute('width', '16')
+  svg.setAttribute('height', '16')
+  svg.setAttribute('fill', 'none')
+  svg.setAttribute('stroke', 'currentColor')
+  svg.setAttribute('stroke-width', '2')
+  svg.setAttribute('stroke-linecap', 'round')
+  svg.setAttribute('stroke-linejoin', 'round')
+  svg.setAttribute('aria-hidden', 'true')
+  svg.setAttribute('focusable', 'false')
+
+  // Ícones geométricos em outline, seguindo a recomendação do IDV.
+  const caminhos: Record<NonNullable<Enxerto['icone']>, string[]> = {
+    picareta: [
+      'M5 21 15.5 10.5',
+      'M7 7c3.5-3.5 8.5-4.5 13-2',
+      'M7 7c2 2 4 4 6 6',
+    ],
+    interrogacao: [
+      'M9.09 9a3 3 0 1 1 5.83 1c0 2-2.92 2.5-2.92 4',
+      'M12 17h.01',
+    ],
+    calendario: [
+      'M8 2v4',
+      'M16 2v4',
+      'M3 10h18',
+      'M5 4h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2Z',
+    ],
+  }
+
+  for (const d of caminhos[nome]) {
+    const elemento = doc.createElementNS('http://www.w3.org/2000/svg', 'path')
+    elemento.setAttribute('d', d)
+    svg.appendChild(elemento)
+  }
+
+  return svg
 }
 
 /**

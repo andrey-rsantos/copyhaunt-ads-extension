@@ -44,10 +44,10 @@ export function montarMinerar(
   )
   const alvo = campo(doc, 'limiteEncontrados', pedidoInicial?.limiteEncontrados ?? 100)
 
-  raiz.appendChild(linha(doc, 'Criativos repetidos', colacao))
-  raiz.appendChild(linha(doc, 'Anúncios do anunciante', presenca))
+  raiz.appendChild(linha(doc, 'Criativos repetidos (mínimo)', colacao))
+  raiz.appendChild(linha(doc, 'Anúncios do anunciante (mínimo)', presenca))
 
-  raiz.appendChild(linha(doc, 'Quantidade de aprovados', alvo))
+  raiz.appendChild(linha(doc, 'Encontrar até', alvo, 'anúncios aprovados'))
 
   const resumo = doc.createElement('div')
   resumo.className = 'nota'
@@ -111,7 +111,12 @@ function campo(
   return el
 }
 
-function linha(doc: Document, texto: string, campo: HTMLElement): HTMLElement {
+function linha(
+  doc: Document,
+  texto: string,
+  campo: HTMLElement,
+  sufixo?: string,
+): HTMLElement {
   const l = doc.createElement('div')
   l.className = 'linha'
 
@@ -119,6 +124,11 @@ function linha(doc: Document, texto: string, campo: HTMLElement): HTMLElement {
   rotulo.textContent = texto
 
   l.append(rotulo, campo)
+  if (sufixo) {
+    const unidade = doc.createElement('span')
+    unidade.textContent = sufixo
+    l.appendChild(unidade)
+  }
   return l
 }
 

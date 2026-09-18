@@ -49,6 +49,75 @@ function doisEnxertos(aoClicar = () => {}): Enxerto[] {
 }
 
 describe('plantarEnxertos', () => {
+  it('renderiza o ícone de picareta antes do texto quando solicitado', () => {
+    montarBarra()
+    plantio = plantarEnxertos(document, [
+      {
+        chave: 'minerar',
+        glifo: 'Minerar',
+        icone: 'picareta',
+        titulo: 'Minerar',
+        variante: 'solido',
+        aoClicar: () => {},
+      },
+    ])
+
+    const botao = document
+      .getElementById(ID_ENXERTOS)
+      ?.shadowRoot?.querySelector<HTMLElement>('[data-chave="minerar"]')
+    const icone = botao?.querySelector('svg[data-icone="picareta"]')
+
+    expect(icone).not.toBeNull()
+    expect(icone?.getAttribute('aria-hidden')).toBe('true')
+    expect(botao?.textContent).toContain('Minerar')
+  })
+
+  it('substitui o ponto de interrogação por um SVG quando o ícone é exclusivo', () => {
+    montarBarra()
+    plantio = plantarEnxertos(document, [
+      {
+        chave: 'ajuda',
+        glifo: '?',
+        icone: 'interrogacao',
+        somenteIcone: true,
+        titulo: 'Exemplos de busca',
+        variante: 'contorno',
+        aoClicar: () => {},
+      },
+    ])
+
+    const botao = document
+      .getElementById(ID_ENXERTOS)
+      ?.shadowRoot?.querySelector<HTMLElement>('[data-chave="ajuda"]')
+    const icone = botao?.querySelector('svg[data-icone="interrogacao"]')
+
+    expect(icone).not.toBeNull()
+    expect(botao?.textContent).not.toContain('?')
+    expect(botao?.children).toHaveLength(1)
+  })
+
+  it('adiciona o ícone de calendário antes do texto do filtro de tempo', () => {
+    montarBarra()
+    plantio = plantarEnxertos(document, [
+      {
+        chave: 'calendario',
+        glifo: '14+ dias no ar',
+        icone: 'calendario',
+        titulo: 'Tempo ativo',
+        variante: 'contorno',
+        aoClicar: () => {},
+      },
+    ])
+
+    const botao = document
+      .getElementById(ID_ENXERTOS)
+      ?.shadowRoot?.querySelector<HTMLElement>('[data-chave="calendario"]')
+
+    expect(botao?.firstElementChild?.tagName).toBe('svg')
+    expect(botao?.querySelector('svg[data-icone="calendario"]')).not.toBeNull()
+    expect(botao?.textContent).toContain('14+ dias no ar')
+  })
+
   it('reflui os enxertos para uma segunda linha em viewport estreita', () => {
     montarBarra()
     Object.defineProperty(window, 'innerWidth', {
