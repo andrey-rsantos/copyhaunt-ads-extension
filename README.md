@@ -82,6 +82,8 @@ As capturas abaixo mostram a extensão em uso na Biblioteca de Anúncios da Meta
 
 ![Detalhe de um card](capturas/card-detalhe.png)
 
+![Resultados da mineração](capturas/resultados-mineracao.png)
+
 ## Privacidade e permissões
 
 - A extensão usa a permissão `storage` para preferências, cache e resultados
