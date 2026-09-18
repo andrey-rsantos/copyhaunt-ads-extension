@@ -13,9 +13,9 @@
 ## Progresso
 
 - **Estado:** concluído
-- **Última tarefa concluída:** verificação integrada da padronização e do recolhimento da barra
-- **Próxima tarefa:** revisão manual do proprietário
-- **Notas de retomada:** `botoes-preview.html` é um artefato temporário não commitado. Implementação, testes e plano permanecem na working tree; o commit foi deliberadamente adiado.
+- **Última tarefa concluída:** revisão manual do proprietário
+- **Próxima tarefa:** —
+- **Notas de retomada:** revisão manual aprovada. `botoes-preview.html` foi confirmado como artefato temporário e será removido no checkpoint de fechamento.
 
 ## Global Constraints
 
@@ -25,7 +25,7 @@
 - Não alterar controles pertencentes à Meta.
 - Testes novos devem falhar antes da implementação e não podem usar espera fixa.
 - Não adicionar dependências para ícones; reutilizar SVG inline já adotado pelo projeto.
-- Não criar commit nesta execução; deixar o plano e a working tree disponíveis para revisão.
+- Após a revisão manual aprovada, registrar o fechamento no checkpoint correspondente.
 
 ### Task 1: Padronizar a barra de mineração e permitir recolher/expandir
 
