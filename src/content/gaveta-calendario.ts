@@ -35,8 +35,7 @@ export function montarCalendario(
         (valor === null && botao.dataset.preset === 'none') ||
         botao.dataset.preset === String(valor)
       botao.setAttribute('aria-pressed', String(ativo))
-      botao.style.outline = ativo ? '2px solid #7C3AED' : 'none'
-      botao.style.outlineOffset = '-2px'
+      botao.dataset.selecionado = String(ativo)
     }
   }
 
@@ -55,7 +54,7 @@ export function montarCalendario(
   atualizarSelecao(selecionado)
 
   const aplicar = doc.createElement('button')
-  aplicar.className = 'acao'
+  aplicar.className = 'acao acao--primaria'
   aplicar.dataset.acao = 'aplicar'
   aplicar.textContent = 'Aplicar na página'
   aplicar.addEventListener('click', () => {
@@ -74,10 +73,8 @@ function botaoPreset(
   const botao = doc.createElement('button')
   botao.type = 'button'
   botao.dataset.preset = preset
+  botao.className = 'preset'
   botao.textContent = texto
   botao.setAttribute('aria-pressed', 'false')
-  botao.style.cssText =
-    'cursor:pointer;padding:4px 10px;border-radius:8px;' +
-    'box-shadow:inset 0 0 0 1px rgba(196,167,255,0.4)'
   return botao
 }

@@ -64,7 +64,7 @@ export function montarMinerar(
   raiz.appendChild(aviso)
 
   const iniciar = doc.createElement('button')
-  iniciar.className = 'acao'
+  iniciar.className = 'acao acao--primaria'
   iniciar.dataset.acao = 'iniciar'
   iniciar.textContent = '▶ Iniciar mineração'
   iniciar.addEventListener('click', () => {
@@ -103,11 +103,9 @@ function campo(
   const el = doc.createElement('input')
   el.type = 'number'
   el.min = '1'
+  el.className = 'campo'
   el.dataset.campo = nome
   el.value = valor === null ? '' : String(valor)
-  el.style.cssText =
-    'width:80px;padding:6px 8px;border-radius:8px;border:0;' +
-    'background:#1A1622;color:#FFF;font:inherit'
   return el
 }
 

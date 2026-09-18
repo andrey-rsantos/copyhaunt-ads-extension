@@ -28,7 +28,11 @@ export function App() {
           type="button"
           aria-pressed={selecionado === null}
           onClick={() => setSelecionado(null)}
-          className="rounded-btn bg-ink px-2 py-1 text-xs text-lavender"
+          className={`rounded-btn bg-ink border px-2 py-1 text-xs text-lavender ${
+            selecionado === null
+              ? 'botao--selecionado border-purple text-white'
+              : 'border-transparent'
+          }`}
         >
           Sem filtro
         </button>
@@ -38,7 +42,11 @@ export function App() {
             type="button"
             aria-pressed={selecionado === dias}
             onClick={() => setSelecionado(dias)}
-            className="rounded-btn bg-ink px-2 py-1 text-xs text-lavender"
+            className={`rounded-btn bg-ink border px-2 py-1 text-xs text-lavender ${
+              selecionado === dias
+                ? 'botao--selecionado border-purple text-white'
+                : 'border-transparent'
+            }`}
           >
             {dias}+ Dias
           </button>

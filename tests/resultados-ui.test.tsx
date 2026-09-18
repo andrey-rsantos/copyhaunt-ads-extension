@@ -293,6 +293,21 @@ describe('página de resultados', () => {
     ])
   })
 
+  it('aplica hierarquia visual às ações principais do card', async () => {
+    renderizarComStorage(resultadoComTresAnuncios())
+    await aguardarCards()
+
+    expect(document.querySelector('[data-acao="links"]')?.className).toContain(
+      'botao--secundario',
+    )
+    expect(document.querySelector('[data-acao="copiar"]')?.className).toContain(
+      'botao--secundario',
+    )
+    expect(document.querySelector('[data-acao="baixar"]')?.className).toContain(
+      'botao--primario',
+    )
+  })
+
   it('mantém um menu aberto e fecha ao clicar fora', async () => {
     renderizarComStorage(resultadoComTresAnuncios())
     await aguardarCards()

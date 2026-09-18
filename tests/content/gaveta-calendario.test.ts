@@ -5,6 +5,15 @@ import { montarCalendario } from '../../src/content/gaveta-calendario'
 const VAZIA = { diasMin: null, diasMax: null }
 
 describe('montarCalendario', () => {
+  it('marca o preset selecionado sem depender de estilo inline', () => {
+    const el = montarCalendario(document, { diasMin: 14, diasMax: null }, () => {})
+    const ativo = el.querySelector<HTMLElement>('[data-preset="14"]')
+
+    expect(ativo?.className).toBe('preset')
+    expect(ativo?.dataset.selecionado).toBe('true')
+    expect(ativo?.style.cssText).toBe('')
+  })
+
   it('oferece os cinco presets e a opção de limpar', () => {
     const el = montarCalendario(document, VAZIA, () => {})
     const atalhos = [...el.querySelectorAll('[data-preset]')].map(
@@ -18,10 +27,12 @@ describe('montarCalendario', () => {
 
     expect(el.querySelector('[data-preset="14"]')?.getAttribute('aria-pressed')).toBe('true')
     expect(el.querySelector('[data-preset="5"]')?.getAttribute('aria-pressed')).toBe('false')
-    expect(el.querySelector<HTMLElement>('[data-preset="14"]')?.style.outline).toBe(
-      '2px solid #7C3AED',
+    expect(el.querySelector<HTMLElement>('[data-preset="14"]')?.dataset.selecionado).toBe(
+      'true',
     )
-    expect(el.querySelector<HTMLElement>('[data-preset="5"]')?.style.outline).toBe('none')
+    expect(el.querySelector<HTMLElement>('[data-preset="5"]')?.dataset.selecionado).toBe(
+      'false',
+    )
   })
 
   it('não mostra campos numéricos de mínimo ou máximo', () => {
@@ -36,8 +47,8 @@ describe('montarCalendario', () => {
     const el = montarCalendario(document, VAZIA, espiao)
 
     el.querySelector<HTMLElement>('[data-preset="14"]')?.click()
-    expect(el.querySelector<HTMLElement>('[data-preset="14"]')?.style.outline).toBe(
-      '2px solid #7C3AED',
+    expect(el.querySelector<HTMLElement>('[data-preset="14"]')?.dataset.selecionado).toBe(
+      'true',
     )
     el.querySelector<HTMLElement>('[data-acao="aplicar"]')?.click()
 

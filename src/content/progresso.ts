@@ -38,6 +38,7 @@ export interface AcoesProgresso {
   aoAbrirResultados: () => void
   aoParar: () => void
   aoMinerarNovamente: () => void
+  aoRecolher: () => void
 }
 
 export function montarProgresso(doc: Document, acoes: AcoesProgresso): HTMLElement {
@@ -62,6 +63,11 @@ export function montarProgresso(doc: Document, acoes: AcoesProgresso): HTMLEleme
   const resultados = botao(doc, 'resultados', 'Ver resultados', acoes.aoAbrirResultados)
   resultados.disabled = true
 
+  const recolher = botao(doc, 'recolher', '', acoes.aoRecolher)
+  recolher.setAttribute('aria-label', 'Recolher mineração')
+  recolher.title = 'Recolher mineração'
+  recolher.appendChild(iconeRecolher(doc))
+
   cartao.append(
     estado,
     trilho,
@@ -72,6 +78,7 @@ export function montarProgresso(doc: Document, acoes: AcoesProgresso): HTMLEleme
     botao(doc, 'parar', 'Parar mineração', acoes.aoParar),
     resultados,
     botao(doc, 'repetir', 'Minerar novamente', acoes.aoMinerarNovamente),
+    recolher,
   )
 
   return cartao
@@ -140,6 +147,26 @@ export function atualizarProgresso(
   mostrar('parar', p.estado === 'pausado')
   mostrar('resultados', p.estado === 'pausado' || terminou)
   mostrar('repetir', terminou)
+  mostrar('recolher', terminou)
+}
+
+function iconeRecolher(doc: Document): SVGSVGElement {
+  const svg = doc.createElementNS('http://www.w3.org/2000/svg', 'svg')
+  svg.setAttribute('viewBox', '0 0 24 24')
+  svg.setAttribute('width', '15')
+  svg.setAttribute('height', '15')
+  svg.setAttribute('fill', 'none')
+  svg.setAttribute('stroke', 'currentColor')
+  svg.setAttribute('stroke-width', '2')
+  svg.setAttribute('stroke-linecap', 'round')
+  svg.setAttribute('stroke-linejoin', 'round')
+  svg.setAttribute('aria-hidden', 'true')
+  svg.setAttribute('focusable', 'false')
+
+  const path = doc.createElementNS('http://www.w3.org/2000/svg', 'path')
+  path.setAttribute('d', 'm15 18-6-6 6-6')
+  svg.appendChild(path)
+  return svg
 }
 
 function contador(doc: Document, papel: string, rotulo: string): HTMLElement {

@@ -111,6 +111,7 @@ export function CartaoResultado({
             <button
               type="button"
               data-acao="copiar"
+              className="botao botao--secundario"
               onClick={() => setCopiasAbertas((aberta) => !aberta)}
             >
               Copiar
@@ -142,7 +143,13 @@ export function CartaoResultado({
               </span>
             )}
           </div>
-          <button type="button" data-acao="baixar" onClick={() => void baixar()} disabled={baixando}>
+          <button
+            type="button"
+            data-acao="baixar"
+            className="botao botao--primario"
+            onClick={() => void baixar()}
+            disabled={baixando}
+          >
             {baixando ? 'Baixando…' : 'Baixar'}
           </button>
         </div>

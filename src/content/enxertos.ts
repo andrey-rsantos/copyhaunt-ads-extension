@@ -112,36 +112,37 @@ function montarHost(doc: Document, enxertos: Enxerto[]): HTMLElement {
   divisor.className = 'divisor'
   fila.appendChild(divisor)
 
-  for (const e of enxertos) {
-    const botao = doc.createElement('div')
-    botao.className = 'botao'
-    botao.dataset.chave = e.chave
-    botao.dataset.variante = e.variante
-    botao.title = e.titulo
-    if (e.icone) {
-      botao.appendChild(montarIcone(doc, e.icone))
-      if (e.somenteIcone) {
-        botao.dataset.iconeApenas = 'true'
-        botao.setAttribute('aria-label', e.titulo)
-      } else {
-        const texto = doc.createElement('span')
-        texto.textContent = e.glifo
-        botao.appendChild(texto)
-      }
-    } else {
-      botao.textContent = e.glifo
-    }
-    botao.addEventListener('click', (ev) => {
-      // A barra da Meta tem os seus próprios listeners; sem isto, clicar no
-      // nosso botão também mexe no que está atrás.
-      ev.stopPropagation()
-      e.aoClicar(botao)
-    })
-    fila.appendChild(botao)
-  }
+  for (const e of enxertos) fila.appendChild(montarBotao(doc, e))
 
   shadow.appendChild(fila)
   return host
+}
+
+/** Monta um botão de enxerto para poder restaurá-lo após recolher a mineração. */
+export function montarBotao(doc: Document, e: Enxerto): HTMLElement {
+  const botao = doc.createElement('div')
+  botao.className = 'botao'
+  botao.dataset.chave = e.chave
+  botao.dataset.variante = e.variante
+  botao.title = e.titulo
+  if (e.icone) {
+    botao.appendChild(montarIcone(doc, e.icone))
+    if (e.somenteIcone) {
+      botao.dataset.iconeApenas = 'true'
+      botao.setAttribute('aria-label', e.titulo)
+    } else {
+      const texto = doc.createElement('span')
+      texto.textContent = e.glifo
+      botao.appendChild(texto)
+    }
+  } else {
+    botao.textContent = e.glifo
+  }
+  botao.addEventListener('click', (ev) => {
+    ev.stopPropagation()
+    e.aoClicar(botao)
+  })
+  return botao
 }
 
 function montarIcone(doc: Document, nome: NonNullable<Enxerto['icone']>): SVGSVGElement {

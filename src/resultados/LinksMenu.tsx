@@ -49,6 +49,7 @@ export function LinksMenu({
       <button
         type="button"
         data-acao="links"
+        className="botao botao--secundario"
         aria-expanded={aberto}
         onClick={(evento) => {
           evento.stopPropagation()

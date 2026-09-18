@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>CopyHaunt — preview de botões</title>
+  <style>
+    :root { --ink:#08070D; --purple:#7C3AED; --violet:#A855F7; --lavender:#C4A7FF; --muted:#777281; --line:#e8e5ed; }
+    * { box-sizing:border-box; }
+    body { margin:0; background:#f7f6f9; color:var(--ink); font:14px Inter,ui-sans-serif,system-ui,sans-serif; }
+    main { width:min(920px,calc(100vw - 32px)); margin:40px auto; }
+    .eyebrow { margin:0 0 8px; color:var(--purple); font-size:11px; font-weight:700; letter-spacing:.1em; text-transform:uppercase; }
+    h1,h2 { font-family:Sora,Inter,ui-sans-serif,system-ui,sans-serif; letter-spacing:-.03em; }
+    h1 { margin:0; font-size:28px; } h2 { margin:30px 0 12px; font-size:15px; }
+    .intro,.note { color:var(--muted); line-height:1.55; } .intro { max-width:650px; margin:10px 0 30px; }
+    .shell,.samples { border:1px solid var(--line); border-radius:14px; background:#fff; box-shadow:0 10px 30px #08070d12; }
+    .toolbar { display:flex; align-items:center; gap:10px; min-height:64px; padding:14px 16px; border-bottom:1px solid var(--line); color:#625e69; font-size:12px; }
+    .meta { color:#1877f2; font-size:18px; font-weight:800; white-space:nowrap; }
+    .search { flex:1; min-width:80px; height:34px; border:1px solid #d9d5df; border-radius:8px; }
+    .area { padding:32px 16px; }
+    .progress { display:flex; align-items:center; gap:10px; min-height:36px; padding:0 9px 0 14px; border-radius:10px; background:var(--ink); color:#fff; font-size:12px; white-space:nowrap; }
+    .track { width:80px; height:6px; overflow:hidden; border-radius:99px; background:#ffffff29; } .bar { width:100%; height:100%; border-radius:inherit; background:linear-gradient(90deg,var(--purple),var(--violet)); }
+    .metric { color:var(--lavender); font-weight:600; }
+    button { border:0; font:inherit; cursor:pointer; transition:filter 150ms,box-shadow 150ms; }
+    button:hover { filter:brightness(1.14); } button:focus-visible { outline:2px solid var(--violet); outline-offset:2px; }
+    .btn { display:inline-flex; align-items:center; justify-content:center; gap:6px; min-height:32px; padding:0 12px; border-radius:8px; font-size:12px; font-weight:600; white-space:nowrap; }
+    .primary { background:var(--purple); color:#fff; box-shadow:0 0 16px #7c3aed33; }
+    .secondary { background:#181621; color:#fff; box-shadow:inset 0 0 0 1px #302b3d; }
+    .ghost { width:28px; padding:0; background:transparent; color:var(--lavender); }
+    .icon { width:15px; height:15px; fill:none; stroke:currentColor; stroke-linecap:round; stroke-linejoin:round; stroke-width:1.8; }
+    .collapsed { display:none; }
+    .samples { display:flex; flex-wrap:wrap; gap:10px; padding:20px; }
+    .legend { width:100%; margin:0 0 4px; color:var(--muted); font-size:12px; }
+    .preset { min-height:32px; padding:0 12px; border:1px solid #d8d2e2; border-radius:8px; background:#fff; color:var(--ink); font-size:12px; font-weight:600; }
+    .preset[aria-pressed="true"],.preset:hover { border-color:var(--purple); box-shadow:inset 0 0 0 1px var(--purple); color:var(--purple); }
+    .note { margin:10px 0 0; font-size:11px; }
+    @media (max-width:720px) { main{margin:24px auto}.progress{gap:7px;overflow-x:auto}.toolbar{gap:6px}.toolbar>span:not(.meta){display:none} }
+  </style>
+</head>
+<body>
+  <main>
+    <p class="eyebrow">CopyHaunt Ads · preview de interface</p>
+    <h1>Botões e barra de mineração</h1>
+    <p class="intro">Proposta aprovada para substituir os controles nativos por uma hierarquia única, alinhada à IDV.</p>
+
+    <h2>Barra concluída · expandida</h2>
+    <section class="shell">
+      <div class="toolbar"><span class="meta">Meta</span><span>Biblioteca de Anúncios</span><span class="search"></span><button class="btn primary">Minerar</button></div>
+      <div class="area">
+        <div class="progress" id="progress"><strong>Concluído</strong><span class="track"><span class="bar"></span></span><span class="metric">50 encontrados</span><span class="metric">50 analisados</span><span class="metric">4 rolagens</span><button class="btn primary">Ver resultados</button><button class="btn secondary">Minerar novamente</button><button class="btn ghost" id="collapse" aria-label="Recolher mineração" title="Recolher mineração"><svg class="icon" viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"/></svg></button></div>
+        <div class="collapsed" id="collapsed"><button class="btn primary" id="expand"><svg class="icon" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></svg>Minerar</button></div>
+      </div>
+    </section>
+    <p class="note">A seta recolhe a barra e retorna ao botão Minerar; ao expandir, a mineração concluída continua disponível.</p>
+
+    <h2>Variantes de ação</h2>
+    <section class="samples"><p class="legend">Primária para a ação principal · secundária para ações complementares · fantasma para ações discretas.</p><button class="btn primary">Minerar</button><button class="btn secondary">Minerar novamente</button><button class="btn secondary">Ver resultados</button><button class="btn ghost" aria-label="Recolher"><svg class="icon" viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"/></svg></button></section>
+
+    <h2>Filtros e ações compactas</h2>
+    <section class="samples"><p class="legend">O preset selecionado usa contorno roxo e `aria-pressed`, sem depender apenas da cor de fundo.</p><button class="preset" aria-pressed="false">3+ Dias</button><button class="preset" aria-pressed="true">5+ Dias</button><button class="preset" aria-pressed="false">14+ Dias</button><button class="btn primary">Exportar</button><button class="btn secondary">Links</button></section>
+  </main>
+  <script>
+    const progress = document.querySelector('#progress');
+    const collapsed = document.querySelector('#collapsed');
+    document.querySelector('#collapse').onclick = () => { progress.classList.add('collapsed'); collapsed.classList.remove('collapsed'); };
+    document.querySelector('#expand').onclick = () => { progress.classList.remove('collapsed'); collapsed.classList.add('collapsed'); };
+  </script>
+</body>
+</html>

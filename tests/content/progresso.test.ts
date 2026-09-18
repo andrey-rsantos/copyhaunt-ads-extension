@@ -25,6 +25,7 @@ function acoes(parcial: Partial<AcoesProgresso> = {}): AcoesProgresso {
     aoAbrirResultados: vi.fn(),
     aoParar: vi.fn(),
     aoMinerarNovamente: vi.fn(),
+    aoRecolher: vi.fn(),
     ...parcial,
   }
 }
@@ -145,6 +146,30 @@ describe('cartão de progresso', () => {
     expect(cartao.querySelector<HTMLButtonElement>('[data-acao="repetir"]')?.hidden).toBe(false)
     expect(cartao.querySelector<HTMLButtonElement>('[data-acao="parar"]')?.hidden).toBe(true)
     expect(cartao.querySelector<HTMLButtonElement>('[data-acao="pausar"]')?.hidden).toBe(true)
+  })
+
+  it('mostra o controle de recolher somente em estado terminal', () => {
+    const cartao = montarProgresso(document, acoes())
+
+    atualizarProgresso(cartao, progresso({ estado: 'minerando' }), 100)
+    expect(
+      cartao.querySelector<HTMLButtonElement>('[data-acao="recolher"]')?.hidden,
+    ).toBe(true)
+
+    atualizarProgresso(cartao, progresso({ estado: 'concluido' }), 100)
+    expect(
+      cartao.querySelector<HTMLButtonElement>('[data-acao="recolher"]'),
+    ).not.toBeNull()
+  })
+
+  it('dispara o callback de recolher', () => {
+    const aoRecolher = vi.fn()
+    const cartao = montarProgresso(document, acoes({ aoRecolher }))
+    atualizarProgresso(cartao, progresso({ estado: 'concluido' }), 100)
+
+    cartao.querySelector<HTMLButtonElement>('[data-acao="recolher"]')?.click()
+
+    expect(aoRecolher).toHaveBeenCalledTimes(1)
   })
 
   it('dispara parar e repetir pelos callbacks corretos', () => {

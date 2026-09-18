@@ -16,7 +16,12 @@ import { precisaOrdenar, urlOrdenada } from '../core/ordenacao'
 import { acharCards, definirPadraoAncora } from './anchor'
 import { criarAgendadorRepintura } from './agendamento'
 import { iniciarQuandoHouverBody } from './arranque'
-import { plantarEnxertos, type Enxerto, type Plantio } from './enxertos'
+import {
+  montarBotao,
+  plantarEnxertos,
+  type Enxerto,
+  type Plantio,
+} from './enxertos'
 import { abrirGaveta, alternarGaveta, fecharGaveta } from './gaveta'
 import { escreverNaBusca, montarExemplos } from './gaveta-exemplos'
 import { montarCalendario } from './gaveta-calendario'
@@ -338,6 +343,21 @@ function mostrarProgresso(shadow: ShadowRoot): HTMLElement | null {
           pedidoAtual,
         ),
       )
+    },
+    aoRecolher: () => {
+      const botao = montarBotao(document, {
+        chave: 'minerar',
+        glifo: 'Minerar',
+        icone: 'picareta',
+        titulo: 'Minerar',
+        variante: 'solido',
+        aoClicar: () => {
+          const atual = shadow.querySelector('[data-chave="minerar"]')
+          if (atual) atual.replaceWith(cartao)
+        },
+      })
+      const atual = shadow.querySelector('[data-chave="progresso"]')
+      if (atual) atual.replaceWith(botao)
     },
   })
   cartao.dataset.chave = 'progresso'

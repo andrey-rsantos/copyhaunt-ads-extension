@@ -211,6 +211,46 @@ export const CSS_GAVETA = `
     padding: 6px 0;
   }
 
+  :host(#copyhaunt-enxertos) .gaveta button,
+  :host(#copyhaunt-enxertos) .gaveta input {
+    font: inherit;
+  }
+
+  :host(#copyhaunt-enxertos) .gaveta .campo {
+    width: 80px;
+    padding: 6px 8px;
+    border: 1px solid #302B3D;
+    border-radius: 8px;
+    background: #1A1622;
+    color: #FFFFFF;
+  }
+  :host(#copyhaunt-enxertos) .gaveta .campo:focus-visible {
+    outline: 2px solid #A855F7;
+    outline-offset: 1px;
+  }
+
+  :host(#copyhaunt-enxertos) .gaveta .preset {
+    min-height: 32px;
+    padding: 0 10px;
+    border: 1px solid rgba(196, 167, 255, 0.4);
+    border-radius: 8px;
+    background: transparent;
+    color: #FFFFFF;
+    cursor: pointer;
+    transition: background 150ms ease, border-color 150ms ease, color 150ms ease;
+  }
+  :host(#copyhaunt-enxertos) .gaveta .preset:hover,
+  :host(#copyhaunt-enxertos) .gaveta .preset[data-selecionado="true"] {
+    border-color: #7C3AED;
+    box-shadow: inset 0 0 0 1px #7C3AED;
+    color: #C4A7FF;
+  }
+  :host(#copyhaunt-enxertos) .gaveta .preset:focus-visible,
+  :host(#copyhaunt-enxertos) .gaveta .acao:focus-visible {
+    outline: 2px solid #A855F7;
+    outline-offset: 2px;
+  }
+
   :host(#copyhaunt-enxertos) .gaveta .nota {
     margin-top: 10px;
     padding-top: 10px;
@@ -225,12 +265,13 @@ export const CSS_GAVETA = `
     height: 38px;
     border: 0;
     border-radius: 10px;
-    background: #7C3AED;
-    color: #FFFFFF;
-    font-family: inherit;
-    font-size: 13px;
     font-weight: 600;
     cursor: pointer;
+  }
+  :host(#copyhaunt-enxertos) .gaveta .acao--primaria {
+    background: #7C3AED;
+    color: #FFFFFF;
+    box-shadow: 0 0 16px rgba(124, 58, 237, 0.2);
   }
   :host(#copyhaunt-enxertos) .gaveta .acao:hover { filter: brightness(1.12); }
 `
@@ -267,6 +308,38 @@ export const CSS_PROGRESSO = `
 
   :host(#copyhaunt-enxertos) .progresso .numero { font-weight: 600; color: #C4A7FF; }
 
+  :host(#copyhaunt-enxertos) .progresso button {
+    min-height: 28px;
+    padding: 0 10px;
+    border: 0;
+    border-radius: 8px;
+    font: inherit;
+    font-weight: 600;
+    cursor: pointer;
+    transition: filter 150ms ease, background 150ms ease, box-shadow 150ms ease;
+  }
+  :host(#copyhaunt-enxertos) .progresso button:hover { filter: brightness(1.14); }
+  :host(#copyhaunt-enxertos) .progresso button:focus-visible {
+    outline: 2px solid #A855F7;
+    outline-offset: 2px;
+  }
+  :host(#copyhaunt-enxertos) .progresso button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  :host(#copyhaunt-enxertos) .progresso [data-acao="resultados"] {
+    background: #7C3AED;
+    color: #FFFFFF;
+    box-shadow: 0 0 16px rgba(124, 58, 237, 0.2);
+  }
+  :host(#copyhaunt-enxertos) .progresso [data-acao="repetir"],
+  :host(#copyhaunt-enxertos) .progresso [data-acao="parar"] {
+    background: #181621;
+    color: #FFFFFF;
+    box-shadow: inset 0 0 0 1px #302B3D;
+  }
+
   :host(#copyhaunt-enxertos) .progresso .pausar {
     border: 0;
     background: transparent;
@@ -274,6 +347,12 @@ export const CSS_PROGRESSO = `
     font: inherit;
     font-weight: 600;
     cursor: pointer;
+  }
+  :host(#copyhaunt-enxertos) .progresso [data-acao="recolher"] {
+    width: 28px;
+    padding: 0;
+    background: transparent;
+    color: #C4A7FF;
   }
 `
 

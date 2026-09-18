@@ -8,6 +8,15 @@ const URL_ATUAL =
   'https://www.facebook.com/ads/library/?q=emagrecimento&country=BR&active_status=active'
 
 describe('montarMinerar', () => {
+  it('usa variantes visuais próprias nos controles da gaveta', () => {
+    const el = montarMinerar(document, URL_ATUAL, agora, () => {})
+
+    expect(el.querySelector('[data-campo="colacaoMinima"]')?.className).toBe('campo')
+    expect(el.querySelector('[data-acao="iniciar"]')?.className).toBe(
+      'acao acao--primaria',
+    )
+  })
+
   it('deixa explícito que os critérios de escala são mínimos', () => {
     const el = montarMinerar(document, URL_ATUAL, agora, () => {})
 
