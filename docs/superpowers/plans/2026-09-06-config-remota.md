@@ -752,7 +752,7 @@ Considerações:
 - Somente dados, nunca código. Nada vindo do arquivo é executado, que é o que
   separa configuração remota de carregamento de código remoto, proibido no
   MV3. É a alternativa que a própria documentação do Chrome recomenda, e o
-  que a extensão de referência já faz com os seletores dela
+  padrão permite corrigir valores operacionais sem reenviar a extensão
 - host_permissions passa de um host para dois, e o verificador do build passa
   a travar nos dois, na ordem. A trava não afrouxou: um host a mais continua
   reprovando o build. permissions segue exatamente ["storage"]

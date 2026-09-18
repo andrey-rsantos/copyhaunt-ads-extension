@@ -59,18 +59,32 @@ tipografia (Sora/Inter), raios de borda, glow e ícones Lucide.
 
 ---
 
-## 3. Inspiração e decisões de arquitetura
-  
-  O projeto foi orientado por referências públicas de mercado e por testes
-  independentes. Esta seção registra apenas as decisões do CopyHaunt, sem
-  reproduzir código, identificadores internos ou detalhes operacionais de
-  terceiros.
-  
-  A implementação foi desenhada de forma independente, com foco em coleta
-  passiva, normalização de dados e interface própria.
-  
-  ---
-  ---
+## 3. Inspiração e decisões de arquitetura (referência de mercado)
+
+O CopyHaunt é uma alternativa gratuita e de código aberto, inspirada no
+referência de mercado. A referência ajudou a formular perguntas sobre a Biblioteca de
+Anúncios e sobre a experiência de pesquisa, mas o estudo foi de arquitetura e
+**nenhum código de terceiros é reaproveitado**.
+
+### O que aprendemos sobre a Biblioteca
+
+| Comportamento observado | Decisão do CopyHaunt |
+|---|---|
+| A Biblioteca entrega lotes de anúncios por `XMLHttpRequest` durante a navegação | Interceptar o XHR no *main world* e normalizar os lotes sem criar uma busca própria |
+| A coleta acontece junto do carregamento e da rolagem real da página | Manter a coleta passiva e acompanhar a sessão ativa do usuário |
+| As respostas trazem mídia, datas, anunciante, links e metadados de repetição | Normalizar somente os campos necessários para os cards, filtros e downloads |
+| A página pode mudar seletores e valores operacionais sem aviso | Manter dados operacionais em configuração remota; a lógica continua dentro da extensão |
+| A interface própria precisa conviver com o DOM da Meta | Isolar os enxertos no Shadow DOM e preservar os controles pertencentes à Meta |
+| A Biblioteca oferece ordenação por veiculação | Usar `sort_data[mode]=total_impressions` com direção descendente quando a busca exigir essa ordem |
+
+### Regras de rede declarativas
+
+A decisão relevante para o CopyHaunt é que as regras de rede observadas não
+tratavam do CDN de mídia. Esse foi o ponto de partida do Spike 1: validar um
+fluxo de download com os recursos normais do navegador, sem regra declarativa
+extra e sem a permissão `downloads`.
+
+---
 
 ## 4. Spikes executados
 
@@ -92,7 +106,7 @@ mídia de qualquer contexto.
 **Consequências:** dispensa `host_permissions` no fbcdn, dispensa regra de DNR
 para mídia, e dispensa a permissão `declarativeNetRequest`.
 
-Quanto ao CSP que o referência de mercado remove, ambos os motivos têm saída melhor hoje.
+Quanto ao CSP presente na página, ambos os fluxos têm uma saída melhor hoje.
 Injeção no *main world* usa `world: "MAIN"` no `content_scripts` (Chrome 111 ou
 superior), sem tag de script e portanto sem CSP envolvido. E o download roda no
 content script, que por estar em mundo isolado não é afetado pelo CSP da página.
@@ -139,8 +153,7 @@ Quatro contextos de execução:
 
 ### Decisões de arquitetura
 
-**O content script é o hub.** O referência de mercado envia os dados do script injetado
-diretamente ao iframe. Aqui não: quem precisa do dado é o content script, que
+**O content script é o hub.** Quem precisa do dado é o content script, que
 esconde card, destaca borda e planta botão. Passar pelo iframe para voltar seria
 um percurso extra no caminho quente.
 
@@ -325,8 +338,8 @@ Quem paga se der errado é o usuário final, não o produto. As travas acima
 existem para manter isso no mínimo: um pedido, por clique deliberado, por
 anunciante, por sessão.
 
-A extensão de referência faz o mesmo, com escala omitida. Isso mede que ainda
-não houve consequência visível — não que o risco inexista.
+Os limites acima reduzem o volume e deixam a ação explícita para o usuário,
+mas não eliminam o risco operacional da requisição ativa.
 
 #### A4 · Filtro de data
 
@@ -536,9 +549,9 @@ na seção 4. O `run_at: "document_start"` é obrigatório nos dois: o intercept
 precisa aplicar o patch em `XMLHttpRequest` **antes** de a página fazer a
 primeira requisição.
 
-Contra as quatro permissões e dois hosts do referência de mercado. Uma extensão que pede o
-mínimo passa mais facilmente pela revisão da Web Store e é mais fácil de o
-usuário aceitar.
+O manifesto mantém uma permissão de armazenamento e dois hosts estreitos. Uma
+extensão que pede o mínimo passa mais facilmente pela revisão da Web Store e é
+mais fácil de o usuário aceitar.
 
 ### Stack
 
