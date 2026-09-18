@@ -32,7 +32,11 @@ function montarMotorFalso(aprovados: Ad[]) {
     interromper: vi.fn(() => { estado = 'interrompida' }),
     iniciar: vi.fn(async () => { estado = 'minerando' }),
   }
-  return { motor, estadoAtual: () => estado }
+  return {
+    motor,
+    estadoAtual: () => estado,
+    definirEstado: (novo: Progresso['estado']) => { estado = novo },
+  }
 }
 
 function montar(falso: ReturnType<typeof montarMotorFalso>, salvar = vi.fn(async () => {})) {
@@ -106,6 +110,30 @@ describe('controle da sessão', () => {
     const { sessao, salvar } = montar(falso)
 
     await expect(sessao.interromper()).resolves.toBe(false)
+    expect(salvar).not.toHaveBeenCalled()
+  })
+
+  it('grava checkpoint minerando sem interromper o motor', async () => {
+    const falso = montarMotorFalso([ad('a1')])
+    const { sessao, salvar } = montar(falso)
+
+    await expect(sessao.checkpoint()).resolves.toBe(true)
+
+    expect(falso.motor.interromper).not.toHaveBeenCalled()
+    expect(falso.estadoAtual()).toBe('minerando')
+    expect(salvar).toHaveBeenCalledWith(expect.objectContaining({
+      estado: 'minerando',
+      anuncios: [expect.objectContaining({ id: 'a1' })],
+    }))
+  })
+
+  it('ignora checkpoint tardio depois de a mineração concluir', async () => {
+    const falso = montarMotorFalso([ad('a1')])
+    const { sessao, salvar } = montar(falso)
+    falso.definirEstado('concluido')
+
+    await expect(sessao.checkpoint()).resolves.toBe(false)
+
     expect(salvar).not.toHaveBeenCalled()
   })
 })

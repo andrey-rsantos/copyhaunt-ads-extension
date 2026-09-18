@@ -36,6 +36,7 @@ import {
   criarControleMineracao,
   type ControleMineracao,
 } from './controle-mineracao'
+import { criarCicloMineracao } from './ciclo-mineracao'
 
 /** Índice da sessão. Vive enquanto a aba viver. */
 const store = new AdStore()
@@ -71,6 +72,15 @@ let ritmo = { pisoMs: 2500, timeoutMs: 4500, jitter: 0.4 }
 let motorAtual: Minerador | null = null
 let controleAtual: ControleMineracao | null = null
 let pedidoAtual: PedidoMineracao | null = null
+
+const cicloMineracao = criarCicloMineracao(() => controleAtual)
+
+document.addEventListener('visibilitychange', () => {
+  cicloMineracao.aoMudarVisibilidade(document.visibilityState)
+})
+window.addEventListener('pagehide', () => {
+  cicloMineracao.aoPagehide()
+})
 
 /** Monta o motor com os efeitos reais do navegador ligados. */
 export function criarMinerador(

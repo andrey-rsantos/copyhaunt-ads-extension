@@ -29,11 +29,16 @@ export interface DependenciasFinalizacao {
 }
 
 /** Pausa e interrupção gravam o que há, sem pós-filtro: o snapshot é parcial. */
-const ESTADOS_PARCIAIS = new Set<Progresso['estado']>(['pausado', 'interrompida'])
+const ESTADOS_PARCIAIS = new Set<Progresso['estado']>([
+  'minerando',
+  'pausado',
+  'interrompida',
+])
 
 export interface DependenciasParcial {
   salvar?: DependenciasFinalizacao['salvar']
   agora?: () => Date
+  podePersistir?: () => boolean
 }
 
 /** Devolve `true` só quando a gravação resolveu: o cartão não pode fingir. */
@@ -45,18 +50,21 @@ export async function salvarResultadoParcial(
 ): Promise<boolean> {
   if (!ESTADOS_PARCIAIS.has(progresso.estado)) return false
 
-  try {
-    const salvar = deps.salvar ?? salvarResultado
-    await salvar({
-      origem,
-      estado: progresso.estado,
-      salvoEm: deps.agora?.() ?? new Date(),
-      anuncios: aprovados,
-    })
-    return true
-  } catch {
-    return false
-  }
+  const salvar = deps.salvar ?? salvarResultado
+  return naFila(async () => {
+    try {
+      if (deps.podePersistir && !deps.podePersistir()) return false
+      await salvar({
+        origem,
+        estado: progresso.estado,
+        salvoEm: deps.agora?.() ?? new Date(),
+        anuncios: aprovados,
+      })
+      return true
+    } catch {
+      return false
+    }
+  })
 }
 
 export async function finalizarResultado(
@@ -68,17 +76,28 @@ export async function finalizarResultado(
   if (ESTADOS_PARCIAIS.has(progresso.estado)) return null
 
   const finais = deps.filtrar ? await deps.filtrar(aprovados) : aprovados
-  try {
-    const salvar = deps.salvar ?? salvarResultado
-    await salvar({
-      origem,
-      estado: progresso.estado,
-      salvoEm: deps.agora ? deps.agora() : new Date(),
-      anuncios: finais,
-    })
-    deps.liberar?.()
-    return finais
-  } catch {
-    return null
-  }
+  const salvar = deps.salvar ?? salvarResultado
+  return naFila(async () => {
+    try {
+      await salvar({
+        origem,
+        estado: progresso.estado,
+        salvoEm: deps.agora ? deps.agora() : new Date(),
+        anuncios: finais,
+      })
+      deps.liberar?.()
+      return finais
+    } catch {
+      return null
+    }
+  })
+}
+
+/** Serializa checkpoints e resultados finais na mesma página. */
+let fila: Promise<unknown> = Promise.resolve()
+
+function naFila<T>(operacao: () => Promise<T>): Promise<T> {
+  const trabalho = fila.then(operacao)
+  fila = trabalho.catch(() => undefined)
+  return trabalho
 }

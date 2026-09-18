@@ -51,6 +51,9 @@ describe('resultado', () => {
     expect(rotuloDoResultado('interrompida')).toBe(
       'Resultados parciais — mineração interrompida',
     )
+    expect(rotuloDoResultado('minerando')).toBe(
+      'Último checkpoint — mineração em andamento',
+    )
     expect(rotuloDoResultado('concluido')).toBe('Mineração concluída')
     expect(rotuloDoResultado('esgotado')).toBe('Fim dos resultados')
   })

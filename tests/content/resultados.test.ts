@@ -115,6 +115,22 @@ describe('atalho da página de resultados', () => {
     }))
   })
 
+  it('salva um checkpoint enquanto a mineração continua em segundo plano', async () => {
+    const salvar = vi.fn(async () => {})
+
+    const salvo = await salvarResultadoParcial(
+      { estado: 'minerando', analisados: 4, encontrados: 1, rolagens: 2 },
+      [ad()],
+      'https://www.facebook.com/ads/library/?q=receitas',
+      { salvar },
+    )
+
+    expect(salvo).toBe(true)
+    expect(salvar).toHaveBeenCalledWith(expect.objectContaining({
+      estado: 'minerando',
+    }))
+  })
+
   it('salva uma interrupção sem chamar filtro ou liberar ação', async () => {
     const salvar = vi.fn(async () => {})
     const trabalho = await salvarResultadoParcial(

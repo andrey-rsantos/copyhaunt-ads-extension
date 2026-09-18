@@ -75,6 +75,28 @@ describe('Minerador', () => {
     expect(rolar).toHaveBeenCalledTimes(3)
   })
 
+  it('continua rolando quando a aba fica oculta', async () => {
+    let visibilidade: DocumentVisibilityState = 'visible'
+    vi.stubGlobal('document', {
+      get visibilityState() {
+        return visibilidade
+      },
+    })
+
+    const { relogio, rolar, minerador } = montar({ maxRolagens: 2 })
+    const trabalho = minerador.iniciar()
+
+    visibilidade = 'hidden'
+    await avancarCiclo(relogio, minerador)
+    await avancarCiclo(relogio, minerador)
+    await trabalho
+
+    expect(visibilidade).toBe('hidden')
+    expect(rolar).toHaveBeenCalledTimes(2)
+    expect(minerador.progresso().rolagens).toBe(2)
+    vi.unstubAllGlobals()
+  })
+
   it('conclui ao atingir o máximo de rolagens', async () => {
     const { relogio, minerador } = montar({ maxRolagens: 2 })
     const p = minerador.iniciar()

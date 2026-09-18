@@ -18,6 +18,7 @@ vi.hoisted(() => {
       onMessage: { addListener: vi.fn() },
       getURL: vi.fn((caminho: string) => `chrome-extension://teste/${caminho}`),
     },
+    tabs: { create: vi.fn() },
   })
 })
 
@@ -50,6 +51,24 @@ describe('criarMinerador', () => {
       rolagens: 0,
     })
     expect(scrollBy).not.toHaveBeenCalled()
+  })
+
+  it('mantém o início na aba atual, sem coordenador externo', () => {
+    const criarAba = vi.fn()
+    const enviar = vi.fn()
+    vi.stubGlobal('chrome', {
+      runtime: { sendMessage: enviar },
+      tabs: { create: criarAba },
+    })
+
+    criarAba.mockClear()
+    enviar.mockClear()
+    criarMinerador(new AdStore(), CRITERIOS_PADRAO, 100, RITMO)
+
+    expect(criarAba).not.toHaveBeenCalled()
+    expect(enviar).not.toHaveBeenCalledWith(
+      expect.objectContaining({ tipo: 'iniciar-mineracao' }),
+    )
   })
 
   it('repassa o teto de aprovados ao motor', () => {

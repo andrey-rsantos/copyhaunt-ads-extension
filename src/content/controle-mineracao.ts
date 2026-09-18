@@ -21,6 +21,8 @@ export interface ControleMineracao {
   retomar(): Promise<void>
   /** Fim definitivo, com parcial gravada. Daqui não se retoma. */
   interromper(): Promise<boolean>
+  /** Grava um checkpoint sem mudar o estado do motor. */
+  checkpoint(): Promise<boolean>
   estado(): Progresso['estado']
   resultadosDisponiveis(): boolean
 }
@@ -35,6 +37,7 @@ export interface ControleMineracao {
 export function criarControleMineracao(deps: DependenciasControle): ControleMineracao {
   const { motor } = deps
   let disponiveis = false
+  let checkpointEmAndamento: Promise<boolean> | null = null
 
   const gravarParcial = async (): Promise<boolean> => {
     const ok = await salvarResultadoParcial(
@@ -42,6 +45,24 @@ export function criarControleMineracao(deps: DependenciasControle): ControleMine
       motor.encontrados(),
       deps.origem,
       { salvar: deps.salvarParcial, agora: deps.agora },
+    )
+    if (ok) disponiveis = true
+    return ok
+  }
+
+  const gravarCheckpoint = async (): Promise<boolean> => {
+    const progresso = motor.progresso()
+    if (progresso.estado !== 'minerando') return false
+
+    const ok = await salvarResultadoParcial(
+      progresso,
+      motor.encontrados(),
+      deps.origem,
+      {
+        salvar: deps.salvarParcial,
+        agora: deps.agora,
+        podePersistir: () => motor.progresso().estado === 'minerando',
+      },
     )
     if (ok) disponiveis = true
     return ok
@@ -64,6 +85,16 @@ export function criarControleMineracao(deps: DependenciasControle): ControleMine
       motor.interromper()
       if (motor.progresso().estado !== 'interrompida') return false
       return gravarParcial()
+    },
+    checkpoint() {
+      if (checkpointEmAndamento) return checkpointEmAndamento
+      const trabalho = gravarCheckpoint()
+      checkpointEmAndamento = trabalho
+      trabalho.then(
+        () => { if (checkpointEmAndamento === trabalho) checkpointEmAndamento = null },
+        () => { if (checkpointEmAndamento === trabalho) checkpointEmAndamento = null },
+      )
+      return trabalho
     },
     estado: () => motor.progresso().estado,
     resultadosDisponiveis: () => disponiveis,
