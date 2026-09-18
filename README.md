@@ -72,6 +72,16 @@ as permissões e a preservação do interceptador no `MAIN world`.
 - Playwright para testes end-to-end e validação no Chrome
 - Chrome DevTools para diagnóstico e validações manuais de performance
 
+## Capturas
+
+As capturas abaixo mostram a extensão em uso na Biblioteca de Anúncios da Meta:
+
+![Menu de links do anúncio](capturas/menu-open.png)
+
+![Grade de resultados](capturas/grade-completa.png)
+
+![Detalhe de um card](capturas/card-detalhe.png)
+
 ## Privacidade e permissões
 
 - A extensão usa a permissão `storage` para preferências, cache e resultados
