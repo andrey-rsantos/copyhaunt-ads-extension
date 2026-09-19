@@ -52,6 +52,10 @@ Depois:
 4. Selecione a pasta `dist/` gerada pelo build.
 5. Abra a Biblioteca de Anúncios da Meta.
 
+## Instalação pela Chrome Web Store
+
+[Baixar o CopyHaunt Ads no Chrome](https://chromewebstore.google.com/detail/copyhaunt-ads/hpohpmpmedpnldmgpegdilmdmejjlfge)
+
 ## Desenvolvimento
 
 ```bash
@@ -120,4 +124,4 @@ Discussões sobre mudanças de arquitetura devem ser registradas em `docs/superp
 
 ## Licença
 
-A licença open source será adicionada antes da publicação da primeira release.
+Este projeto é distribuído sob a [licença MIT](LICENSE).
