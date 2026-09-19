@@ -19,7 +19,7 @@ describe('montarPedidoAvaliacao', () => {
     const link = el.shadowRoot?.querySelector<HTMLAnchorElement>(
       '[data-acao="avaliar"]',
     )
-    expect(link?.textContent).toContain('Avaliar na Chrome Web Store')
+    expect(link?.textContent).toContain('Avaliar na Web Store')
     expect(link?.href).toBe(LINK_AVALIACAO)
     expect(link?.target).toBe('_blank')
     expect(link?.rel).toContain('noreferrer')

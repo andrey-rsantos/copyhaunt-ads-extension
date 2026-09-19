@@ -266,7 +266,7 @@ export function montarPedidoAvaliacao(
   avaliar.href = LINK_AVALIACAO
   avaliar.target = '_blank'
   avaliar.rel = 'noopener noreferrer'
-  avaliar.textContent = 'Avaliar na Chrome Web Store ↗'
+  avaliar.textContent = 'Avaliar na Web Store ↗'
 
   const agoraNao = doc.createElement('button')
   agoraNao.className = 'secundaria'
