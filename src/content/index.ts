@@ -42,6 +42,10 @@ import {
   type ControleMineracao,
 } from './controle-mineracao'
 import { criarCicloMineracao } from './ciclo-mineracao'
+import {
+  focarPedidoAvaliacao,
+  montarPedidoAvaliacao,
+} from './avaliacao'
 
 /** Índice da sessão. Vive enquanto a aba viver. */
 const store = new AdStore()
@@ -491,11 +495,36 @@ function iniciarInterface(): void {
   plantio = plantarEnxertos(document, montarEnxertos())
   garantirObservador()
   agendarRepintura()
+  iniciarPedidoAvaliacao()
 }
 
 function iniciarSsr(): void {
   lerLoteInicial()
   agendarRepintura()
+}
+
+function iniciarPedidoAvaliacao(): void {
+  void new Promise<boolean>((resolver) => {
+    chrome.runtime.sendMessage(
+      { tipo: 'considerar-avaliacao', agora: new Date().toISOString() },
+      (deveMostrar: unknown) => {
+        resolver(!chrome.runtime.lastError && deveMostrar === true)
+      },
+    )
+  })
+    .then((deveMostrar) => {
+      if (!deveMostrar || document.getElementById('copyhaunt-avaliacao')) return
+
+      const pedido = montarPedidoAvaliacao(document, {
+        aoFechar: (naoMostrarNovamente) => {
+          if (!naoMostrarNovamente) return
+          chrome.runtime.sendMessage({ tipo: 'desativar-avaliacao' })
+        },
+      })
+      document.body.appendChild(pedido)
+      focarPedidoAvaliacao(pedido)
+    })
+    .catch(() => {})
 }
 
 iniciarQuandoHouverBody(document, iniciarInterface)

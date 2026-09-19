@@ -4,6 +4,11 @@ import {
   type BuscarInstagramMensagem,
   type RespostaInstagram,
 } from '../core/instagram-ponte'
+import {
+  considerarPedidoAvaliacao,
+  desativarPedidoAvaliacao,
+} from '../core/avaliacao'
+import { criarStorageChrome } from '../storage/resultados'
 import { obterConfig } from './config-remota'
 
 const CAMINHO_BOAS_VINDAS = 'src/boas-vindas/index.html'
@@ -28,6 +33,16 @@ function abrirResultados(): void {
 }
 
 chrome.action.onClicked.addListener(abrirResultados)
+
+let filaAvaliacao: Promise<unknown> = Promise.resolve()
+
+function enfileirarAvaliacao(
+  operacao: () => Promise<unknown>,
+): Promise<unknown> {
+  const proxima = filaAvaliacao.then(operacao, operacao)
+  filaAvaliacao = proxima.catch(() => {})
+  return proxima
+}
 
 /** Resolve quando a aba termina de carregar; o listener sai no primeiro evento dela. */
 function aguardarCarga(tabId: number): Promise<void> {
@@ -104,6 +119,23 @@ function respostaControlada(resposta: unknown): RespostaInstagram {
  * carimbo de namespace que `src/core/messages.ts` exige no main world.
  */
 chrome.runtime.onMessage.addListener((mensagem, _remetente, responder) => {
+  if (mensagem?.tipo === 'considerar-avaliacao') {
+    const agora = new Date(
+      typeof mensagem.agora === 'string' ? mensagem.agora : Date.now(),
+    )
+    void enfileirarAvaliacao(() =>
+      considerarPedidoAvaliacao(agora, criarStorageChrome()),
+    ).then(responder, () => responder(false))
+    return true
+  }
+
+  if (mensagem?.tipo === 'desativar-avaliacao') {
+    void enfileirarAvaliacao(() =>
+      desativarPedidoAvaliacao(criarStorageChrome()).then(() => true),
+    ).then(responder, () => responder(false))
+    return true
+  }
+
   // O content script não consegue navegar para `chrome-extension://` a
   // partir da origem da Meta; só o service worker abre a página.
   if (mensagem?.tipo === 'abrir-resultados') {
